@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import '../app_controller.dart';
 
 class ReplayScreen extends StatefulWidget {
@@ -22,7 +23,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
     final isClarifying = controller.state == AppState.waitingForClarification;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('Executing Command'),
@@ -40,19 +41,20 @@ class _ReplayScreenState extends State<ReplayScreen> {
               ),
               const SizedBox(height: 16),
               LinearProgressIndicator(
-                value: controller.replayState!.totalSteps > 0 
-                  ? controller.replayState!.currentStep / controller.replayState!.totalSteps 
-                  : null,
+                value: controller.replayState!.totalSteps > 0
+                    ? controller.replayState!.currentStep /
+                          controller.replayState!.totalSteps
+                    : null,
               ),
               const SizedBox(height: 32),
             ],
-            
+
             Text(
               controller.statusMessage,
               textAlign: TextAlign.center,
               style: Theme.of(context).textTheme.headlineSmall,
             ),
-            
+
             if (isClarifying) ...[
               const SizedBox(height: 32),
               Card(
@@ -62,8 +64,13 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   child: Column(
                     children: [
                       Text(
-                        controller.clarificationQuestion ?? 'Clarification needed',
-                        style: TextStyle(color: Theme.of(context).colorScheme.onPrimaryContainer),
+                        controller.clarificationQuestion ??
+                            'Clarification needed',
+                        style: TextStyle(
+                          color: Theme.of(context)
+                              .colorScheme
+                              .onPrimaryContainer,
+                        ),
                       ),
                       const SizedBox(height: 16),
                       TextField(
@@ -83,7 +90,9 @@ class _ReplayScreenState extends State<ReplayScreen> {
                       ElevatedButton(
                         onPressed: () {
                           if (_clarificationController.text.isNotEmpty) {
-                            controller.provideClarification(_clarificationController.text);
+                            controller.provideClarification(
+                              _clarificationController.text,
+                            );
                             _clarificationController.clear();
                           }
                         },
@@ -94,7 +103,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 ),
               ),
             ],
-            
+
             const Spacer(),
             SizedBox(
               width: double.infinity,
@@ -108,7 +117,10 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   controller.stopExecution();
                 },
                 icon: const Icon(Icons.stop, size: 32),
-                label: const Text('STOP', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'STOP',
+                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                ),
               ),
             ),
             const SizedBox(height: 32),

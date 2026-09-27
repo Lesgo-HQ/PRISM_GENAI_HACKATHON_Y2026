@@ -1,4 +1,5 @@
 import 'dart:async';
+
 import 'package:speech_to_text/speech_to_text.dart' as stt;
 import 'package:speech_to_text/speech_recognition_result.dart';
 
@@ -18,7 +19,9 @@ class AsrService {
   /// Listen once and return the final transcript.
   /// Push-to-talk: starts listening, returns a Future that completes
   /// when the user stops speaking or timeout.
-  Future<String?> listenOnce({Duration timeout = const Duration(seconds: 10)}) async {
+  Future<String?> listenOnce({
+    Duration timeout = const Duration(seconds: 10),
+  }) async {
     if (!_isInitialized) {
       final initialized = await initialize();
       if (!initialized) {

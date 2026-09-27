@@ -5,20 +5,25 @@ class Slot {
   final String type;
   final dynamic defaultValue;
   final List<String>? values;
+  final String? description;
 
   Slot({
     required this.name,
-    required this.type,
+    this.type = 'string',
     this.defaultValue,
     this.values,
+    this.description,
   });
 
   factory Slot.fromJson(Map<String, dynamic> json) {
     return Slot(
       name: json['name'] as String,
-      type: json['type'] as String,
+      type: json['type'] as String? ?? 'string',
       defaultValue: json['default'],
-      values: (json['values'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      values: (json['values'] as List<dynamic>?)
+          ?.map((e) => e as String)
+          .toList(),
+      description: json['description'] as String?,
     );
   }
 
@@ -28,6 +33,7 @@ class Slot {
       'type': type,
       'default': defaultValue,
       if (values != null) 'values': values,
+      if (description != null) 'description': description,
     };
   }
 }
@@ -35,20 +41,33 @@ class Slot {
 class StepPrecondition {
   final List<String> requiredRoles;
   final List<String> forbiddenRoles;
-  const StepPrecondition({this.requiredRoles = const [], this.forbiddenRoles = const []});
+  const StepPrecondition({
+    this.requiredRoles = const [],
+    this.forbiddenRoles = const [],
+  });
   factory StepPrecondition.fromJson(Map<String, dynamic> j) => StepPrecondition(
-    requiredRoles: (j['required_roles'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
-    forbiddenRoles: (j['forbidden_roles'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
+    requiredRoles: (j['required_roles'] as List<dynamic>? ?? [])
+        .map((e) => e as String)
+        .toList(),
+    forbiddenRoles: (j['forbidden_roles'] as List<dynamic>? ?? [])
+        .map((e) => e as String)
+        .toList(),
   );
-  Map<String, dynamic> toJson() => {'required_roles': requiredRoles, 'forbidden_roles': forbiddenRoles};
+  Map<String, dynamic> toJson() => {
+    'required_roles': requiredRoles,
+    'forbidden_roles': forbiddenRoles,
+  };
 }
 
 class StepPostcondition {
   final List<String> requiredRoles;
   const StepPostcondition({this.requiredRoles = const []});
-  factory StepPostcondition.fromJson(Map<String, dynamic> j) => StepPostcondition(
-    requiredRoles: (j['required_roles'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
-  );
+  factory StepPostcondition.fromJson(Map<String, dynamic> j) =>
+      StepPostcondition(
+        requiredRoles: (j['required_roles'] as List<dynamic>? ?? [])
+            .map((e) => e as String)
+            .toList(),
+      );
   Map<String, dynamic> toJson() => {'required_roles': requiredRoles};
 }
 
@@ -80,9 +99,19 @@ class FlowStep {
       targetRole: json['target_role'] as String,
       valueSlot: json['value_slot'] as String?,
       valueLiteral: json['value_literal'] as String?,
-      precondition: json['precondition'] != null ? StepPrecondition.fromJson(json['precondition'] as Map<String, dynamic>) : null,
-      postcondition: json['postcondition'] != null ? StepPostcondition.fromJson(json['postcondition'] as Map<String, dynamic>) : null,
-      recovery: (json['recovery'] as List<dynamic>? ?? []).map((e) => e as String).toList(),
+      precondition: json['precondition'] != null
+          ? StepPrecondition.fromJson(
+              json['precondition'] as Map<String, dynamic>,
+            )
+          : null,
+      postcondition: json['postcondition'] != null
+          ? StepPostcondition.fromJson(
+              json['postcondition'] as Map<String, dynamic>,
+            )
+          : null,
+      recovery: (json['recovery'] as List<dynamic>? ?? [])
+          .map((e) => e as String)
+          .toList(),
     );
   }
 
@@ -101,7 +130,8 @@ class FlowStep {
 
   bool validatePrecondition(Set<String> screenRoles) {
     if (precondition == null) return true;
-    if (precondition!.requiredRoles.any((r) => !screenRoles.contains(r))) return false;
+    if (precondition!.requiredRoles.any((r) => !screenRoles.contains(r)))
+      return false;
     if (precondition!.forbiddenRoles.any(screenRoles.contains)) return false;
     return true;
   }
@@ -134,9 +164,15 @@ class Flow {
       flowId: json['flow_id'] as String,
       appPackage: json['app_package'] as String,
       triggerIntent: json['trigger_intent'] as String,
-      exampleUtterances: (json['example_utterances'] as List<dynamic>).map((e) => e as String).toList(),
-      slots: (json['slots'] as List<dynamic>).map((e) => Slot.fromJson(e as Map<String, dynamic>)).toList(),
-      steps: (json['steps'] as List<dynamic>).map((e) => FlowStep.fromJson(e as Map<String, dynamic>)).toList(),
+      exampleUtterances: (json['example_utterances'] as List<dynamic>)
+          .map((e) => e as String)
+          .toList(),
+      slots: (json['slots'] as List<dynamic>)
+          .map((e) => Slot.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      steps: (json['steps'] as List<dynamic>)
+          .map((e) => FlowStep.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 
@@ -156,9 +192,15 @@ class Flow {
       flowId: map['flow_id'] as String,
       appPackage: map['app_package'] as String,
       triggerIntent: map['trigger_intent'] as String,
-      exampleUtterances: (jsonDecode(map['example_utterances'] as String) as List<dynamic>).map((e) => e as String).toList(),
-      slots: (jsonDecode(map['slots'] as String) as List<dynamic>).map((e) => Slot.fromJson(e as Map<String, dynamic>)).toList(),
-      steps: (jsonDecode(map['steps'] as String) as List<dynamic>).map((e) => FlowStep.fromJson(e as Map<String, dynamic>)).toList(),
+      exampleUtterances: (jsonDecode(
+        map['example_utterances'] as String,
+      ) as List<dynamic>).map((e) => e as String).toList(),
+      slots: (jsonDecode(map['slots'] as String) as List<dynamic>)
+          .map((e) => Slot.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      steps: (jsonDecode(map['steps'] as String) as List<dynamic>)
+          .map((e) => FlowStep.fromJson(e as Map<String, dynamic>))
+          .toList(),
     );
   }
 

@@ -1,0 +1,9 @@
+{
+  "model_name": "saar-nlu-lite",
+  "version": "0.1.0",
+  "type": "local-regex-baseline",
+  "embedding_dim": 128,
+  "intents": ["TEACH","ORDER_ITEM","SEARCH_ITEM","ADD_TO_CART","CHANGE_QUANTITY","SELECT_ADDRESS","CHECKOUT","FILTER","SORT","UNKNOWN","AMBIGUOUS"],
+  "slots": ["item","quantity","address","app","restaurant","category","variant"],
+  "note": "Baseline regex model. Neural SAAR-NLU model to be trained and exported to ONNX."
+}

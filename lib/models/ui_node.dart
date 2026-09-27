@@ -3,6 +3,7 @@ class UiNode {
   final String? className;
   final String? text;
   final String? contentDescription;
+  final String? hintText;
   final String? resourceId;
   final String? packageName;
   final Map<String, int> bounds; // {left, top, right, bottom}
@@ -21,6 +22,7 @@ class UiNode {
     this.className,
     this.text,
     this.contentDescription,
+    this.hintText,
     this.resourceId,
     this.packageName,
     required this.bounds,
@@ -41,6 +43,7 @@ class UiNode {
       className: json['className'] as String?,
       text: json['text'] as String?,
       contentDescription: json['contentDescription'] as String?,
+      hintText: json['hintText'] as String?,
       resourceId: json['resourceId'] as String?,
       packageName: json['packageName'] as String?,
       bounds: Map<String, int>.from(json['bounds'] as Map),
@@ -52,7 +55,8 @@ class UiNode {
       isFocusable: json['isFocusable'] as bool? ?? false,
       isFocused: json['isFocused'] as bool? ?? false,
       inputType: json['inputType'] as int? ?? 0,
-      children: (json['children'] as List<dynamic>?)
+      children:
+          (json['children'] as List<dynamic>?)
               ?.map((e) => UiNode.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
@@ -65,6 +69,7 @@ class UiNode {
       'className': className,
       'text': text,
       'contentDescription': contentDescription,
+      'hintText': hintText,
       'resourceId': resourceId,
       'packageName': packageName,
       'bounds': bounds,

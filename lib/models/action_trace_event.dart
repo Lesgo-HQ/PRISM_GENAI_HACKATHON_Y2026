@@ -19,7 +19,9 @@ class ActionTraceEvent {
     return ActionTraceEvent(
       timestampMs: json['timestampMs'] as int,
       action: json['action'] as String,
-      node: json['node'] != null ? UiNode.fromJson(json['node'] as Map<String, dynamic>) : null,
+      node: json['node'] != null
+          ? UiNode.fromJson(json['node'] as Map<String, dynamic>)
+          : null,
       valueTyped: json['valueTyped'] as String?,
       packageName: json['packageName'] as String?,
     );

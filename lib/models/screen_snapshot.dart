@@ -17,7 +17,10 @@ class ScreenSnapshot {
     required this.capturedAt,
   });
 
-  factory ScreenSnapshot.fromTree(UiNode root, {required Iterable<String> Function(UiNode) rolesForNode}) {
+  factory ScreenSnapshot.fromTree(
+    UiNode root, {
+    required Iterable<String> Function(UiNode) rolesForNode,
+  }) {
     final roles = <String>{};
     final text = <String>{};
     final structure = <String>[];
@@ -27,7 +30,9 @@ class ScreenSnapshot {
         final normalized = _normalize(value);
         if (normalized.isNotEmpty) text.add(normalized);
       }
-      structure.add('${_normalize(node.className)}:${node.isClickable}:${node.isEditable}:${node.isScrollable}');
+      structure.add(
+        '${_normalize(node.className)}:${node.isClickable}:${node.isEditable}:${node.isScrollable}',
+      );
     }
     final canonical = jsonEncode({
       'package': root.packageName ?? '',
@@ -44,7 +49,8 @@ class ScreenSnapshot {
     );
   }
 
-  static String _normalize(String? value) => (value ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
+  static String _normalize(String? value) =>
+      (value ?? '').toLowerCase().replaceAll(RegExp(r'\s+'), ' ').trim();
 
   static String _hash(String value) {
     var hash = 0xcbf29ce484222325;

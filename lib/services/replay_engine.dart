@@ -10,7 +10,6 @@ import '../models/ui_node.dart';
 import 'accessibility_bridge.dart';
 import 'clarification_service.dart';
 import 'credential_guard.dart';
-import 'llm_client.dart';
 import 'node_ranker.dart';
 import 'recovery_engine.dart';
 
@@ -47,9 +46,8 @@ class ReplayEngine {
   Stream<ReplayState> get stateStream => _states.stream;
   ReplaySession? get session => _session;
 
-  ReplayEngine(AccessibilityBridge bridge, LlmClient _, this._clarification, {Duration stepDelay = const Duration(milliseconds: 800)})
-      : _bridge = bridge,
-        _recovery = RecoveryEngine(bridge),
+  ReplayEngine(this._bridge, this._clarification, {Duration stepDelay = const Duration(milliseconds: 800)})
+      : _recovery = RecoveryEngine(_bridge),
         _stepDelay = stepDelay;
 
   Future<ReplayState> execute(Flow flow, Map<String, dynamic> slots) async {
@@ -72,7 +70,7 @@ class ReplayEngine {
         return _finish(session, ReplayStatus.haltedSensitive, 'SAAR stopped for safety.');
       }
 
-      session.pause();
+      session.pause('needs_clarification');
       session.clarificationCount++;
       final step = flow.steps[session.currentStep];
       _emit(session, message: 'Stuck at step ${session.currentStep + 1}.', question: _clarification.buildReplayClarification(
@@ -83,7 +81,7 @@ class ReplayEngine {
       await _resumeSignal!.future;
       _resumeSignal = null;
       if (_stopRequested) return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
-      session.resume();
+      session.resume(); // Remains at same step
     }
     return _finish(session, ReplayStatus.completed, 'Flow completed successfully');
   }
@@ -93,7 +91,7 @@ class ReplayEngine {
     if (step.action == 'stop_before') return _StepResult.waiting;
 
     _emit(session, message: 'Executing: ${step.action} on ${step.targetRole}');
-    for (var attempt = 0; attempt < 3; attempt++) {
+    for (var attempt = 0; attempt < 5; attempt++) {
       if (_stopRequested) return _StepResult.waiting;
       final tree = await _bridge.getLastTree();
       if (CredentialGuard.isSensitiveScreen(tree)) return _StepResult.halted;
@@ -114,7 +112,11 @@ class ReplayEngine {
         await Future<void>.delayed(_stepDelay);
         continue;
       }
-      final target = _ranker.best(tree.flatten(), step.targetRole)?.node;
+      final match = _ranker.best(tree.flatten(), step.targetRole, step.action);
+      if (match != null && match.isAmbiguous) {
+        return _StepResult.waiting;
+      }
+      final target = match?.node;
       if (target != null && await _performAction(step, target, session.slots)) {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         final afterTree = await _bridge.getLastTree();

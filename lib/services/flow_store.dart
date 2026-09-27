@@ -1,19 +1,21 @@
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
+
 import 'dart:convert';
+
 import '../models/flow.dart';
 
 class FlowStore {
   static Database? _database;
-  
+
   // In-memory embedding index: list of (flowId, embeddingVector)
   final List<FlowEmbedding> _embeddings = [];
-  
+
   Future<Database> get database async {
     _database ??= await _initDatabase();
     return _database!;
   }
-  
+
   Future<Database> _initDatabase() async {
     final dbPath = await getDatabasesPath();
     return openDatabase(
@@ -54,7 +56,7 @@ class FlowStore {
       },
     );
   }
-  
+
   // CRUD operations for flows
   Future<void> saveFlow(Flow flow) async {
     final db = await database;
@@ -100,11 +102,7 @@ class FlowStore {
 
   Future<void> deleteFlow(String flowId) async {
     final db = await database;
-    await db.delete(
-      'flows',
-      where: 'flow_id = ?',
-      whereArgs: [flowId],
-    );
+    await db.delete('flows', where: 'flow_id = ?', whereArgs: [flowId]);
     await db.delete(
       'flow_embeddings',
       where: 'flow_id = ?',
@@ -112,18 +110,14 @@ class FlowStore {
     );
     _embeddings.removeWhere((e) => e.flowId == flowId);
   }
-  
+
   // Embedding operations
   Future<void> saveEmbedding(String flowId, List<double> vector) async {
     final db = await database;
-    await db.insert(
-      'flow_embeddings',
-      {
-        'flow_id': flowId,
-        'vector': jsonEncode(vector),
-      },
-      conflictAlgorithm: ConflictAlgorithm.replace,
-    );
+    await db.insert('flow_embeddings', {
+      'flow_id': flowId,
+      'vector': jsonEncode(vector),
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
     _embeddings.removeWhere((e) => e.flowId == flowId);
     _embeddings.add(FlowEmbedding(flowId: flowId, vector: vector));
   }
@@ -136,15 +130,22 @@ class FlowStore {
       final String flowId = map['flow_id'] as String;
       final String vectorStr = map['vector'] as String;
       final List<dynamic> vectorList = jsonDecode(vectorStr) as List<dynamic>;
-      final List<double> vector = vectorList.map((e) => (e as num).toDouble()).toList();
+      final List<double> vector = vectorList
+          .map((e) => (e as num).toDouble())
+          .toList();
       _embeddings.add(FlowEmbedding(flowId: flowId, vector: vector));
     }
   }
 
   List<FlowEmbedding> get embeddings => _embeddings;
-  
+
   // Session log operations
-  Future<void> logSession({required String? flowId, required String sessionType, required String status, String? details}) async {
+  Future<void> logSession({
+    required String? flowId,
+    required String sessionType,
+    required String status,
+    String? details,
+  }) async {
     final db = await database;
     await db.insert('session_logs', {
       'flow_id': flowId,
