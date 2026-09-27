@@ -1,150 +1,55 @@
-import '../models/parsed_intent.dart';
+﻿import 'package:flutter/services.dart';
+import 'dart:convert';
 
 class LocalIntentModel {
-  static const Map<String, List<String>> _intentPatterns = {
-    'search': [
-      'find',
-      'search',
-      'look for',
-      'show me',
-      'where is',
-      'search for',
-      'get me',
-      'i want',
-      'i\'d like',
-      'can you get',
-      'look up',
-    ],
-    'add_to_cart': [
-      'add',
-      'cart',
-      'put in',
-      'basket',
-      'add to bag',
-      'buy this',
-      'toss it in',
-    ],
-    'checkout': [
-      'checkout',
-      'pay',
-      'buy now',
-      'place order',
-      'purchase',
-      'proceed to pay',
-    ],
-    'filter': [
-      'filter',
-      'sort',
-      'price under',
-      'cheapest',
-      'highest rating',
-      'cheaper',
-      'best',
-    ],
-    'teach': [
-      'teach me',
-      'show me how',
-      'learn to',
-      'record',
-      'how to',
-      'watch me',
-    ],
-  };
+  static const MethodChannel _channel = MethodChannel('saar/accessibility');
+  Map<String, int> _vocab = {};
 
-  static const List<String> _unknownPatterns = [
-    'weather',
-    'alarm',
-    'timer',
-    'music',
-    'play',
-    'call',
-    'message',
-    'text',
-    'email',
-    'navigate',
-    'directions',
-    'cab',
-    'uber',
-    'ola',
-    'camera',
-  ];
-
-  static const List<String> _ambiguousPatterns = [
-    'order pizza',
-    'buy something',
-    'get the usual',
-    'order from the app',
-    'get food',
-    'do the thing',
-  ];
-
-  static const Map<String, List<String>> _appPatterns = {
-    'swiggy': ['swiggy', 'instamart'],
-    'blinkit': ['blinkit', 'blink it'],
-    'myntra': ['myntra'],
-    'zepto': ['zepto'],
-    'amazon': ['amazon'],
-    'flipkart': ['flipkart'],
-  };
-
-  Future<ParsedIntent> parse(String text) async {
-    final lower = text.toLowerCase();
-
-    // Check unknown first
-    for (final pattern in _unknownPatterns) {
-      if (lower.contains(pattern)) {
-        return ParsedIntent.unknown(confidence: 0.9);
+  Future<void> initialize() async {
+    try {
+      final vocabString = await rootBundle.loadString('assets/models/vocab.txt');
+      final lines = const LineSplitter().convert(vocabString);
+      for (int i = 0; i < lines.length; i++) {
+        _vocab[lines[i].trim()] = i;
       }
+    } catch (e) {
+      print("Failed to load vocab.txt: $e");
     }
-
-    // Check ambiguous
-    for (final pattern in _ambiguousPatterns) {
-      if (lower.contains(pattern)) {
-        return ParsedIntent.ambiguous(slots: {}, confidence: 0.8);
-      }
-    }
-
-    String? detectedApp;
-    for (final entry in _appPatterns.entries) {
-      for (final pattern in entry.value) {
-        if (lower.contains(pattern)) {
-          detectedApp = entry.key;
-          break;
-        }
-      }
-      if (detectedApp != null) break;
-    }
-
-    String bestIntent = 'UNKNOWN';
-    double bestScore = 0.0;
-
-    for (final entry in _intentPatterns.entries) {
-      for (final pattern in entry.value) {
-        if (lower.contains(pattern)) {
-          // Simple scoring based on pattern length match
-          double score = 0.6 + (pattern.length / lower.length) * 0.3;
-          if (score > bestScore) {
-            bestScore = score;
-            bestIntent = entry.key;
-          }
-        }
-      }
-    }
-
-    if (bestIntent == 'UNKNOWN') {
-      return ParsedIntent.unknown(confidence: 0.4);
-    }
-
-    return ParsedIntent(
-      intent: bestIntent,
-      app: detectedApp,
-      slots: {}, // Slots handled by SlotExtractor in SaarNlu
-      confidence: bestScore.clamp(0.0, 1.0),
-    );
   }
 
-  Future<List<double>> embed(String text) async {
-    // Stub for actual embeddings, returning zeroes
-    return List.filled(128, 0.0);
+  Future<List<double>?> predictIntent(String text) async {
+    // 1. Basic whitespace tokenization
+    final tokens = text.toLowerCase().split(RegExp(r'\s+'));
+    
+    // 2. Map to IDs using vocab (101 is CLS, 102 is SEP, 100 is UNK)
+    List<int> inputIds = [101]; // CLS
+    for (final token in tokens) {
+      if (token.isEmpty) continue;
+      inputIds.add(_vocab[token] ?? 100); // UNK if not found
+    }
+    inputIds.add(102); // SEP
+    
+    // 3. Pad to 64
+    if (inputIds.length > 64) {
+      inputIds = inputIds.sublist(0, 64);
+      inputIds[63] = 102;
+    }
+    List<int> mask = List.filled(inputIds.length, 1);
+    while (inputIds.length < 64) {
+      inputIds.add(0); // PAD
+      mask.add(0);
+    }
+
+    // 4. Send to Kotlin
+    try {
+      final List<dynamic>? logits = await _channel.invokeMethod('predictIntent', {
+        'inputIds': inputIds.map((e) => e.toDouble()).toList(),
+        'attentionMask': mask.map((e) => e.toDouble()).toList(),
+      });
+      return logits?.cast<double>();
+    } catch (e) {
+      print("Failed to run ONNX model: $e");
+      return null;
+    }
   }
 }

@@ -1,4 +1,4 @@
-package com.lesgo.saar
+﻿package com.lesgo.saar
 
 import android.content.Context
 import android.content.Intent
@@ -21,6 +21,7 @@ class MainActivity : FlutterActivity() {
     }
 
     private var eventSink: EventChannel.EventSink? = null
+    private var nluEngine: LocalNluEngine? = null
     private var teachPollHandler: Handler? = null
     private var teachPollRunnable: Runnable? = null
     private var lastTraceSentCount = 0
@@ -28,7 +29,14 @@ class MainActivity : FlutterActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
 
-        // ── MethodChannel ─────────────────────────────────────────────────
+        try {
+            val modelBytes = assets.open("models/saar_nlu.onnx").readBytes()
+            nluEngine = LocalNluEngine(modelBytes)
+        } catch (e: Exception) {
+            Log.e(TAG, "Failed to load ONNX model: \")
+        }
+
+        // â”€â”€ MethodChannel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
                 try {
@@ -112,6 +120,23 @@ class MainActivity : FlutterActivity() {
                             result.success(trace)
                         }
 
+                        "predictIntent" -> {
+                            val inputIds = call.argument<List<Double>>("inputIds")?.map { it.toLong() }?.toLongArray() ?: longArrayOf()
+                            val mask = call.argument<List<Double>>("attentionMask")?.map { it.toLong() }?.toLongArray() ?: longArrayOf()
+                            Thread {
+                                try {
+                                    val logits = nluEngine?.parse(inputIds, mask)
+                                    Handler(Looper.getMainLooper()).post {
+                                        result.success(logits?.toList())
+                                    }
+                                } catch (e: Exception) {
+                                    Handler(Looper.getMainLooper()).post {
+                                        result.error("ONNX_ERROR", e.message, null)
+                                    }
+                                }
+                            }.start()
+                        }
+
                         "isSensitiveScreen" -> {
                             result.success(SaarAccessibilityService.isSensitiveScreenDetected())
                         }
@@ -126,7 +151,7 @@ class MainActivity : FlutterActivity() {
                 }
             }
 
-        // ── EventChannel for teach-mode streaming ─────────────────────────
+        // â”€â”€ EventChannel for teach-mode streaming â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         EventChannel(flutterEngine.dartExecutor.binaryMessenger, EVENT_CHANNEL)
             .setStreamHandler(object : EventChannel.StreamHandler {
                 override fun onListen(arguments: Any?, events: EventChannel.EventSink?) {
