@@ -1,0 +1,1060 @@
+{"text": "show me tomatoes", "intent": "SEARCH_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "send to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "can you get chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "i want 3 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "set quantity three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "can you get rice", "intent": "ORDER_ITEM", "slots": {"item": "rice"}}
+{"text": "use work address", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "add sugar to cart", "intent": "ADD_TO_CART", "slots": {"item": "sugar"}}
+{"text": "watch me flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "ship to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "get 2 eggs from amazon", "intent": "ORDER_ITEM", "slots": {"item": "eggs", "quantity": "2", "app": "amazon"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "teach me to onions", "intent": "TEACH", "slots": {"item": "onions"}}
+{"text": "add chicken to my basket", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "make it half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "i want 1 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "buy noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "add cheese to my basket", "intent": "ADD_TO_CART", "slots": {"item": "cheese"}}
+{"text": "use work address", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "add biscuits to my basket", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "add chips to my basket", "intent": "ADD_TO_CART", "slots": {"item": "chips"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add flour to cart", "intent": "ADD_TO_CART", "slots": {"item": "flour"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "ship to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "i want eggs", "intent": "ORDER_ITEM", "slots": {"item": "eggs"}}
+{"text": "show me how to butter", "intent": "TEACH", "slots": {"item": "butter"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add water to my basket", "intent": "ADD_TO_CART", "slots": {"item": "water"}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i'd like to buy salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "use work address", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "find flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "learn to eggs", "intent": "TEACH", "slots": {"item": "eggs"}}
+{"text": "can you get biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "find eggs on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "eggs", "app": "swiggy"}}
+{"text": "order 3 bread", "intent": "ORDER_ITEM", "slots": {"item": "bread", "quantity": "3"}}
+{"text": "find salt", "intent": "SEARCH_ITEM", "slots": {"item": "salt"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "put pasta in cart", "intent": "ADD_TO_CART", "slots": {"item": "pasta"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "show me butter", "intent": "SEARCH_ITEM", "slots": {"item": "butter"}}
+{"text": "toss onions in cart", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "find bread", "intent": "SEARCH_ITEM", "slots": {"item": "bread"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "look for cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "get me coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "order half kg sugar", "intent": "ORDER_ITEM", "slots": {"item": "sugar", "quantity": "half kg"}}
+{"text": "learn to butter", "intent": "TEACH", "slots": {"item": "butter"}}
+{"text": "get 3 burger from amazon", "intent": "ORDER_ITEM", "slots": {"item": "burger", "quantity": "3", "app": "amazon"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "find noodles on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "noodles", "app": "swiggy"}}
+{"text": "search biryani on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "biryani", "app": "blinkit"}}
+{"text": "i want burger", "intent": "ORDER_ITEM", "slots": {"item": "burger"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "record how to milk", "intent": "TEACH", "slots": {"item": "milk"}}
+{"text": "order three burger", "intent": "ORDER_ITEM", "slots": {"item": "burger", "quantity": "three"}}
+{"text": "learn to pizza", "intent": "TEACH", "slots": {"item": "pizza"}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "buy milk", "intent": "ORDER_ITEM", "slots": {"item": "milk"}}
+{"text": "i want water", "intent": "ORDER_ITEM", "slots": {"item": "water"}}
+{"text": "find cheese on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "cheese", "app": "zepto"}}
+{"text": "watch me chips", "intent": "TEACH", "slots": {"item": "chips"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "get me burger", "intent": "ORDER_ITEM", "slots": {"item": "burger"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me how to biscuits", "intent": "TEACH", "slots": {"item": "biscuits"}}
+{"text": "can you get biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "add water to cart", "intent": "ADD_TO_CART", "slots": {"item": "water"}}
+{"text": "learn to noodles", "intent": "TEACH", "slots": {"item": "noodles"}}
+{"text": "i want juice", "intent": "ORDER_ITEM", "slots": {"item": "juice"}}
+{"text": "can you get rice", "intent": "ORDER_ITEM", "slots": {"item": "rice"}}
+{"text": "learn to cheese", "intent": "TEACH", "slots": {"item": "cheese"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "order 2 tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes", "quantity": "2"}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "order chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "can you get rice", "intent": "ORDER_ITEM", "slots": {"item": "rice"}}
+{"text": "put onions in cart", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "add milk to cart", "intent": "ADD_TO_CART", "slots": {"item": "milk"}}
+{"text": "order 500g pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta", "quantity": "500g"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "i'd like to buy coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "add juice to my basket", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "add juice to cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "find eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "look for flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "send to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "make it 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "set quantity 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "record how to biryani", "intent": "TEACH", "slots": {"item": "biryani"}}
+{"text": "record how to onions", "intent": "TEACH", "slots": {"item": "onions"}}
+{"text": "i'd like to buy bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "make it half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "learn to butter", "intent": "TEACH", "slots": {"item": "butter"}}
+{"text": "order 1 flour", "intent": "ORDER_ITEM", "slots": {"item": "flour", "quantity": "1"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add rice to cart", "intent": "ADD_TO_CART", "slots": {"item": "rice"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "can you get salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "find noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "i'd like to buy tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "look for milk", "intent": "SEARCH_ITEM", "slots": {"item": "milk"}}
+{"text": "learn to salt", "intent": "TEACH", "slots": {"item": "salt"}}
+{"text": "i want 4 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "teach me to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "buy juice", "intent": "ORDER_ITEM", "slots": {"item": "juice"}}
+{"text": "order 5 pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta", "quantity": "5"}}
+{"text": "deliver to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "order two sugar", "intent": "ORDER_ITEM", "slots": {"item": "sugar", "quantity": "two"}}
+{"text": "find pasta on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "pasta", "app": "zepto"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "add pizza to my basket", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "learn to chicken", "intent": "TEACH", "slots": {"item": "chicken"}}
+{"text": "record how to oil", "intent": "TEACH", "slots": {"item": "oil"}}
+{"text": "look for flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "search for biryani", "intent": "SEARCH_ITEM", "slots": {"item": "biryani"}}
+{"text": "toss noodles in cart", "intent": "ADD_TO_CART", "slots": {"item": "noodles"}}
+{"text": "deliver to my work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "i want 5 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "use default address", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "use default address", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "find eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "please order noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles"}}
+{"text": "add coffee to my basket", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "get 5 water from zepto", "intent": "ORDER_ITEM", "slots": {"item": "water", "quantity": "5", "app": "zepto"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to my mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "ship to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "set quantity two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "look for noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "teach me to milk", "intent": "TEACH", "slots": {"item": "milk"}}
+{"text": "look for eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "get 2 biryani from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "biryani", "quantity": "2", "app": "blinkit"}}
+{"text": "show me how to burger", "intent": "TEACH", "slots": {"item": "burger"}}
+{"text": "look for biscuits", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits"}}
+{"text": "show me how to tomatoes", "intent": "TEACH", "slots": {"item": "tomatoes"}}
+{"text": "i want bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "teach me to pasta", "intent": "TEACH", "slots": {"item": "pasta"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "i want salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "find biscuits on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits", "app": "swiggy"}}
+{"text": "set quantity 4", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "please order milk", "intent": "ORDER_ITEM", "slots": {"item": "milk"}}
+{"text": "set quantity 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "order pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "add juice to cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "please order pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "record how to pizza", "intent": "TEACH", "slots": {"item": "pizza"}}
+{"text": "toss pasta in cart", "intent": "ADD_TO_CART", "slots": {"item": "pasta"}}
+{"text": "add tomatoes to cart", "intent": "ADD_TO_CART", "slots": {"item": "tomatoes"}}
+{"text": "i'd like to buy butter", "intent": "ORDER_ITEM", "slots": {"item": "butter"}}
+{"text": "find sugar", "intent": "SEARCH_ITEM", "slots": {"item": "sugar"}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "i want pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "can you get chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "learn to biryani", "intent": "TEACH", "slots": {"item": "biryani"}}
+{"text": "put burger in cart", "intent": "ADD_TO_CART", "slots": {"item": "burger"}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "can you get bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "deliver to my office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "order 3 water", "intent": "ORDER_ITEM", "slots": {"item": "water", "quantity": "3"}}
+{"text": "search for noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "search for salt", "intent": "SEARCH_ITEM", "slots": {"item": "salt"}}
+{"text": "get me biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "show me chips", "intent": "SEARCH_ITEM", "slots": {"item": "chips"}}
+{"text": "watch me chips", "intent": "TEACH", "slots": {"item": "chips"}}
+{"text": "look for oil", "intent": "SEARCH_ITEM", "slots": {"item": "oil"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss flour in cart", "intent": "ADD_TO_CART", "slots": {"item": "flour"}}
+{"text": "put butter in cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "put water in cart", "intent": "ADD_TO_CART", "slots": {"item": "water"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "look for burger", "intent": "SEARCH_ITEM", "slots": {"item": "burger"}}
+{"text": "toss butter in cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "buy pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "i'd like to buy burger", "intent": "ORDER_ITEM", "slots": {"item": "burger"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "find noodles on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "noodles", "app": "flipkart"}}
+{"text": "toss juice in cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss salt in cart", "intent": "ADD_TO_CART", "slots": {"item": "salt"}}
+{"text": "order coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "ship to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to my mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "put coffee in cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "make it 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "can you get oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "set quantity 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "i'd like to buy pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "make it 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "please order coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "deliver to my office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i'd like to buy butter", "intent": "ORDER_ITEM", "slots": {"item": "butter"}}
+{"text": "ship to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "find pizza on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "pizza", "app": "flipkart"}}
+{"text": "toss flour in cart", "intent": "ADD_TO_CART", "slots": {"item": "flour"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "get me salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "search for juice", "intent": "SEARCH_ITEM", "slots": {"item": "juice"}}
+{"text": "look for chicken", "intent": "SEARCH_ITEM", "slots": {"item": "chicken"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i'd like to buy bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "search oil on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "oil", "app": "blinkit"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "toss juice in cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "toss pasta in cart", "intent": "ADD_TO_CART", "slots": {"item": "pasta"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "search for chips", "intent": "SEARCH_ITEM", "slots": {"item": "chips"}}
+{"text": "get me biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "add rice to cart", "intent": "ADD_TO_CART", "slots": {"item": "rice"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "record how to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "look for biscuits", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "make it 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "get me sugar", "intent": "ORDER_ITEM", "slots": {"item": "sugar"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "order oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "add water to my basket", "intent": "ADD_TO_CART", "slots": {"item": "water"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add pizza to cart", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "show me chips", "intent": "SEARCH_ITEM", "slots": {"item": "chips"}}
+{"text": "toss juice in cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get me water", "intent": "ORDER_ITEM", "slots": {"item": "water"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss eggs in cart", "intent": "ADD_TO_CART", "slots": {"item": "eggs"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "search water on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "water", "app": "blinkit"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "can you get chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me how to oil", "intent": "TEACH", "slots": {"item": "oil"}}
+{"text": "show me oil", "intent": "SEARCH_ITEM", "slots": {"item": "oil"}}
+{"text": "put cheese in cart", "intent": "ADD_TO_CART", "slots": {"item": "cheese"}}
+{"text": "teach me to pasta", "intent": "TEACH", "slots": {"item": "pasta"}}
+{"text": "i want 3 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "add water to cart", "intent": "ADD_TO_CART", "slots": {"item": "water"}}
+{"text": "can you get biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "get three pasta from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "pasta", "quantity": "three", "app": "blinkit"}}
+{"text": "please order pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "record how to tomatoes", "intent": "TEACH", "slots": {"item": "tomatoes"}}
+{"text": "put butter in cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "show me how to noodles", "intent": "TEACH", "slots": {"item": "noodles"}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "make it two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "show me chips", "intent": "SEARCH_ITEM", "slots": {"item": "chips"}}
+{"text": "toss biryani in cart", "intent": "ADD_TO_CART", "slots": {"item": "biryani"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "ship to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "get 5 butter from flipkart", "intent": "ORDER_ITEM", "slots": {"item": "butter", "quantity": "5", "app": "flipkart"}}
+{"text": "make it 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order three chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken", "quantity": "three"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "ship to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "show me how to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "toss biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "add pizza to my basket", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "i'd like to buy tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "order water", "intent": "ORDER_ITEM", "slots": {"item": "water"}}
+{"text": "i'd like to buy biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "search bread on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "bread", "app": "myntra"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order 2 tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes", "quantity": "2"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "add onions to my basket", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss juice in cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "find bread on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "bread", "app": "flipkart"}}
+{"text": "search pizza on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "pizza", "app": "blinkit"}}
+{"text": "add pizza to my basket", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "learn to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "search pasta on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "pasta", "app": "myntra"}}
+{"text": "record how to pasta", "intent": "TEACH", "slots": {"item": "pasta"}}
+{"text": "show me biryani", "intent": "SEARCH_ITEM", "slots": {"item": "biryani"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "search for chicken", "intent": "SEARCH_ITEM", "slots": {"item": "chicken"}}
+{"text": "search for pasta", "intent": "SEARCH_ITEM", "slots": {"item": "pasta"}}
+{"text": "search for juice", "intent": "SEARCH_ITEM", "slots": {"item": "juice"}}
+{"text": "teach me to rice", "intent": "TEACH", "slots": {"item": "rice"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "deliver to my mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "buy chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "record how to chips", "intent": "TEACH", "slots": {"item": "chips"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "watch me tomatoes", "intent": "TEACH", "slots": {"item": "tomatoes"}}
+{"text": "make it 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "set quantity half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss oil in cart", "intent": "ADD_TO_CART", "slots": {"item": "oil"}}
+{"text": "change quantity to three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "show me butter", "intent": "SEARCH_ITEM", "slots": {"item": "butter"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "use office address", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "can you get salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "record how to eggs", "intent": "TEACH", "slots": {"item": "eggs"}}
+{"text": "search bread on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "bread", "app": "myntra"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "i want 5 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "find sugar on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "sugar", "app": "swiggy"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "teach me to juice", "intent": "TEACH", "slots": {"item": "juice"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "toss cheese in cart", "intent": "ADD_TO_CART", "slots": {"item": "cheese"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "find eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me juice", "intent": "SEARCH_ITEM", "slots": {"item": "juice"}}
+{"text": "toss flour in cart", "intent": "ADD_TO_CART", "slots": {"item": "flour"}}
+{"text": "please order bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "add juice to cart", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "search eggs on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "eggs", "app": "flipkart"}}
+{"text": "find biscuits on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits", "app": "flipkart"}}
+{"text": "ship to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss chips in cart", "intent": "ADD_TO_CART", "slots": {"item": "chips"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "i'd like to buy noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles"}}
+{"text": "search chips on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "chips", "app": "flipkart"}}
+{"text": "buy chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "deliver to my work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "show me noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "order chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i want biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "add tomatoes to my basket", "intent": "ADD_TO_CART", "slots": {"item": "tomatoes"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "change quantity to 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "watch me biscuits", "intent": "TEACH", "slots": {"item": "biscuits"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "show me flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "toss sugar in cart", "intent": "ADD_TO_CART", "slots": {"item": "sugar"}}
+{"text": "watch me pizza", "intent": "TEACH", "slots": {"item": "pizza"}}
+{"text": "buy chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "can you get burger", "intent": "ORDER_ITEM", "slots": {"item": "burger"}}
+{"text": "search chicken on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "chicken", "app": "blinkit"}}
+{"text": "i want chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "use home address", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "i'd like to buy oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "find biscuits on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits", "app": "myntra"}}
+{"text": "put biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "make it 500g", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "500g"}}
+{"text": "toss onions in cart", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "can you get chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "order rice", "intent": "ORDER_ITEM", "slots": {"item": "rice"}}
+{"text": "deliver to my default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "set quantity three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "find biryani on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "biryani", "app": "swiggy"}}
+{"text": "deliver to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "find coffee", "intent": "SEARCH_ITEM", "slots": {"item": "coffee"}}
+{"text": "change quantity to 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "get 2 biryani from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "biryani", "quantity": "2", "app": "blinkit"}}
+{"text": "deliver to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "find tomatoes", "intent": "SEARCH_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "deliver to my home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "add oil to my basket", "intent": "ADD_TO_CART", "slots": {"item": "oil"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "i'd like to buy cheese", "intent": "ORDER_ITEM", "slots": {"item": "cheese"}}
+{"text": "toss coffee in cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "buy flour", "intent": "ORDER_ITEM", "slots": {"item": "flour"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "set quantity 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "find tomatoes on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "tomatoes", "app": "blinkit"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "please order tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "find water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "find coffee on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "coffee", "app": "swiggy"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me bread", "intent": "SEARCH_ITEM", "slots": {"item": "bread"}}
+{"text": "get me tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "order 4 coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee", "quantity": "4"}}
+{"text": "ship to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "learn to eggs", "intent": "TEACH", "slots": {"item": "eggs"}}
+{"text": "find cheese on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "cheese", "app": "myntra"}}
+{"text": "i'd like to buy water", "intent": "ORDER_ITEM", "slots": {"item": "water"}}
+{"text": "get me water", "intent": "ORDER_ITEM", "slots": {"item": "water"}}
+{"text": "set quantity 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "make it three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "i want half kg of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i want 3 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order half kg noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles", "quantity": "half kg"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "find water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "use office address", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss coffee in cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "use mom's place address", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "add biryani to cart", "intent": "ADD_TO_CART", "slots": {"item": "biryani"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "make it 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "send to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to 4", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i'd like to buy noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "change quantity to two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "order oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "record how to butter", "intent": "TEACH", "slots": {"item": "butter"}}
+{"text": "set quantity 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "toss sugar in cart", "intent": "ADD_TO_CART", "slots": {"item": "sugar"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "can you get chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "i want 1 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "change quantity to 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "teach me to bread", "intent": "TEACH", "slots": {"item": "bread"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get 5 juice from myntra", "intent": "ORDER_ITEM", "slots": {"item": "juice", "quantity": "5", "app": "myntra"}}
+{"text": "deliver to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "search eggs on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "eggs", "app": "blinkit"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "deliver to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "find water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "show me how to biscuits", "intent": "TEACH", "slots": {"item": "biscuits"}}
+{"text": "search chicken on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "chicken", "app": "myntra"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "record how to rice", "intent": "TEACH", "slots": {"item": "rice"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "i want butter", "intent": "ORDER_ITEM", "slots": {"item": "butter"}}
+{"text": "get 500g chips from swiggy", "intent": "ORDER_ITEM", "slots": {"item": "chips", "quantity": "500g", "app": "swiggy"}}
+{"text": "i want salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "find chicken on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "chicken", "app": "zepto"}}
+{"text": "get me oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "ship to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "show me biryani", "intent": "SEARCH_ITEM", "slots": {"item": "biryani"}}
+{"text": "use default address", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "search noodles on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "noodles", "app": "blinkit"}}
+{"text": "change quantity to 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "send to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "learn to oil", "intent": "TEACH", "slots": {"item": "oil"}}
+{"text": "can you get biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "search pizza on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "pizza", "app": "flipkart"}}
+{"text": "send to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "add sugar to my basket", "intent": "ADD_TO_CART", "slots": {"item": "sugar"}}
+{"text": "toss coffee in cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "show me eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "toss chicken in cart", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "i want juice", "intent": "ORDER_ITEM", "slots": {"item": "juice"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "can you get pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "put biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 4", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "i want 5 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "change quantity to 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "look for eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me pasta", "intent": "SEARCH_ITEM", "slots": {"item": "pasta"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "add chicken to cart", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "buy chicken", "intent": "ORDER_ITEM", "slots": {"item": "chicken"}}
+{"text": "look for biscuits", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get 2 juice from amazon", "intent": "ORDER_ITEM", "slots": {"item": "juice", "quantity": "2", "app": "amazon"}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "look for water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "record how to pizza", "intent": "TEACH", "slots": {"item": "pizza"}}
+{"text": "search milk on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "milk", "app": "amazon"}}
+{"text": "get me butter", "intent": "ORDER_ITEM", "slots": {"item": "butter"}}
+{"text": "watch me bread", "intent": "TEACH", "slots": {"item": "bread"}}
+{"text": "make it two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "teach me to chicken", "intent": "TEACH", "slots": {"item": "chicken"}}
+{"text": "watch me juice", "intent": "TEACH", "slots": {"item": "juice"}}
+{"text": "i'd like to buy pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "order 1 kg eggs", "intent": "ORDER_ITEM", "slots": {"item": "eggs", "quantity": "1 kg"}}
+{"text": "order three eggs", "intent": "ORDER_ITEM", "slots": {"item": "eggs", "quantity": "three"}}
+{"text": "learn to oil", "intent": "TEACH", "slots": {"item": "oil"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "add sugar to my basket", "intent": "ADD_TO_CART", "slots": {"item": "sugar"}}
+{"text": "i'd like to buy salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "watch me milk", "intent": "TEACH", "slots": {"item": "milk"}}
+{"text": "put cheese in cart", "intent": "ADD_TO_CART", "slots": {"item": "cheese"}}
+{"text": "add oil to cart", "intent": "ADD_TO_CART", "slots": {"item": "oil"}}
+{"text": "order two rice", "intent": "ORDER_ITEM", "slots": {"item": "rice", "quantity": "two"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "put chicken in cart", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "change quantity to 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "find eggs", "intent": "SEARCH_ITEM", "slots": {"item": "eggs"}}
+{"text": "get three noodles from zepto", "intent": "ORDER_ITEM", "slots": {"item": "noodles", "quantity": "three", "app": "zepto"}}
+{"text": "send to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "make it two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "search burger on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "burger", "app": "flipkart"}}
+{"text": "order from the app", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "teach me to burger", "intent": "TEACH", "slots": {"item": "burger"}}
+{"text": "watch me noodles", "intent": "TEACH", "slots": {"item": "noodles"}}
+{"text": "buy now", "intent": "CHECKOUT", "slots": {}}
+{"text": "can you get butter", "intent": "ORDER_ITEM", "slots": {"item": "butter"}}
+{"text": "look for salt", "intent": "SEARCH_ITEM", "slots": {"item": "salt"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me burger", "intent": "SEARCH_ITEM", "slots": {"item": "burger"}}
+{"text": "get 3 chicken from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "chicken", "quantity": "3", "app": "blinkit"}}
+{"text": "learn to noodles", "intent": "TEACH", "slots": {"item": "noodles"}}
+{"text": "i want coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "change quantity to two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "toss pizza in cart", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "order biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "search for noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "i'd like to buy pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "search milk on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "milk", "app": "myntra"}}
+{"text": "set quantity 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "find biryani on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "biryani", "app": "myntra"}}
+{"text": "i want three of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "use work address", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "add juice to my basket", "intent": "ADD_TO_CART", "slots": {"item": "juice"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "toss cheese in cart", "intent": "ADD_TO_CART", "slots": {"item": "cheese"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "search for burger", "intent": "SEARCH_ITEM", "slots": {"item": "burger"}}
+{"text": "use office address", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "order half kg cheese", "intent": "ORDER_ITEM", "slots": {"item": "cheese", "quantity": "half kg"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add butter to cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "set quantity 4", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "put coffee in cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "teach me to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "add salt to my basket", "intent": "ADD_TO_CART", "slots": {"item": "salt"}}
+{"text": "find salt", "intent": "SEARCH_ITEM", "slots": {"item": "salt"}}
+{"text": "find noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "add butter to my basket", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "can you get salt", "intent": "ORDER_ITEM", "slots": {"item": "salt"}}
+{"text": "i want 4 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "buy pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "find cheese on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "cheese", "app": "blinkit"}}
+{"text": "look for oil", "intent": "SEARCH_ITEM", "slots": {"item": "oil"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order 3 biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani", "quantity": "3"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "put chips in cart", "intent": "ADD_TO_CART", "slots": {"item": "chips"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "find water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "add coffee to cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "send to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "search chips on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "chips", "app": "blinkit"}}
+{"text": "put pizza in cart", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "i want three of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "show me rice", "intent": "SEARCH_ITEM", "slots": {"item": "rice"}}
+{"text": "search juice on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "juice", "app": "blinkit"}}
+{"text": "i want 1 kg of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "find burger on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "burger", "app": "flipkart"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "make it three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "look for juice", "intent": "SEARCH_ITEM", "slots": {"item": "juice"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "get 3 biscuits from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "biscuits", "quantity": "3", "app": "blinkit"}}
+{"text": "watch me juice", "intent": "TEACH", "slots": {"item": "juice"}}
+{"text": "order cheese", "intent": "ORDER_ITEM", "slots": {"item": "cheese"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "get me eggs", "intent": "ORDER_ITEM", "slots": {"item": "eggs"}}
+{"text": "order three rice", "intent": "ORDER_ITEM", "slots": {"item": "rice", "quantity": "three"}}
+{"text": "look for chicken", "intent": "SEARCH_ITEM", "slots": {"item": "chicken"}}
+{"text": "find pasta on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "pasta", "app": "amazon"}}
+{"text": "please order milk", "intent": "ORDER_ITEM", "slots": {"item": "milk"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "change quantity to 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "search for chips", "intent": "SEARCH_ITEM", "slots": {"item": "chips"}}
+{"text": "i want 5 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "record how to pasta", "intent": "TEACH", "slots": {"item": "pasta"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "add burger to my basket", "intent": "ADD_TO_CART", "slots": {"item": "burger"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "record how to bread", "intent": "TEACH", "slots": {"item": "bread"}}
+{"text": "find pizza", "intent": "SEARCH_ITEM", "slots": {"item": "pizza"}}
+{"text": "change quantity to half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "put butter in cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "watch me sugar", "intent": "TEACH", "slots": {"item": "sugar"}}
+{"text": "can you get sugar", "intent": "ORDER_ITEM", "slots": {"item": "sugar"}}
+{"text": "toss chicken in cart", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "add pasta to my basket", "intent": "ADD_TO_CART", "slots": {"item": "pasta"}}
+{"text": "toss salt in cart", "intent": "ADD_TO_CART", "slots": {"item": "salt"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "search for water", "intent": "SEARCH_ITEM", "slots": {"item": "water"}}
+{"text": "use work address", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "learn to biscuits", "intent": "TEACH", "slots": {"item": "biscuits"}}
+{"text": "find rice on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "rice", "app": "myntra"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "watch me flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "show me cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "search rice on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "rice", "app": "amazon"}}
+{"text": "change quantity to 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "find noodles on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "noodles", "app": "amazon"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "put chicken in cart", "intent": "ADD_TO_CART", "slots": {"item": "chicken"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "search oil on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "oil", "app": "zepto"}}
+{"text": "put rice in cart", "intent": "ADD_TO_CART", "slots": {"item": "rice"}}
+{"text": "add tomatoes to my basket", "intent": "ADD_TO_CART", "slots": {"item": "tomatoes"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "put bread in cart", "intent": "ADD_TO_CART", "slots": {"item": "bread"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "add coffee to my basket", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "please order chips", "intent": "ORDER_ITEM", "slots": {"item": "chips"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to my work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "ship to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "toss butter in cart", "intent": "ADD_TO_CART", "slots": {"item": "butter"}}
+{"text": "deliver to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "teach me to tomatoes", "intent": "TEACH", "slots": {"item": "tomatoes"}}
+{"text": "toss chips in cart", "intent": "ADD_TO_CART", "slots": {"item": "chips"}}
+{"text": "i want 3 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order 3 tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes", "quantity": "3"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "get food", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "find burger on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "burger", "app": "myntra"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order 4 noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles", "quantity": "4"}}
+{"text": "change quantity to 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "toss tomatoes in cart", "intent": "ADD_TO_CART", "slots": {"item": "tomatoes"}}
+{"text": "change quantity to 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "please order biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "search for burger", "intent": "SEARCH_ITEM", "slots": {"item": "burger"}}
+{"text": "search for biscuits", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits"}}
+{"text": "search burger on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "burger", "app": "zepto"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "find coffee", "intent": "SEARCH_ITEM", "slots": {"item": "coffee"}}
+{"text": "i want biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "record how to salt", "intent": "TEACH", "slots": {"item": "salt"}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "i want 4 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "find burger on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "burger", "app": "amazon"}}
+{"text": "show me coffee", "intent": "SEARCH_ITEM", "slots": {"item": "coffee"}}
+{"text": "send to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "please order tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes"}}
+{"text": "find pasta on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "pasta", "app": "myntra"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "order pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "search for butter", "intent": "SEARCH_ITEM", "slots": {"item": "butter"}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "i'd like to buy milk", "intent": "ORDER_ITEM", "slots": {"item": "milk"}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "can you get sugar", "intent": "ORDER_ITEM", "slots": {"item": "sugar"}}
+{"text": "deliver to my home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "i'd like to buy noodles", "intent": "ORDER_ITEM", "slots": {"item": "noodles"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "change quantity to three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "please order cheese", "intent": "ORDER_ITEM", "slots": {"item": "cheese"}}
+{"text": "learn to chips", "intent": "TEACH", "slots": {"item": "chips"}}
+{"text": "change quantity to 3", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "3"}}
+{"text": "search butter on myntra", "intent": "SEARCH_ITEM", "slots": {"item": "butter", "app": "myntra"}}
+{"text": "add pasta to my basket", "intent": "ADD_TO_CART", "slots": {"item": "pasta"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "add onions to my basket", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "add biscuits to cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "i want biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "put noodles in cart", "intent": "ADD_TO_CART", "slots": {"item": "noodles"}}
+{"text": "search salt on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "salt", "app": "zepto"}}
+{"text": "i want 500g of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "500g"}}
+{"text": "find flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "order biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "deliver to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "search water on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "water", "app": "blinkit"}}
+{"text": "can you get bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "send to default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "ship to work", "intent": "SELECT_ADDRESS", "slots": {"address": "work"}}
+{"text": "search for milk", "intent": "SEARCH_ITEM", "slots": {"item": "milk"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "set quantity 4", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "set quantity 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "change quantity to 1", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1"}}
+{"text": "please order bread", "intent": "ORDER_ITEM", "slots": {"item": "bread"}}
+{"text": "play a game", "intent": "UNKNOWN", "slots": {}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "send to mom's place", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "show me how to burger", "intent": "TEACH", "slots": {"item": "burger"}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me how to pasta", "intent": "TEACH", "slots": {"item": "pasta"}}
+{"text": "i'd like to buy burger", "intent": "ORDER_ITEM", "slots": {"item": "burger"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "call mom", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss noodles in cart", "intent": "ADD_TO_CART", "slots": {"item": "noodles"}}
+{"text": "get me coffee", "intent": "ORDER_ITEM", "slots": {"item": "coffee"}}
+{"text": "find butter on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "butter", "app": "blinkit"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order two tomatoes", "intent": "ORDER_ITEM", "slots": {"item": "tomatoes", "quantity": "two"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "set an alarm", "intent": "UNKNOWN", "slots": {}}
+{"text": "change quantity to half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "search for butter", "intent": "SEARCH_ITEM", "slots": {"item": "butter"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "i want 4 of those", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "4"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "make it 5", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "5"}}
+{"text": "change quantity to two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "make it 1 kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "1 kg"}}
+{"text": "search sugar on zepto", "intent": "SEARCH_ITEM", "slots": {"item": "sugar", "app": "zepto"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
+{"text": "go to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "search for cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "show me coffee", "intent": "SEARCH_ITEM", "slots": {"item": "coffee"}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "learn to tomatoes", "intent": "TEACH", "slots": {"item": "tomatoes"}}
+{"text": "search for cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "show me sugar", "intent": "SEARCH_ITEM", "slots": {"item": "sugar"}}
+{"text": "order 500g bread", "intent": "ORDER_ITEM", "slots": {"item": "bread", "quantity": "500g"}}
+{"text": "use default address", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "can you get pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "find pasta on amazon", "intent": "SEARCH_ITEM", "slots": {"item": "pasta", "app": "amazon"}}
+{"text": "buy something", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "order 1 kg oil", "intent": "ORDER_ITEM", "slots": {"item": "oil", "quantity": "1 kg"}}
+{"text": "learn to milk", "intent": "TEACH", "slots": {"item": "milk"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "add to bag", "intent": "ADD_TO_CART", "slots": {}}
+{"text": "look for oil", "intent": "SEARCH_ITEM", "slots": {"item": "oil"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "open camera", "intent": "UNKNOWN", "slots": {}}
+{"text": "order pizza", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get the usual", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "teach me to flour", "intent": "TEACH", "slots": {"item": "flour"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "ship to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "change quantity to 2", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "2"}}
+{"text": "deliver to office", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy pizza", "intent": "ORDER_ITEM", "slots": {"item": "pizza"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me cheese", "intent": "SEARCH_ITEM", "slots": {"item": "cheese"}}
+{"text": "set quantity three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "add noodles to cart", "intent": "ADD_TO_CART", "slots": {"item": "noodles"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me how to biscuits", "intent": "TEACH", "slots": {"item": "biscuits"}}
+{"text": "search salt on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "salt", "app": "blinkit"}}
+{"text": "find onions on blinkit", "intent": "SEARCH_ITEM", "slots": {"item": "onions", "app": "blinkit"}}
+{"text": "navigate to work", "intent": "UNKNOWN", "slots": {}}
+{"text": "show me oil", "intent": "SEARCH_ITEM", "slots": {"item": "oil"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "get two biscuits from blinkit", "intent": "ORDER_ITEM", "slots": {"item": "biscuits", "quantity": "two", "app": "blinkit"}}
+{"text": "i'd like to buy biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "find rice", "intent": "SEARCH_ITEM", "slots": {"item": "rice"}}
+{"text": "deliver to my default", "intent": "SELECT_ADDRESS", "slots": {"address": "default"}}
+{"text": "make it half kg", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "half kg"}}
+{"text": "search bread on swiggy", "intent": "SEARCH_ITEM", "slots": {"item": "bread", "app": "swiggy"}}
+{"text": "send an email", "intent": "UNKNOWN", "slots": {}}
+{"text": "put onions in cart", "intent": "ADD_TO_CART", "slots": {"item": "onions"}}
+{"text": "put pizza in cart", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "set quantity two", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "two"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "use mom's place address", "intent": "SELECT_ADDRESS", "slots": {"address": "mom's place"}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "find noodles", "intent": "SEARCH_ITEM", "slots": {"item": "noodles"}}
+{"text": "record how to onions", "intent": "TEACH", "slots": {"item": "onions"}}
+{"text": "i want eggs", "intent": "ORDER_ITEM", "slots": {"item": "eggs"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "toss salt in cart", "intent": "ADD_TO_CART", "slots": {"item": "salt"}}
+{"text": "search chips on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "chips", "app": "flipkart"}}
+{"text": "add it to cart", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "set quantity 500g", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "500g"}}
+{"text": "checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "search for flour", "intent": "SEARCH_ITEM", "slots": {"item": "flour"}}
+{"text": "can you get pasta", "intent": "ORDER_ITEM", "slots": {"item": "pasta"}}
+{"text": "put biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "add biscuits to cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "put biscuits in cart", "intent": "ADD_TO_CART", "slots": {"item": "biscuits"}}
+{"text": "put pizza in cart", "intent": "ADD_TO_CART", "slots": {"item": "pizza"}}
+{"text": "send to home", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "show me how to eggs", "intent": "TEACH", "slots": {"item": "eggs"}}
+{"text": "use office address", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "do the thing", "intent": "AMBIGUOUS", "slots": {}}
+{"text": "check weather", "intent": "UNKNOWN", "slots": {}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "use home address", "intent": "SELECT_ADDRESS", "slots": {"address": "home"}}
+{"text": "find cheese on flipkart", "intent": "SEARCH_ITEM", "slots": {"item": "cheese", "app": "flipkart"}}
+{"text": "complete purchase", "intent": "CHECKOUT", "slots": {}}
+{"text": "show me juice", "intent": "SEARCH_ITEM", "slots": {"item": "juice"}}
+{"text": "book movie tickets", "intent": "UNKNOWN", "slots": {}}
+{"text": "add coffee to cart", "intent": "ADD_TO_CART", "slots": {"item": "coffee"}}
+{"text": "add tomatoes to cart", "intent": "ADD_TO_CART", "slots": {"item": "tomatoes"}}
+{"text": "play music", "intent": "UNKNOWN", "slots": {}}
+{"text": "look for biscuits", "intent": "SEARCH_ITEM", "slots": {"item": "biscuits"}}
+{"text": "use office address", "intent": "SELECT_ADDRESS", "slots": {"address": "office"}}
+{"text": "change quantity to three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "teach me to bread", "intent": "TEACH", "slots": {"item": "bread"}}
+{"text": "finalize order", "intent": "CHECKOUT", "slots": {}}
+{"text": "proceed to checkout", "intent": "CHECKOUT", "slots": {}}
+{"text": "i want biryani", "intent": "ORDER_ITEM", "slots": {"item": "biryani"}}
+{"text": "show me sugar", "intent": "SEARCH_ITEM", "slots": {"item": "sugar"}}
+{"text": "learn to juice", "intent": "TEACH", "slots": {"item": "juice"}}
+{"text": "watch me bread", "intent": "TEACH", "slots": {"item": "bread"}}
+{"text": "order oil", "intent": "ORDER_ITEM", "slots": {"item": "oil"}}
+{"text": "reserve a table", "intent": "UNKNOWN", "slots": {}}
+{"text": "get half kg milk from swiggy", "intent": "ORDER_ITEM", "slots": {"item": "milk", "quantity": "half kg", "app": "swiggy"}}
+{"text": "change quantity to three", "intent": "CHANGE_QUANTITY", "slots": {"quantity": "three"}}
+{"text": "translate this", "intent": "UNKNOWN", "slots": {}}
+{"text": "buy biscuits", "intent": "ORDER_ITEM", "slots": {"item": "biscuits"}}
+{"text": "book a cab", "intent": "UNKNOWN", "slots": {}}
