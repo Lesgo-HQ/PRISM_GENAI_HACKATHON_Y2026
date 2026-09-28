@@ -114,8 +114,9 @@ class CredentialGuard {
       'transfer funds',
     ];
     if (loginPatterns.any((p) => text.contains(p)) ||
-        (text.contains('total') && text.contains('pay')))
+        (text.contains('total') && text.contains('pay'))) {
       return true;
+    }
 
     return false;
   }

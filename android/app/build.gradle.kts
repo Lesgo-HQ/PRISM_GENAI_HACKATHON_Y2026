@@ -4,6 +4,10 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+dependencies {
+    implementation("com.microsoft.onnxruntime:onnxruntime-android:1.20.0")
+}
+
 android {
     namespace = "com.lesgo.saar"
     compileSdk = 37

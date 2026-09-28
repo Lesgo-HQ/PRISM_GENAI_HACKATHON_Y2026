@@ -46,9 +46,8 @@ class ReplayEngine {
   Stream<ReplayState> get stateStream => _states.stream;
   ReplaySession? get session => _session;
 
-  ReplayEngine(this._bridge, this._clarification, {Duration stepDelay = const Duration(milliseconds: 800)})
-      : _recovery = RecoveryEngine(_bridge),
-        _stepDelay = stepDelay;
+  ReplayEngine(this._bridge, this._clarification, {this._stepDelay = const Duration(milliseconds: 800)})
+      : _recovery = RecoveryEngine(_bridge);
 
   Future<ReplayState> execute(Flow flow, Map<String, dynamic> slots) async {
     if (_session != null && _isActive(_session!.status)) {

@@ -10,7 +10,7 @@ class SaarNlu {
     final parsed = await _model.parse(utterance);
     // Merge/validate slots
     final extractedSlots = _extractor.extract(utterance);
-    final mergedSlots = {...extractedSlots, ...parsed.slots};
+    final mergedSlots = <String, dynamic>{...extractedSlots, ...parsed.slots};
     return ParsedIntent(
       intent: parsed.intent,
       app: parsed.app ?? _extractor.extractApp(utterance),

@@ -74,13 +74,14 @@ class FlowMatcher {
         _store.embeddings.map((e) => MapEntry(e, _cos(emb, e.vector))).toList()
           ..sort((a, b) => b.value.compareTo(a.value));
     final top = sims.take(_topK).toList();
-    if (top.isEmpty)
+    if (top.isEmpty) {
       return MatchResult(
         isUnknown: true,
         needsClarification: true,
         clarificationQuestion: "I don't have a learned workflow for that task. Would you like to teach me?",
         parsedIntent: parsed,
       );
+    }
     final best = top.first;
     final second = top.length > 1 ? top[1].value : 0.0;
     final margin = best.value - second;
@@ -99,12 +100,13 @@ class FlowMatcher {
       final f = await _store.getFlow(e.key.flowId);
       if (f != null) candidates.add(f);
     }
-    if (candidates.isEmpty)
+    if (candidates.isEmpty) {
       return MatchResult(
         isUnknown: true,
         needsClarification: true,
         clarificationQuestion: "I don't have a learned workflow for that task. Would you like to teach me?",
       );
+    }
     final isAmbiguous = margin < _marginThreshold && candidates.length > 1;
     if (isAmbiguous) {
       final q = _ambiguityQuestion(candidates.take(2).toList());

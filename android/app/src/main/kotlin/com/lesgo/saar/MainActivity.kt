@@ -33,7 +33,7 @@ class MainActivity : FlutterActivity() {
             val modelBytes = assets.open("models/saar_nlu.onnx").readBytes()
             nluEngine = LocalNluEngine(modelBytes)
         } catch (e: Exception) {
-            Log.e(TAG, "Failed to load ONNX model: \")
+            Log.e(TAG, "Failed to load ONNX model: ${e.message}", e)
         }
 
         // â”€â”€ MethodChannel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

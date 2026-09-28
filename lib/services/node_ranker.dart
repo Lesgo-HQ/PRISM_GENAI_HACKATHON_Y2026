@@ -40,20 +40,22 @@ class NodeRanker {
   double _score(UiNode node, String targetRole, String actionType) {
     final roleScore = RoleOntology.matchScore(node, targetRole);
     
-    final text = '${node.text ?? ''}'.toLowerCase();
+    final text = (node.text ?? '').toLowerCase();
     final terms = targetRole.toLowerCase().split('_');
     final textScore = terms.isNotEmpty ? terms.where(text.contains).length / terms.length : 0.0;
     
-    final contentDesc = '${node.contentDescription ?? ''}'.toLowerCase();
+    final contentDesc = (node.contentDescription ?? '').toLowerCase();
     final contentDescScore = terms.isNotEmpty ? terms.where(contentDesc.contains).length / terms.length : 0.0;
     
     double classScore = 0.0;
     if (actionType == 'type' || actionType == 'set_quantity') {
-      if (node.isEditable) classScore = 1.0;
-      else if (node.className?.contains('EditText') == true) classScore = 1.0;
+      if (node.isEditable) {
+        classScore = 1.0;
+      } else if (node.className?.contains('EditText') == true) classScore = 1.0;
     } else {
-      if (node.isClickable) classScore = 1.0;
-      else if (node.className?.contains('Button') == true) classScore = 1.0;
+      if (node.isClickable) {
+        classScore = 1.0;
+      } else if (node.className?.contains('Button') == true) classScore = 1.0;
     }
     
     final clickEditScore = (node.isClickable || node.isEditable) ? 1.0 : 0.0;

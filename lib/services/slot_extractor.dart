@@ -114,8 +114,9 @@ class SlotExtractor {
   }
 
   bool _isSensitive(String value) {
-    if (RegExp(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b').hasMatch(value))
+    if (RegExp(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b').hasMatch(value)) {
       return true;
+    }
     if (RegExp(r'\b\d{3}\b').hasMatch(value) && value.length <= 4) return true;
     final lower = value.toLowerCase();
     const sensitive = [

@@ -130,8 +130,9 @@ class FlowStep {
 
   bool validatePrecondition(Set<String> screenRoles) {
     if (precondition == null) return true;
-    if (precondition!.requiredRoles.any((r) => !screenRoles.contains(r)))
+    if (precondition!.requiredRoles.any((r) => !screenRoles.contains(r))) {
       return false;
+    }
     if (precondition!.forbiddenRoles.any(screenRoles.contains)) return false;
     return true;
   }
