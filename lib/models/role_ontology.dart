@@ -72,6 +72,8 @@ class RoleOntology {
   static const String scrollView = 'SCROLL_VIEW';
   static const String listView = 'LIST_VIEW';
   static const String gridView = 'GRID_VIEW';
+  static const String textField = 'TEXT_FIELD';
+  static const String interactiveControl = 'INTERACTIVE_CONTROL';
 
   // Aliases for compatibility
   static const String searchBox = searchField;
@@ -148,6 +150,8 @@ class RoleOntology {
     scrollView,
     listView,
     gridView,
+    textField,
+    interactiveControl,
   ];
 
   static String? inferRole(UiNode node) {
@@ -160,7 +164,16 @@ class RoleOntology {
         bestRole = r;
       }
     }
-    return best > 0.5 ? bestRole : null;
+    if (best > 0.5) return bestRole;
+    if (node.isEditable ||
+        (node.className ?? '').toLowerCase().contains('edittext')) {
+      return textField;
+    }
+    if (node.isClickable ||
+        (node.className ?? '').toLowerCase().contains('button')) {
+      return interactiveControl;
+    }
+    return null;
   }
 
   static double matchScore(UiNode node, String targetRole) {
@@ -481,6 +494,17 @@ class RoleOntology {
         break;
       case gridView:
         if (cls.contains('gridview')) s += 0.6;
+        break;
+      case textField:
+        if (node.isEditable || cls.contains('edittext')) s += 0.8;
+        break;
+      case interactiveControl:
+        if (node.isClickable ||
+            cls.contains('button') ||
+            cls.contains('imageview')) {
+          s += 0.7;
+        }
+        if (text.isNotEmpty || desc.isNotEmpty) s += 0.1;
         break;
       default:
         if (resId.contains(targetRole.toLowerCase().replaceAll('_', ''))) {

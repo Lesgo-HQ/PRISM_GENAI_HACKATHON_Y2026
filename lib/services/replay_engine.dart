@@ -64,6 +64,14 @@ class ReplayEngine {
     _session = session;
     _stopRequested = false;
 
+    if (!await _openTargetApp(flow.appPackage)) {
+      return _finish(
+        session,
+        ReplayStatus.failed,
+        'Could not open the app learned for this workflow.',
+      );
+    }
+
     while (session.currentStep < flow.steps.length) {
       if (_stopRequested)
         return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
@@ -108,6 +116,33 @@ class ReplayEngine {
       ReplayStatus.completed,
       'Flow completed successfully',
     );
+  }
+
+  Future<bool> _openTargetApp(String packageName) async {
+    if (packageName.isEmpty) return true;
+
+    final currentTree = await _bridge.getLastTree();
+    if (_treeBelongsToPackage(currentTree, packageName)) return true;
+
+    _emit(_session!, message: 'Opening the learned app...');
+    if (!await _bridge.openApp(packageName)) return false;
+
+    for (var attempt = 0; attempt < 12; attempt++) {
+      if (_stopRequested) return false;
+      await Future<void>.delayed(const Duration(milliseconds: 400));
+      final tree = await _bridge.getLastTree();
+      if (_treeBelongsToPackage(tree, packageName)) return true;
+    }
+    // Android accepted the launch, but some accessibility services continue
+    // exposing the previous window briefly. Let step grounding handle that
+    // transition instead of reporting a successful launch as a launch error.
+    return true;
+  }
+
+  bool _treeBelongsToPackage(UiNode? tree, String packageName) {
+    if (tree == null) return false;
+    return tree.packageName == packageName ||
+        tree.flatten().any((node) => node.packageName == packageName);
   }
 
   Future<_StepResult> _executeCurrentStep(ReplaySession session) async {

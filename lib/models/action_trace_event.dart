@@ -20,9 +20,14 @@ class ActionTraceEvent {
   });
 
   factory ActionTraceEvent.fromJson(Map<String, dynamic> json) {
+    final timestamp = json['timestampMs'];
+    final action = json['action'];
+    if (timestamp is! num || action is! String || action.isEmpty) {
+      throw const FormatException('Invalid action trace event');
+    }
     return ActionTraceEvent(
-      timestampMs: json['timestampMs'] as int,
-      action: json['action'] as String,
+      timestampMs: timestamp.toInt(),
+      action: action,
       node: json['node'] != null
           ? UiNode.fromJson(json['node'] as Map<String, dynamic>)
           : null,

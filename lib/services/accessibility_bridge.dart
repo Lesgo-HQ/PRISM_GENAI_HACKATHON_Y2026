@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -36,6 +36,13 @@ class AccessibilityBridge {
 
   Future<bool> isServiceEnabled() async {
     final result = await _methodChannel.invokeMethod<bool>('isServiceEnabled');
+    return result ?? false;
+  }
+
+  Future<bool> openApp(String packageName) async {
+    final result = await _methodChannel.invokeMethod<bool>('openApp', {
+      'packageName': packageName,
+    });
     return result ?? false;
   }
 
@@ -102,17 +109,30 @@ class AccessibilityBridge {
     return result ?? false;
   }
 
-  // Start teach session - returns stream of action trace events
-  Stream<List<ActionTraceEvent>> startTeachSession() {
-    _methodChannel.invokeMethod('startTeachSession');
+  // Start the native recorder before subscribing to its event stream.
+  Future<Stream<List<ActionTraceEvent>>> startTeachSession() async {
+    await _methodChannel.invokeMethod<bool>('startTeachSession');
     return _eventChannel.receiveBroadcastStream().map((dynamic event) {
       try {
-        if (event is String) {
-          final List<dynamic> decoded = jsonDecode(event);
-          return decoded
-              .map((e) => ActionTraceEvent.fromJson(e as Map<String, dynamic>))
-              .toList();
-        }
+        final decoded = event is String ? jsonDecode(event) : event;
+        if (decoded is! List) return <ActionTraceEvent>[];
+
+        // A single malformed platform event must not erase the valid events
+        // that were recorded before it.
+        return decoded
+            .whereType<Map>()
+            .map((raw) {
+              try {
+                return ActionTraceEvent.fromJson(
+                  Map<String, dynamic>.from(raw),
+                );
+              } catch (e) {
+                debugPrint('Skipping malformed action trace event: $e');
+                return null;
+              }
+            })
+            .whereType<ActionTraceEvent>()
+            .toList();
       } catch (e) {
         debugPrint('Error parsing action trace event stream: $e');
       }
@@ -129,7 +149,16 @@ class AccessibilityBridge {
       if (jsonStr == null || jsonStr.isEmpty) return <ActionTraceEvent>[];
       final List<dynamic> decoded = jsonDecode(jsonStr);
       return decoded
-          .map((e) => ActionTraceEvent.fromJson(e as Map<String, dynamic>))
+          .whereType<Map>()
+          .map((raw) {
+            try {
+              return ActionTraceEvent.fromJson(Map<String, dynamic>.from(raw));
+            } catch (e) {
+              debugPrint('Skipping malformed final trace event: $e');
+              return null;
+            }
+          })
+          .whereType<ActionTraceEvent>()
           .toList();
     } catch (e) {
       debugPrint('Error stopping teach session: $e');

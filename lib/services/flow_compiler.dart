@@ -3,6 +3,7 @@ import 'package:uuid/uuid.dart';
 import '../models/flow.dart';
 import '../models/action_trace_event.dart';
 import '../models/role_ontology.dart';
+import '../models/ui_node.dart';
 import 'trace_normalizer.dart';
 
 class FlowCompiler {
@@ -14,8 +15,8 @@ class FlowCompiler {
 
     final packageCounts = <String, int>{};
     for (final event in trace) {
-      final pkg = event.packageName ?? event.node?.packageName;
-      if (pkg != null && pkg.isNotEmpty) {
+      final pkg = _applicationPackage(event);
+      if (pkg != null) {
         packageCounts[pkg] = (packageCounts[pkg] ?? 0) + 1;
       }
     }
@@ -33,7 +34,7 @@ class FlowCompiler {
       final node = event.node;
       if (node == null || event.action == 'focus') continue;
 
-      final role = RoleOntology.inferRole(node) ?? 'GENERIC_$stepId';
+      final role = _roleForAction(node, event.action, stepId);
 
       final roleLower = role.toLowerCase();
       final textLower = (node.text ?? '').toLowerCase();
@@ -47,7 +48,7 @@ class FlowCompiler {
       String? valueSlot;
       String? valueLiteral;
       if (event.action == 'type' || event.action == 'set_quantity') {
-        final typed = event.valueTyped;
+        final typed = _typedValue(event);
         if (typed != null && typed.isNotEmpty) {
           if (_isSensitiveValue(typed)) {
             valueLiteral = '<REDACTED>';
@@ -101,6 +102,37 @@ class FlowCompiler {
     if (lower.contains('quantity')) return 'quantity';
     if (lower.contains('address')) return 'address';
     return '${lower}_value';
+  }
+
+  String _roleForAction(UiNode node, String action, int stepId) {
+    final inferred = RoleOntology.inferRole(node);
+    if (inferred != null) return inferred;
+    if (action == 'scroll') return RoleOntology.scrollView;
+    return 'UI_ELEMENT_$stepId';
+  }
+
+  String? _typedValue(ActionTraceEvent event) {
+    final eventValue = event.valueTyped?.trim();
+    if (eventValue != null && eventValue.isNotEmpty) return eventValue;
+    final nodeValue = event.node?.text?.trim();
+    return nodeValue == null || nodeValue.isEmpty ? null : nodeValue;
+  }
+
+  String? _applicationPackage(ActionTraceEvent event) {
+    final eventPackage = event.packageName?.trim();
+    final nodePackage = event.node?.packageName?.trim();
+    final packageName = eventPackage?.isNotEmpty == true
+        ? eventPackage
+        : nodePackage;
+    if (packageName == null || packageName.isEmpty) return null;
+    if (packageName == 'com.lesgo.saar' ||
+        packageName == 'android' ||
+        packageName.startsWith('com.android.') ||
+        packageName == 'com.miui.home' ||
+        packageName == 'com.google.android.apps.nexuslauncher') {
+      return null;
+    }
+    return packageName;
   }
 
   /// Whole-word matching only: a plain `contains` would treat "Shopping Bag"

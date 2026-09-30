@@ -1,5 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saar/models/flow.dart';
+import 'package:saar/models/action_trace_event.dart';
 import 'package:saar/models/execution_report.dart';
 import 'package:saar/models/parsed_intent.dart';
 import 'package:saar/models/replay_session.dart';
@@ -8,6 +9,7 @@ import 'package:saar/models/ui_node.dart';
 import 'package:saar/services/credential_guard.dart';
 import 'package:saar/services/slot_extractor.dart';
 import 'package:saar/services/intent_model.dart';
+import 'package:saar/services/flow_compiler.dart';
 
 UiNode _node({
   String? text,
@@ -70,6 +72,51 @@ void main() {
     expect(restored.flowId, 'f1');
     expect(restored.steps.length, 1);
     expect(restored.steps.first.targetRole, 'ADD_TO_CART');
+  });
+
+  test('FlowCompiler preserves semantic fallback roles and typed values', () {
+    final flow = FlowCompiler().compile('order rice', [
+      ActionTraceEvent(
+        timestampMs: 1,
+        action: 'tap',
+        node: _node(text: 'Rice', clickable: true),
+        packageName: 'com.example.shop',
+      ),
+      ActionTraceEvent(
+        timestampMs: 2,
+        action: 'type',
+        node: _node(
+          className: 'android.widget.EditText',
+          editable: true,
+          text: 'rice',
+        ),
+        valueTyped: '',
+        packageName: 'com.example.shop',
+      ),
+    ]);
+
+    expect(flow.steps.first.targetRole, isNot(startsWith('GENERIC_')));
+    expect(flow.steps[1].valueSlot, isNotNull);
+    expect(flow.steps[1].targetRole, 'TEXT_FIELD');
+  });
+
+  test('FlowCompiler selects the target app over SAAR and system events', () {
+    final flow = FlowCompiler().compile('open shop', [
+      ActionTraceEvent(
+        timestampMs: 1,
+        action: 'tap',
+        node: _node(text: 'Start', clickable: true),
+        packageName: 'com.lesgo.saar',
+      ),
+      ActionTraceEvent(
+        timestampMs: 2,
+        action: 'tap',
+        node: _node(text: 'Shop', clickable: true),
+        packageName: 'com.example.shop',
+      ),
+    ]);
+
+    expect(flow.appPackage, 'com.example.shop');
   });
 
   test('FlowStep precondition validation', () {

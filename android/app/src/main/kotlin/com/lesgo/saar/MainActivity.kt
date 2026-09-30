@@ -1,6 +1,7 @@
 ﻿package com.lesgo.saar
 
 import android.content.Context
+import android.content.ComponentName
 import android.content.Intent
 import android.os.Handler
 import android.os.Looper
@@ -53,6 +54,42 @@ class MainActivity : FlutterActivity() {
 
                         "isServiceEnabled" -> {
                             result.success(isAccessibilityServiceEnabled())
+                        }
+
+                        "openApp" -> {
+                            val requestedPackage = call.argument<String>("packageName")?.trim()
+                            val packageName = resolveLearnedPackage(requestedPackage)
+                            if (packageName.isNullOrBlank()) {
+                                result.success(false)
+                            } else {
+                                // Do not gate this on queryIntentActivities: Android package
+                                // visibility can hide an installed app from that query.
+                                val launchIntent = when (packageName) {
+                                    // Swiggy exposes several launcher aliases; on this
+                                    // device getLaunchIntentForPackage selects a disabled
+                                    // HomeIcon alias instead of the real activity.
+                                    "in.swiggy.android" -> Intent().setComponent(
+                                        ComponentName(
+                                            packageName,
+                                            "$packageName.activities.HomeActivity",
+                                        )
+                                    )
+                                    else -> packageManager.getLaunchIntentForPackage(packageName)
+                                        ?: Intent(Intent.ACTION_MAIN).apply {
+                                            addCategory(Intent.CATEGORY_LAUNCHER)
+                                            setPackage(packageName)
+                                        }
+                                }
+                                launchIntent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                                try {
+                                    startActivity(launchIntent)
+                                    Log.i(TAG, "Opened learned app $packageName")
+                                    result.success(true)
+                                } catch (e: Exception) {
+                                    Log.e(TAG, "Could not open learned app $packageName", e)
+                                    result.success(false)
+                                }
+                            }
                         }
 
                         "performGlobalAction" -> {
@@ -119,6 +156,7 @@ class MainActivity : FlutterActivity() {
                         }
 
                         "startTeachSession" -> {
+                            stopTeachPolling()
                             SaarAccessibilityService.setTeachMode(true)
                             lastTraceSentCount = 0
                             startTeachPolling()
@@ -130,6 +168,7 @@ class MainActivity : FlutterActivity() {
                             SaarAccessibilityService.setTeachMode(false)
                             val trace = SaarAccessibilityService.getActionTrace()
                             SaarAccessibilityService.clearActionTrace()
+                            Log.i(TAG, "Teach session stopped with ${org.json.JSONArray(trace).length()} events")
                             result.success(trace)
                         }
 
@@ -205,6 +244,21 @@ class MainActivity : FlutterActivity() {
             Log.e(TAG, "Error checking accessibility service: ${e.message}")
             false
         }
+    }
+
+    private fun resolveLearnedPackage(requested: String?): String? {
+        if (requested.isNullOrBlank()) return null
+        val value = requested.lowercase()
+        val aliases = mapOf(
+            "swiggy" to "in.swiggy.android",
+            "zepto" to "com.zeptoconsumerapp",
+            "blinkit" to "com.grofers.customerapp",
+            "zomato" to "com.application.zomato",
+            "amazon" to "in.amazon.mShop.android.shopping",
+            "flipkart" to "com.flipkart.android",
+        )
+        return aliases.entries.firstOrNull { value == it.key || value.contains(it.key) }?.value
+            ?: requested
     }
 
     /**

@@ -29,6 +29,26 @@ UiNode _node({
 
 void main() {
   group('TraceNormalizer', () {
+    test('accepts platform timestamps represented as numeric values', () {
+      final event = ActionTraceEvent.fromJson({
+        'timestampMs': 1000.0,
+        'action': 'tap',
+      });
+
+      expect(event.timestampMs, 1000);
+      expect(event.action, 'tap');
+    });
+
+    test('rejects malformed platform events explicitly', () {
+      expect(
+        () => ActionTraceEvent.fromJson({
+          'timestampMs': 'invalid',
+          'action': 'tap',
+        }),
+        throwsFormatException,
+      );
+    });
+
     test('filters system packages', () {
       final normalizer = TraceNormalizer();
       final trace = [

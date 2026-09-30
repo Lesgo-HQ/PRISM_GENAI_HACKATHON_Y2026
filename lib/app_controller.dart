@@ -207,7 +207,15 @@ class AppController extends ChangeNotifier {
         intent = utterance.substring(6);
       } else {
         // Fallback for "teach me" anywhere else
-        intent = utterance.replaceAll(RegExp(r'(teach me how to|teach me to|teach me|teach)\s*', caseSensitive: false), '').trim();
+        intent = utterance
+            .replaceAll(
+              RegExp(
+                r'(teach me how to|teach me to|teach me|teach)\s*',
+                caseSensitive: false,
+              ),
+              '',
+            )
+            .trim();
       }
       if (intent.isEmpty) intent = utterance;
       await _startTeaching(intent, intent);
@@ -242,7 +250,7 @@ class AppController extends ChangeNotifier {
 
     // Start teach session via bridge
     _teachSubscription?.cancel();
-    final stream = _bridge.startTeachSession();
+    final stream = await _bridge.startTeachSession();
     _teachSubscription = stream.listen((events) {
       _actionTrace.addAll(events);
       _statusMessage = 'Recording... ${_actionTrace.length} actions captured';

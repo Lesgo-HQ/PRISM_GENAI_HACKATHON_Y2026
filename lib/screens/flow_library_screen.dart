@@ -26,7 +26,9 @@ class FlowLibraryScreen extends StatelessWidget {
               child: Text(
                 'No flows saved yet.',
                 style: TextStyle(
-                  color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.white70,
+                  color:
+                      Theme.of(context).textTheme.bodyMedium?.color ??
+                      Colors.white70,
                 ),
               ),
             )
@@ -74,14 +76,14 @@ class FlowLibraryScreen extends StatelessWidget {
                       flow.triggerIntent,
                       style: TextStyle(
                         fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                        color:
+                            Theme.of(context).textTheme.bodyLarge?.color ??
+                            Colors.white,
                       ),
                     ),
                     subtitle: Text(
                       '${flow.appPackage} • ${flow.steps.length} steps • ${flow.slots.length} slots',
-                      style: TextStyle(
-                        color: Theme.of(context).primaryColor,
-                      ),
+                      style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
                     children: [
                       ...flow.steps.asMap().entries.map((entry) {
@@ -89,33 +91,54 @@ class FlowLibraryScreen extends StatelessWidget {
                         final step = entry.value;
                         return ListTile(
                           leading: CircleAvatar(
-                            backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
+                            backgroundColor: Theme.of(context).primaryColor
+                                .withValues(alpha: 0.2),
                             child: Text(
                               '${idx + 1}',
-                              style: TextStyle(color: Theme.of(context).primaryColor),
+                              style: TextStyle(
+                                color: Theme.of(context).primaryColor,
+                              ),
                             ),
                           ),
                           title: Text(
                             step.action,
                             style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                              color:
+                                  Theme.of(context)
+                                      .textTheme
+                                      .bodyLarge
+                                      ?.color ??
+                                  Colors.white,
                             ),
                           ),
                           subtitle: Text(
-                            'Target: ${step.targetRole}\nValue: ${step.valueSlot ?? step.valueLiteral ?? 'N/A'}',
+                            'Target: ${step.targetRole} '
+                            '${step.targetNodeText ?? step.targetNodeContentDescription ?? ''}\n'
+                            'Value: ${step.valueSlot ?? step.valueLiteral ?? step.targetNodeText ?? 'N/A'}',
                             style: TextStyle(
-                              color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.white70,
+                              color:
+                                  Theme.of(context)
+                                      .textTheme
+                                      .bodyMedium
+                                      ?.color ??
+                                  Colors.white70,
                             ),
                           ),
                           isThreeLine: true,
                         );
                       }),
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 16.0),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 8.0,
+                          horizontal: 16.0,
+                        ),
                         child: ElevatedButton.icon(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
-                            foregroundColor: Theme.of(context).colorScheme.error,
+                            backgroundColor: Theme.of(context).colorScheme.error
+                                .withValues(alpha: 0.1),
+                            foregroundColor: Theme.of(context)
+                                .colorScheme
+                                .error,
                             elevation: 0,
                           ),
                           icon: const Icon(Icons.delete_outline_rounded),
@@ -126,14 +149,18 @@ class FlowLibraryScreen extends StatelessWidget {
                               builder: (BuildContext context) {
                                 return AlertDialog(
                                   title: const Text("Confirm"),
-                                  content: const Text("Are you sure you wish to delete this flow?"),
+                                  content: const Text(
+                                    "Are you sure you wish to delete this flow?",
+                                  ),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(false),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(false),
                                       child: const Text("CANCEL"),
                                     ),
                                     TextButton(
-                                      onPressed: () => Navigator.of(context).pop(true),
+                                      onPressed: () =>
+                                          Navigator.of(context).pop(true),
                                       child: const Text("DELETE"),
                                     ),
                                   ],
