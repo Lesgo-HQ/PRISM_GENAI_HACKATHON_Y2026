@@ -1,4 +1,4 @@
-package com.lesgo.saar
+﻿package com.lesgo.saar
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
@@ -111,6 +111,10 @@ class SaarAccessibilityService : AccessibilityService() {
             }
             return svc.performNodeAction(nodeHashCode, actionId)
         }
+
+        fun isServiceRunning(): Boolean = instance != null
+
+        fun isTeachModeEnabled(): Boolean = teachModeEnabled
 
         fun setTeachMode(enabled: Boolean) {
             teachModeEnabled = enabled
@@ -270,7 +274,7 @@ class SaarAccessibilityService : AccessibilityService() {
         super.onDestroy()
     }
 
-    // ── Tree capture ──────────────────────────────────────────────────────
+    // â”€â”€ Tree capture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private fun captureTree() {
         try {
@@ -329,7 +333,7 @@ class SaarAccessibilityService : AccessibilityService() {
         return obj
     }
 
-    // ── Teach-mode action recording ───────────────────────────────────────
+    // â”€â”€ Teach-mode action recording â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private fun recordAction(action: String, event: AccessibilityEvent) {
         try {
@@ -395,7 +399,7 @@ class SaarAccessibilityService : AccessibilityService() {
         return obj
     }
 
-    // ── Gesture dispatch ──────────────────────────────────────────────────
+    // â”€â”€ Gesture dispatch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 
     private fun performTap(x: Float, y: Float): Boolean {
         return try {

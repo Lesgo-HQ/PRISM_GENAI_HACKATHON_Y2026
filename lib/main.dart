@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_controller.dart';
@@ -19,9 +19,9 @@ class SaarApp extends StatelessWidget {
         title: 'SAAR',
         debugShowCheckedModeBanner: false,
         theme: ThemeData(
-          colorSchemeSeed: Colors.deepPurple,
+          colorSchemeSeed: const Color(0xFF007BFF),
           useMaterial3: true,
-          brightness: Brightness.dark,
+          brightness: Brightness.light,
         ),
         home: const HomeScreen(),
       ),

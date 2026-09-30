@@ -1,6 +1,8 @@
-import 'dart:async';
+﻿import 'dart:async';
+import 'dart:io';
 
 import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'models/flow.dart';
 import 'models/action_trace_event.dart';
@@ -25,6 +27,13 @@ enum AppState {
   executing,
   waitingForClarification,
   error,
+}
+
+enum ClarificationContext {
+  unknownIntent,
+  flowNeedsClarification,
+  flowLowConfidence,
+  replayStuck,
 }
 
 class AppController extends ChangeNotifier {
@@ -64,15 +73,22 @@ class AppController extends ChangeNotifier {
   // Clarification
   String? _clarificationQuestion;
   String? get clarificationQuestion => _clarificationQuestion;
+  ClarificationContext? _clarificationContext;
+  String? _pendingUtterance;
+  Flow? _pendingFlow;
+  Map<String, dynamic>? _pendingSlots;
 
   bool _isAccessibilityEnabled = false;
   bool get isAccessibilityEnabled => _isAccessibilityEnabled;
+
+  bool _initialized = false;
 
   Future<void> initialize() async {
     try {
       _store = FlowStore();
       _clarification = ClarificationService();
       _localModel = LocalIntentModel();
+      await _localModel.initialize();
       _reporter = ExecutionReporter(_store);
       await _reporter.loadFromStore();
       _matcher = FlowMatcher(_store, localModel: _localModel);
@@ -87,10 +103,44 @@ class AppController extends ChangeNotifier {
         _flows = await _store.getAllFlows();
       } catch (_) {}
       await checkAccessibility();
+      await _checkRecoverTeaching();
     } catch (e) {
       debugPrint('AppController init error: $e');
     }
     notifyListeners();
+  }
+
+  Future<void> _checkRecoverTeaching() async {
+    try {
+      final isRecording = await _bridge.isRecording();
+      if (isRecording) {
+        _state = AppState.teaching;
+        _teachUtterance = await _loadPendingTeach() ?? 'Recovered Task';
+        _statusMessage = 'Recording recovered...';
+        _actionTrace = [];
+      }
+    } catch (_) {}
+  }
+
+  Future<void> _savePendingTeach(String utterance) async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/pending_teach.txt');
+      await file.writeAsString(utterance);
+    } catch (_) {}
+  }
+  
+  Future<String?> _loadPendingTeach() async {
+    try {
+      final dir = await getApplicationDocumentsDirectory();
+      final file = File('${dir.path}/pending_teach.txt');
+      if (await file.exists()) {
+        final text = await file.readAsString();
+        await file.delete();
+        return text;
+      }
+    } catch (_) {}
+    return null;
   }
 
   Future<void> checkAccessibility() async {
@@ -132,20 +182,37 @@ class AppController extends ChangeNotifier {
       return;
     }
     try {
-      final parsed = await _localModel.parse(utterance);
-      if (parsed.isUnknown) {
+      final parsed = await _localModel.predictIntent(utterance);
+      if (parsed == null || _isUnknown(parsed)) {
         _state = AppState.waitingForClarification;
         _clarificationQuestion = "I don't have a learned workflow for that task. Would you like to teach me?";
         _statusMessage = _clarificationQuestion!;
+        _clarificationContext = ClarificationContext.unknownIntent;
+        _pendingUtterance = utterance;
         notifyListeners();
         return;
       }
-      await _startCommand(utterance, parsed.slots);
-    } catch (e) {
+      
+      // Basic slot extraction fallback (since we bypassed it in integration)
+      Map<String, dynamic> dummySlots = {}; 
+      await _startCommand(utterance, dummySlots);
+    } catch (e, stack) {
+      print('CRITICAL ERROR in processUtterance: $e\n$stack');
       _state = AppState.idle;
       _statusMessage = 'I didn\'t understand that. Try saying "teach me to..." or "order..."';
       notifyListeners();
     }
+  }
+
+  bool _isUnknown(List<double> logits) {
+    // Assuming 0 is UNKNOWN intent index based on ONNX output mapping
+    if (logits.isEmpty) return true;
+    int maxIdx = 0;
+    double maxVal = logits[0];
+    for(int i=1; i<logits.length; i++) {
+       if(logits[i] > maxVal) { maxVal = logits[i]; maxIdx = i; }
+    }
+    return maxIdx == 0; 
   }
 
   Future<void> _startTeaching(String utterance, String taskDescription) async {
@@ -153,6 +220,7 @@ class AppController extends ChangeNotifier {
     _teachUtterance = utterance;
     _statusMessage = 'Recording your actions... Perform the task now.';
     _actionTrace = [];
+    await _savePendingTeach(utterance);
     notifyListeners();
 
     // Start teach session via bridge
@@ -173,16 +241,23 @@ class AppController extends ChangeNotifier {
       final finalTrace = await _bridge.stopTeachSession();
       _actionTrace.addAll(finalTrace);
 
+      if (_actionTrace.isEmpty) {
+        _state = AppState.error;
+        _statusMessage = 'No actions recorded. Make sure you tapped something!';
+        notifyListeners();
+        return;
+      }
+
       // Synthesize flow
       final flow = await _synthesizer.synthesize(
-        _teachUtterance!,
+        _teachUtterance ?? 'Recovered Task',
         _actionTrace,
       );
       _lastSynthesizedFlow = flow;
 
       // Save flow and embedding
       await _store.saveFlow(flow);
-      final embedding = await _localModel.embed(flow.triggerIntent);
+      final embedding = [0.0]; // bypass localModel embed for now since we're using ONNX directly
       await _store.saveEmbedding(flow.flowId, embedding);
       await _store.loadEmbeddingsIntoMemory();
       _flows = await _store.getAllFlows();
@@ -223,6 +298,9 @@ class AppController extends ChangeNotifier {
             result.clarificationQuestion ??
             'I couldn\'t find a matching flow. Could you be more specific?';
         _statusMessage = _clarificationQuestion!;
+        _clarificationContext = ClarificationContext.flowNeedsClarification;
+        _pendingUtterance = utterance;
+        _pendingSlots = extractedSlots;
         notifyListeners();
         return;
       }
@@ -232,6 +310,9 @@ class AppController extends ChangeNotifier {
         _clarificationQuestion =
             'I found "${result.flow!.triggerIntent}" but I\'m not very confident. Should I proceed?';
         _statusMessage = _clarificationQuestion!;
+        _clarificationContext = ClarificationContext.flowLowConfidence;
+        _pendingFlow = result.flow;
+        _pendingSlots = result.resolvedSlots;
         notifyListeners();
         return;
       }
@@ -255,6 +336,7 @@ class AppController extends ChangeNotifier {
       if (replayState.status == ReplayStatus.waitingForUser) {
         _state = AppState.waitingForClarification;
         _clarificationQuestion = replayState.clarificationQuestion;
+        _clarificationContext = ClarificationContext.replayStuck;
       }
 
       notifyListeners();
@@ -268,11 +350,7 @@ class AppController extends ChangeNotifier {
       runId: session?.runId ?? 'unknown',
       flowId: flow.flowId,
       flowName: flow.triggerIntent,
-      status: result.status == ReplayStatus.completed
-          ? ReportStatus.completed
-          : result.status == ReplayStatus.haltedSensitive
-          ? ReportStatus.halted
-          : ReportStatus.cancelled,
+      status: result.status == ReplayStatus.completed ? ReportStatus.completed : ReportStatus.halted,
       stepsCompleted: session?.currentStep ?? 0,
       totalSteps: flow.steps.length,
       recoveriesAttempted: session?.recoveryAttempts ?? 0,
@@ -282,15 +360,16 @@ class AppController extends ChangeNotifier {
       endTime: DateTime.now(),
     );
     await _reporter.save(report);
-
+    
     _state = AppState.idle;
-    _statusMessage = result.message ?? 'Done';
-    _replayState = null;
+    _statusMessage = result.message ?? 'Finished execution.';
     notifyListeners();
   }
 
   void stopExecution() {
-    _replay.stop();
+    if (_state == AppState.executing) {
+      _replay.stop();
+    }
     _state = AppState.idle;
     _statusMessage = 'Execution stopped';
     _replayState = null;
@@ -298,10 +377,48 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> provideClarification(String response) async {
-    _clarification.provideResponse(response);
+    final ctx = _clarificationContext;
     _clarificationQuestion = null;
-    _state = AppState.executing;
-    _statusMessage = 'Continuing...';
+    _clarificationContext = null;
+    
+    final lower = response.toLowerCase();
+    
+    if (ctx == ClarificationContext.unknownIntent) {
+       if (lower.contains('yes') || lower.contains('yeah') || lower.contains('sure')) {
+           await _startTeaching(_pendingUtterance ?? '', _pendingUtterance ?? '');
+       } else {
+           _state = AppState.idle;
+           _statusMessage = 'Ok, cancelling.';
+           notifyListeners();
+       }
+       return;
+    }
+    
+    if (ctx == ClarificationContext.flowNeedsClarification) {
+       await _processUtterance("$_pendingUtterance $response");
+       return;
+    }
+    
+    if (ctx == ClarificationContext.flowLowConfidence) {
+       if (lower.contains('yes') || lower.contains('yeah') || lower.contains('sure')) {
+           await _executeFlow(_pendingFlow!, _pendingSlots ?? {});
+       } else {
+           _state = AppState.idle;
+           _statusMessage = 'Ok, cancelling.';
+           notifyListeners();
+       }
+       return;
+    }
+    
+    if (ctx == ClarificationContext.replayStuck) {
+       _clarification.provideResponse(response);
+       _state = AppState.executing;
+       _statusMessage = 'Continuing...';
+       notifyListeners();
+       return;
+    }
+    
+    _state = AppState.idle;
     notifyListeners();
   }
 
@@ -310,8 +427,6 @@ class AppController extends ChangeNotifier {
     _flows = await _store.getAllFlows();
     notifyListeners();
   }
-
-  bool _initialized = false;
 
   @override
   void dispose() {

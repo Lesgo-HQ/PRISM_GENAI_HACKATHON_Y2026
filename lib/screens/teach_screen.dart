@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
@@ -12,10 +12,21 @@ class TeachScreen extends StatelessWidget {
     final isSynthesizing = controller.state == AppState.synthesizing;
 
     return Scaffold(
+      backgroundColor: const Color(0xFFF5F9FF),
       appBar: AppBar(
-        title: const Text('Teach Mode'),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        centerTitle: true,
+        title: const Text(
+          'TEACH MODE',
+          style: TextStyle(
+            color: Color(0xFF007BFF),
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.close_rounded, color: Color(0xFF007BFF)),
           onPressed: () {
             if (!isSynthesizing) {
               controller.stopTeaching();
@@ -25,64 +36,84 @@ class TeachScreen extends StatelessWidget {
       ),
       body: Center(
         child: Padding(
-          padding: const EdgeInsets.all(24.0),
+          padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (isSynthesizing)
-                const CircularProgressIndicator()
-              else ...[
-                const Icon(
-                  Icons.fiber_manual_record,
-                  color: Colors.red,
-                  size: 64,
+              if (isSynthesizing) ...[
+                const CircularProgressIndicator(color: Color(0xFF007BFF)),
+                const SizedBox(height: 24),
+              ] else ...[
+                Container(
+                  padding: const EdgeInsets.all(24),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.redAccent.withOpacity(0.3),
+                        blurRadius: 40,
+                        spreadRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.fiber_manual_record_rounded,
+                    color: Colors.redAccent,
+                    size: 80,
+                  ),
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: 40),
               ],
-              const SizedBox(height: 24),
               Text(
                 controller.statusMessage,
                 textAlign: TextAlign.center,
-                style: Theme.of(context).textTheme.headlineSmall,
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFF1E293B),
+                ),
               ),
-              const SizedBox(height: 32),
-              if (controller.lastSynthesizedFlow != null &&
-                  controller.state == AppState.idle)
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      children: [
-                        Text(
-                          'Synthesized Flow',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'Intent: ${controller.lastSynthesizedFlow!.triggerIntent}',
-                        ),
-                        Text(
-                          'Steps: ${controller.lastSynthesizedFlow!.steps.length}',
-                        ),
-                      ],
+              const SizedBox(height: 16),
+              if (!isSynthesizing)
+                const Text(
+                  'Navigate to the app and perform the task now.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Color(0xFF64748B),
+                  ),
+                ),
+              const Spacer(),
+              if (!isSynthesizing)
+                SizedBox(
+                  width: double.infinity,
+                  height: 60,
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      controller.stopTeaching();
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      foregroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                      elevation: 10,
+                      shadowColor: Colors.redAccent.withOpacity(0.5),
+                    ),
+                    icon: const Icon(Icons.stop_rounded, size: 28),
+                    label: const Text(
+                      'STOP & SAVE',
+                      style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, letterSpacing: 1),
                     ),
                   ),
                 ),
+              const SizedBox(height: 24),
             ],
           ),
         ),
       ),
-      floatingActionButton: isSynthesizing
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () {
-                controller.stopTeaching();
-              },
-              backgroundColor: Colors.red,
-              icon: const Icon(Icons.stop),
-              label: const Text('Stop & Save'),
-            ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
     );
   }
 }

@@ -40,7 +40,7 @@ class LocalIntentModel {
       inputIds = inputIds.sublist(0, 64);
       inputIds[63] = 102;
     }
-    List<int> mask = List.filled(inputIds.length, 1);
+    List<int> mask = List.filled(inputIds.length, 1, growable: true);
     while (inputIds.length < 64) {
       inputIds.add(0); // PAD
       mask.add(0);
@@ -52,7 +52,7 @@ class LocalIntentModel {
         'inputIds': inputIds.map((e) => e.toDouble()).toList(),
         'attentionMask': mask.map((e) => e.toDouble()).toList(),
       });
-      return logits?.cast<double>();
+      return logits?.map((e) => (e as num).toDouble()).toList();
     } catch (e) {
       print("Failed to run ONNX model: $e");
       return null;

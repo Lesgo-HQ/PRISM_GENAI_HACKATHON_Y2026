@@ -1,4 +1,4 @@
-class UiNode {
+﻿class UiNode {
   final String? nodeId;
   final String? className;
   final String? text;
@@ -46,7 +46,7 @@ class UiNode {
       hintText: json['hintText'] as String?,
       resourceId: json['resourceId'] as String?,
       packageName: json['packageName'] as String?,
-      bounds: Map<String, int>.from(json['bounds'] as Map),
+      bounds: json['bounds'] != null ? Map<String, int>.from(json['bounds'] as Map) : {'left': 0, 'top': 0, 'right': 0, 'bottom': 0},
       isClickable: json['isClickable'] as bool? ?? false,
       isEditable: json['isEditable'] as bool? ?? false,
       isScrollable: json['isScrollable'] as bool? ?? false,

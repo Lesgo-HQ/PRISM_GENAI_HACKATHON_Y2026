@@ -1,4 +1,4 @@
-import 'dart:async';
+﻿import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
@@ -29,6 +29,11 @@ class AccessibilityBridge {
   }
 
   // Check if service is enabled
+  Future<bool> isRecording() async {
+    final result = await _methodChannel.invokeMethod<bool>('isRecording');
+    return result ?? false;
+  }
+
   Future<bool> isServiceEnabled() async {
     final result = await _methodChannel.invokeMethod<bool>('isServiceEnabled');
     return result ?? false;

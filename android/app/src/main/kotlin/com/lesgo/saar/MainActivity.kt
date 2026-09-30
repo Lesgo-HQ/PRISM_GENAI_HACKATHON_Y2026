@@ -30,8 +30,11 @@ class MainActivity : FlutterActivity() {
         super.configureFlutterEngine(flutterEngine)
 
         try {
-            val modelBytes = assets.open("models/saar_nlu.onnx").readBytes()
-            nluEngine = LocalNluEngine(modelBytes)
+            val modelFile = java.io.File(filesDir, "saar_nlu.onnx")
+            val dataFile = java.io.File(filesDir, "saar_nlu.onnx.data")
+            assets.open("models/saar_nlu.onnx").use { input -> java.io.FileOutputStream(modelFile).use { output -> input.copyTo(output) } }
+            try { assets.open("models/saar_nlu.onnx.data").use { input -> java.io.FileOutputStream(dataFile).use { output -> input.copyTo(output) } } } catch (e: Exception) {}
+            nluEngine = LocalNluEngine(modelFile.absolutePath)
         } catch (e: Exception) {
             Log.e(TAG, "Failed to load ONNX model: ${e.message}", e)
         }
@@ -105,6 +108,10 @@ class MainActivity : FlutterActivity() {
                             }.start()
                         }
 
+                        "isRecording" -> {
+                            result.success(SaarAccessibilityService.isTeachModeEnabled())
+                        }
+
                         "startTeachSession" -> {
                             SaarAccessibilityService.setTeachMode(true)
                             lastTraceSentCount = 0
@@ -170,6 +177,7 @@ class MainActivity : FlutterActivity() {
      * Check if our AccessibilityService is enabled in system settings.
      */
     private fun isAccessibilityServiceEnabled(): Boolean {
+        if (!SaarAccessibilityService.isServiceRunning()) return false
         val serviceName = "$packageName/${SaarAccessibilityService::class.java.canonicalName}"
         return try {
             val enabledServices = Settings.Secure.getString(

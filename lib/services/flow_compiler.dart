@@ -1,4 +1,4 @@
-import 'package:uuid/uuid.dart';
+﻿import 'package:uuid/uuid.dart';
 
 import '../models/flow.dart';
 import '../models/action_trace_event.dart';
@@ -31,7 +31,7 @@ class FlowCompiler {
 
     for (final event in trace) {
       final node = event.node;
-      if (node == null) continue;
+      if (node == null || event.action == 'focus') continue;
 
       final role = RoleOntology.inferRole(node) ?? 'GENERIC_$stepId';
 

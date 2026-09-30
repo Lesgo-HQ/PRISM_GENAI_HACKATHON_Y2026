@@ -6,12 +6,12 @@ import ai.onnxruntime.OrtSession
 import java.nio.LongBuffer
 import kotlin.math.exp
 
-class LocalNluEngine(modelBytes: ByteArray) {
+class LocalNluEngine(modelPath: String) {
     private val env = OrtEnvironment.getEnvironment()
     private val session: OrtSession
 
     init {
-        session = env.createSession(modelBytes, OrtSession.SessionOptions())
+        session = env.createSession(modelPath, OrtSession.SessionOptions())
     }
 
     fun parse(inputIds: LongArray, attentionMask: LongArray): FloatArray {
