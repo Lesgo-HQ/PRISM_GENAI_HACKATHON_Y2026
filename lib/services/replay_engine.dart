@@ -73,8 +73,9 @@ class ReplayEngine {
     }
 
     while (session.currentStep < flow.steps.length) {
-      if (_stopRequested)
+      if (_stopRequested) {
         return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
+      }
       final result = await _executeCurrentStep(session);
       if (result == _StepResult.completed) {
         session.currentStep++;
@@ -107,8 +108,9 @@ class ReplayEngine {
       _resumeSignal = Completer<void>();
       await _resumeSignal!.future;
       _resumeSignal = null;
-      if (_stopRequested)
+      if (_stopRequested) {
         return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
+      }
       session.resume(); // Remains at same step
     }
     return _finish(
@@ -189,8 +191,9 @@ class ReplayEngine {
       if (target != null && await _performAction(step, target, session.slots)) {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         final afterTree = await _bridge.getLastTree();
-        if (CredentialGuard.isSensitiveScreen(afterTree))
+        if (CredentialGuard.isSensitiveScreen(afterTree)) {
           return _StepResult.halted;
+        }
         if (afterTree != null) {
           final afterRoles = _rolesForTree(afterTree);
           if (!step.validatePostcondition(afterRoles)) {
@@ -316,8 +319,9 @@ class ReplayEngine {
       status == ReplayStatus.waitingForUser;
 
   String _describeScreen(UiNode? tree) {
-    if (tree == null)
+    if (tree == null) {
       return 'the accessibility tree is temporarily unavailable';
+    }
     final interactive = tree
         .flatten()
         .where(
@@ -336,8 +340,9 @@ class ReplayEngine {
           return 'interactive control';
         })
         .toList();
-    if (interactive.isEmpty)
+    if (interactive.isEmpty) {
       return 'a screen with no interactive controls detected';
+    }
     return 'a screen showing: ${interactive.join(', ')}';
   }
 

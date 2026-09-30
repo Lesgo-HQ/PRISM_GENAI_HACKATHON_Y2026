@@ -14,16 +14,6 @@ SAAR is an on-device Android assistant that records a task performed by a user, 
 | Submission presentation | [`SRMIST_Unknowns_Submission_PPT.pdf`](SRMIST_Unknowns_Submission_PPT.pdf) |
 | Demo video | [`Samsung Video.mp4`](Samsung%20Video.mp4) |
 | Architecture and safety documentation | [`docs/`](docs/) |
-| Required GitHub tag | `PRISM_GENAI_HACKATHON_Y2026` |
-
-The demo video is included in the repository and is approximately 15 MB. If the hosting platform or submission form requires external video hosting, upload the same file to YouTube or Google Drive and add the resulting URL beside the video link above.
-
-Create the required tag from the repository root with:
-
-```bash
-git tag -a PRISM_GENAI_HACKATHON_Y2026 -m "Samsung PRISM GenAI Hackathon 2026 submission"
-git push origin PRISM_GENAI_HACKATHON_Y2026
-```
 
 ---
 
@@ -147,7 +137,7 @@ Python dependencies for dataset generation, training, ONNX export, and quantizat
 ## Setup
 
 ```bash
-git clone https://github.com/Lesgo-HQ/SAAR.git
+git clone https://github.com/Lesgo-HQ/PRISM_GENAI_HACKATHON_Y2026.git
 cd SAAR
 ```
 

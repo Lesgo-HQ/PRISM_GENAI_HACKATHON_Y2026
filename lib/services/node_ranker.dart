@@ -42,8 +42,9 @@ class NodeRanker {
     if (ranked.isEmpty) return null;
 
     final bestMatch = ranked[0];
-    if (bestMatch.score < clarifyThreshold)
+    if (bestMatch.score < clarifyThreshold) {
       return null; // Below clarify threshold, don't try
+    }
 
     bool isAmbiguous = false;
     if (ranked.length > 1) {
