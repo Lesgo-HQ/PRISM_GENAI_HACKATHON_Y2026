@@ -1,134 +1,102 @@
 import '../models/ui_node.dart';
 
 class CredentialGuard {
-  /// Check if the current UI tree contains any sensitive fields.
-  /// This is FAIL-CLOSED: if anything goes wrong, returns true (sensitive detected).
+  /// Credential keywords matched as whole words only.
+  ///
+  /// A substring check is unusable here: "pin" occurs inside "shopping" and
+  /// "spinner", so it would flag nearly every ordinary screen and abort the run.
+  static final RegExp _sensitiveWord = RegExp(
+    r'(^|[^a-z0-9])('
+    r'password|passwd|otp|cvv|cvc|mpin|ssn|pin|'
+    r'card[ _-]?number|card[ _-]?num|credit[ _-]?card|debit[ _-]?card|security[ _-]?code'
+    r')($|[^a-z0-9])',
+    caseSensitive: false,
+  );
+
+  /// Prompts that only appear on a credential entry screen.
+  static const List<String> _sensitivePrompts = [
+    'enter otp',
+    'enter pin',
+    'enter cvv',
+    'enter cvc',
+    'enter mpin',
+    'enter password',
+    'verify otp',
+    'verification code',
+    'one time password',
+    'security code',
+    'card number',
+  ];
+
+  /// Whether the given UI tree contains a credential entry field.
+  ///
+  /// Fail-closed: a missing or unreadable tree counts as sensitive. Callers
+  /// that can distinguish "window mid-transition" from "unknown screen" should
+  /// check for a null tree themselves before asking.
   static bool isSensitiveScreen(UiNode? rootNode) {
-    if (rootNode == null) return true; // fail closed
+    if (rootNode == null) return true;
     try {
-      final allNodes = rootNode.flatten();
-      return allNodes.any((node) => _isSensitiveNode(node));
+      return rootNode.flatten().any(_isSensitiveNode);
     } catch (_) {
-      return true; // fail closed
+      return true;
     }
   }
 
   static bool _isSensitiveNode(UiNode node) {
-    // Check inputType flags for password variants
-    final inputType = node.inputType;
-    final maskedVariation = inputType & 0xFF0;
-    const passwordVariations = [0x80, 0x90, 0xE0, 0x10];
-    if (passwordVariations.contains(maskedVariation)) return true;
+    if (_isPasswordInputType(node.inputType)) return true;
 
-    // Check resourceId patterns (case-insensitive)
-    final rid = (node.resourceId ?? '').toLowerCase();
-    const sensitiveIdPatterns = [
-      'password',
-      'passwd',
-      'otp',
-      'verification',
-      'pin',
-      'mpin',
-      'cvv',
-      'cvc',
-      'card_number',
-      'credit_card',
-      'debit_card',
-      'security_code',
-      'card_num',
-      'bank_account',
-      'upi',
-      'ifsc',
-      'payment',
-      'pay_now',
-      'place_order',
-      'confirm_purchase',
-      'biometric',
+    if ((node.className ?? '').toLowerCase().contains('password')) return true;
+
+    final identifiers = [
+      node.resourceId ?? '',
+      node.hintText ?? '',
+      node.contentDescription ?? '',
     ];
-    if (sensitiveIdPatterns.any((p) => rid.contains(p))) return true;
+    if (identifiers.any(_sensitiveWord.hasMatch)) return true;
 
-    // Check className
-    final cn = (node.className ?? '').toLowerCase();
-    if (cn.contains('password')) return true;
-
-    // Check hint text
-    final hint = (node.hintText ?? '').toLowerCase();
-    if (sensitiveIdPatterns.any((p) => hint.contains(p))) return true;
-
-    // Check contentDescription
-    final cd = (node.contentDescription ?? '').toLowerCase();
-    const sensitiveDescPatterns = [
-      'password',
-      'passwd',
-      'otp',
-      'verification code',
-      'pin',
-      'mpin',
-      'cvv',
-      'cvc',
-      'card number',
-      'credit card',
-      'debit card',
-      'bank account',
-      'upi',
-      'ifsc',
-      'payment',
-      'pay now',
-      'place order',
-      'confirm purchase',
-      'biometric confirmation',
-      'confirm payment',
-      'complete purchase',
-      'authorize',
-      'send money',
-      'transfer funds',
-    ];
-    if (sensitiveDescPatterns.any((p) => cd.contains(p))) return true;
-
-    // Check text (for login screens)
     final text = (node.text ?? '').toLowerCase();
-    const loginPatterns = [
-      'enter otp',
-      'enter pin',
-      'enter mpin',
-      'enter cvv',
-      'enter cvc',
-      'enter password',
-      'verify otp',
-      'verification code',
-      'card number',
-      'bank account',
-      'upi',
-      'ifsc',
-      'payment',
-      'pay now',
-      'place order',
-      'confirm purchase',
-      'biometric confirmation',
-      'login',
-      'sign in',
-      'confirm payment',
-      'complete purchase',
-      'authorize',
-      'send money',
-      'transfer funds',
-    ];
-    if (loginPatterns.any((p) => text.contains(p)) ||
-        (text.contains('total') && text.contains('pay'))) {
-      return true;
-    }
+    return _sensitivePrompts.any(text.contains);
+  }
 
+  /// Android InputType class and variation masks.
+  static const int _maskClass = 0x0000000F;
+  static const int _maskVariation = 0x00000FF0;
+  static const int _classText = 0x00000001;
+  static const int _classNumber = 0x00000002;
+  static const int _textVariationPassword = 0x00000080;
+  static const int _textVariationVisiblePassword = 0x00000090;
+  static const int _textVariationWebPassword = 0x000000E0;
+  static const int _numberVariationPassword = 0x00000010;
+
+  /// The variation must be read against the declared class: bare masking would
+  /// flag `TYPE_TEXT_VARIATION_URI` and `TYPE_TEXT_VARIATION_PERSON_NAME`,
+  /// which share bits with the number-password variation.
+  static bool _isPasswordInputType(int inputType) {
+    if (inputType == 0) return false;
+    final variation = inputType & _maskVariation;
+    final inputClass = inputType & _maskClass;
+
+    if (inputClass == _classText || inputClass == 0) {
+      if (variation == _textVariationPassword ||
+          variation == _textVariationVisiblePassword ||
+          variation == _textVariationWebPassword) {
+        return true;
+      }
+    }
+    if (inputClass == _classNumber || inputClass == 0) {
+      if (variation == _numberVariationPassword) return true;
+    }
     return false;
   }
 
-  /// Returns a description of why the screen was flagged as sensitive
+  /// Describes why a screen was flagged, for the execution report.
   static String? getSensitiveReason(UiNode? rootNode) {
     if (rootNode == null) return 'No UI tree available (fail-closed)';
     try {
-      final allNodes = rootNode.flatten();
-      for (final node in allNodes) {
+      for (final node in rootNode.flatten()) {
         if (_isSensitiveNode(node)) {
-          return 'Sensitive field detected: ${node.resourceId ?? node.className ?? node.text ?? 'unknown'}';
+          return 'Sensitive field detected: '
+              '${node.resourceId ?? node.className ?? node.text ?? 'unknown'}';
         }
       }
       return null;

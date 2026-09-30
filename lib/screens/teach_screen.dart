@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
@@ -12,21 +12,21 @@ class TeachScreen extends StatelessWidget {
     final isSynthesizing = controller.state == AppState.synthesizing;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         centerTitle: true,
-        title: const Text(
+        title: Text(
           'TEACH MODE',
           style: TextStyle(
-            color: Color(0xFF007BFF),
+            color: Theme.of(context).primaryColor,
             fontWeight: FontWeight.w800,
             letterSpacing: 1.2,
           ),
         ),
         leading: IconButton(
-          icon: const Icon(Icons.close_rounded, color: Color(0xFF007BFF)),
+          icon: Icon(Icons.close_rounded, color: Theme.of(context).primaryColor),
           onPressed: () {
             if (!isSynthesizing) {
               controller.stopTeaching();
@@ -41,25 +41,25 @@ class TeachScreen extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               if (isSynthesizing) ...[
-                const CircularProgressIndicator(color: Color(0xFF007BFF)),
+                CircularProgressIndicator(color: Theme.of(context).primaryColor),
                 const SizedBox(height: 24),
               ] else ...[
                 Container(
                   padding: const EdgeInsets.all(24),
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: Theme.of(context).cardTheme.color,
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.redAccent.withValues(alpha: 0.3),
+                        color: Theme.of(context).colorScheme.error.withValues(alpha: 0.3),
                         blurRadius: 40,
                         spreadRadius: 10,
                       )
                     ],
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.fiber_manual_record_rounded,
-                    color: Colors.redAccent,
+                    color: Theme.of(context).colorScheme.error,
                     size: 80,
                   ),
                 ),
@@ -68,20 +68,20 @@ class TeachScreen extends StatelessWidget {
               Text(
                 controller.statusMessage,
                 textAlign: TextAlign.center,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: Color(0xFF1E293B),
+                  color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                 ),
               ),
               const SizedBox(height: 16),
               if (!isSynthesizing)
-                const Text(
+                Text(
                   'Navigate to the app and perform the task now.',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 16,
-                    color: Color(0xFF64748B),
+                    color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.white70,
                   ),
                 ),
               const Spacer(),
@@ -94,13 +94,13 @@ class TeachScreen extends StatelessWidget {
                       controller.stopTeaching();
                     },
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
+                      backgroundColor: Theme.of(context).colorScheme.error,
                       foregroundColor: Colors.white,
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 10,
-                      shadowColor: Colors.redAccent.withValues(alpha: 0.5),
+                      shadowColor: Theme.of(context).colorScheme.error.withValues(alpha: 0.5),
                     ),
                     icon: const Icon(Icons.stop_rounded, size: 28),
                     label: const Text(

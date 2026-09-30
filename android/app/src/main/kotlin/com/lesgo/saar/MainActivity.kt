@@ -104,7 +104,8 @@ class MainActivity : FlutterActivity() {
 
                         "performActionOnNode" -> {
                             val nodeId = call.argument<String>("nodeId") ?: ""
-                            val actionId = call.argument<Int>("actionId") ?: 0
+                            val actionId = call.argument<Int>("actionId")
+                                ?: call.argument<Int>("action") ?: 0
                             Thread {
                                 val success = SaarAccessibilityService.performActionOnNode(nodeId, actionId)
                                 Handler(Looper.getMainLooper()).post {

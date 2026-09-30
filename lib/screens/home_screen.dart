@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
@@ -60,15 +60,38 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   }
 }
 
-class _HomeView extends StatelessWidget {
+class _HomeView extends StatefulWidget {
   const _HomeView();
+
+  @override
+  State<_HomeView> createState() => _HomeViewState();
+}
+
+class _HomeViewState extends State<_HomeView> {
+  final _commandController = TextEditingController();
+  bool _showTypedCommand = false;
+
+  @override
+  void dispose() {
+    _commandController.dispose();
+    super.dispose();
+  }
+
+  void _submitTypedCommand(AppController controller) {
+    final text = _commandController.text.trim();
+    if (text.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    _commandController.clear();
+    setState(() => _showTypedCommand = false);
+    controller.submitTypedCommand(text);
+  }
 
   @override
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F9FF),
+      backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -78,10 +101,10 @@ class _HomeView extends StatelessWidget {
           children: [
             Image.asset('assets/images/logo.png', height: 28),
             const SizedBox(width: 12),
-            const Text(
+            Text(
               'SAAR',
               style: TextStyle(
-                color: Color(0xFF007BFF),
+                color: Theme.of(context).primaryColor,
                 fontWeight: FontWeight.w800,
                 letterSpacing: 1.2,
               ),
@@ -90,16 +113,16 @@ class _HomeView extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.analytics_rounded, color: Color(0xFF007BFF)),
+            icon: Icon(Icons.analytics_rounded, color: Theme.of(context).primaryColor),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const ReportScreen()),
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.library_books_rounded,
-              color: Color(0xFF007BFF),
+              color: Theme.of(context).primaryColor,
             ),
             onPressed: () => Navigator.push(
               context,
@@ -107,7 +130,7 @@ class _HomeView extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.settings_rounded, color: Color(0xFF007BFF)),
+            icon: Icon(Icons.settings_rounded, color: Theme.of(context).primaryColor),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -121,18 +144,18 @@ class _HomeView extends StatelessWidget {
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFEBEE),
+                color: Theme.of(context).colorScheme.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: ListTile(
-                leading: const Icon(
+                leading: Icon(
                   Icons.warning_rounded,
-                  color: Colors.redAccent,
+                  color: Theme.of(context).colorScheme.error,
                 ),
-                title: const Text(
+                title: Text(
                   'Accessibility disabled',
                   style: TextStyle(
-                    color: Colors.redAccent,
+                    color: Theme.of(context).colorScheme.error,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -160,12 +183,11 @@ class _HomeView extends StatelessWidget {
                         vertical: 16,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.white,
+                        color: Theme.of(context).cardTheme.color,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF007BFF)
-                                .withValues(alpha: 0.1),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -179,17 +201,17 @@ class _HomeView extends StatelessWidget {
                                 ? Icons.error_outline_rounded
                                 : Icons.auto_awesome_rounded,
                             color: controller.state == AppState.error
-                                ? Colors.redAccent
-                                : const Color(0xFF007BFF),
+                                ? Theme.of(context).colorScheme.error
+                                : Theme.of(context).primaryColor,
                           ),
                           const SizedBox(width: 12),
                           Flexible(
                             child: Text(
                               controller.statusMessage,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w500,
-                                color: Color(0xFF1E293B),
+                                color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                               ),
                             ),
                           ),
@@ -212,19 +234,19 @@ class _HomeView extends StatelessWidget {
                           gradient: LinearGradient(
                             colors: controller.state == AppState.listening
                                 ? [
-                                    const Color(0xFF0056b3),
-                                    const Color(0xFF007BFF),
+                                    Theme.of(context).primaryColorDark,
+                                    Theme.of(context).primaryColor,
                                   ]
                                 : [
-                                    const Color(0xFF007BFF),
-                                    const Color(0xFF3399FF),
+                                    Theme.of(context).primaryColor,
+                                    Theme.of(context).colorScheme.secondary,
                                   ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF007BFF)
+                              color: Theme.of(context).primaryColor
                                   .withValues(alpha: 0.3),
                               blurRadius: controller.state == AppState.listening
                                   ? 40
@@ -250,13 +272,52 @@ class _HomeView extends StatelessWidget {
                       controller.state == AppState.listening
                           ? 'Listening...'
                           : 'Tap and speak',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w600,
-                        color: Color(0xFF64748B),
+                        color: Theme.of(context).textTheme.bodyMedium?.color ?? Colors.white70,
                       ),
                     ),
-                    const SizedBox(height: 60),
+                    const SizedBox(height: 16),
+                    if (_showTypedCommand)
+                      TextField(
+                        controller: _commandController,
+                        autofocus: true,
+                        textInputAction: TextInputAction.send,
+                        style: TextStyle(
+                          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'e.g. teach me to order coffee',
+                          filled: true,
+                          fillColor: Theme.of(context).cardTheme.color,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              Icons.send_rounded,
+                              color: Theme.of(context).primaryColor,
+                            ),
+                            onPressed: () => _submitTypedCommand(controller),
+                          ),
+                        ),
+                        onSubmitted: (_) => _submitTypedCommand(controller),
+                      )
+                    else
+                      TextButton.icon(
+                        onPressed: () =>
+                            setState(() => _showTypedCommand = true),
+                        icon: const Icon(Icons.keyboard_rounded, size: 20),
+                        label: const Text('Type a command instead'),
+                        style: TextButton.styleFrom(
+                          foregroundColor:
+                              Theme.of(context).textTheme.bodyMedium?.color ??
+                              Colors.white70,
+                        ),
+                      ),
+                    const SizedBox(height: 40),
                   ],
                 ),
               ),
@@ -265,17 +326,17 @@ class _HomeView extends StatelessWidget {
           if (controller.flows.isNotEmpty)
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: const BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.only(
+              decoration: BoxDecoration(
+                color: Theme.of(context).cardTheme.color,
+                borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(32),
                   topRight: Radius.circular(32),
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black12,
+                    color: Colors.black.withValues(alpha: 0.2),
                     blurRadius: 10,
-                    offset: Offset(0, -5),
+                    offset: const Offset(0, -5),
                   ),
                 ],
               ),
@@ -284,12 +345,12 @@ class _HomeView extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      const Text(
+                      Text(
                         'Recent Workflows',
                         style: TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
-                          color: Color(0xFF1E293B),
+                          color: Theme.of(context).textTheme.bodyLarge?.color ?? Colors.white,
                         ),
                       ),
                       TextButton(
@@ -299,9 +360,9 @@ class _HomeView extends StatelessWidget {
                             builder: (_) => const FlowLibraryScreen(),
                           ),
                         ),
-                        child: const Text(
+                        child: Text(
                           'View All',
-                          style: TextStyle(color: Color(0xFF007BFF)),
+                          style: TextStyle(color: Theme.of(context).primaryColor),
                         ),
                       ),
                     ],
@@ -313,16 +374,16 @@ class _HomeView extends StatelessWidget {
                         (flow) => Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           decoration: BoxDecoration(
-                            color: const Color(0xFFF8FAFC),
+                            color: Theme.of(context).scaffoldBackgroundColor,
                             borderRadius: BorderRadius.circular(16),
-                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                            border: Border.all(color: Colors.white12),
                           ),
                           child: ListTile(
-                            leading: const CircleAvatar(
-                              backgroundColor: Color(0xFFE0F2FE),
+                            leading: CircleAvatar(
+                              backgroundColor: Theme.of(context).primaryColor.withValues(alpha: 0.2),
                               child: Icon(
                                 Icons.bolt_rounded,
-                                color: Color(0xFF0EA5E9),
+                                color: Theme.of(context).primaryColor,
                               ),
                             ),
                             title: Text(
@@ -331,10 +392,10 @@ class _HomeView extends StatelessWidget {
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
-                            subtitle: Text(' •  steps'),
+                            subtitle: Text('${flow.steps.length} steps'),
                             trailing: const Icon(
                               Icons.chevron_right_rounded,
-                              color: Color(0xFF94A3B8),
+                              color: Colors.white54,
                             ),
                           ),
                         ),

@@ -81,6 +81,10 @@ class ReplayEngine {
         );
       }
 
+      if (_stopRequested) {
+        return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
+      }
+
       session.pause('needs_clarification');
       session.clarificationCount++;
       final step = flow.steps[session.currentStep];
@@ -114,13 +118,16 @@ class ReplayEngine {
     for (var attempt = 0; attempt < 5; attempt++) {
       if (_stopRequested) return _StepResult.waiting;
       final tree = await _bridge.getLastTree();
+      // An unavailable tree means the window is mid-transition, not that the
+      // screen is unsafe: retry instead of ending the run.
+      if (tree == null) {
+        await Future<void>.delayed(_stepDelay);
+        continue;
+      }
       if (CredentialGuard.isSensitiveScreen(tree)) return _StepResult.halted;
       try {
         if (await _bridge.isSensitiveScreen()) return _StepResult.halted;
       } catch (_) {
-        return _StepResult.halted;
-      }
-      if (tree == null) {
         await Future<void>.delayed(_stepDelay);
         continue;
       }
@@ -227,16 +234,18 @@ class ReplayEngine {
   }
 
   void resume() {
-    if (_session?.status == ReplayStatus.waitingForUser &&
-        _resumeSignal != null) {
-      _resumeSignal!.complete();
+    final signal = _resumeSignal;
+    if (signal != null && !signal.isCompleted) {
+      signal.complete();
     }
   }
 
   void stop() {
     _stopRequested = true;
-    if (_resumeSignal != null && !_resumeSignal!.isCompleted)
-      _resumeSignal!.complete();
+    final signal = _resumeSignal;
+    if (signal != null && !signal.isCompleted) {
+      signal.complete();
+    }
   }
 
   ReplayState _finish(

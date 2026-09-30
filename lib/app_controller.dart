@@ -1,4 +1,4 @@
-﻿import 'dart:async';
+import 'dart:async';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -61,6 +61,7 @@ class AppController extends ChangeNotifier {
 
   // Teach mode state
   List<ActionTraceEvent> _actionTrace = [];
+  StreamSubscription<List<ActionTraceEvent>>? _teachSubscription;
   String? _teachUtterance;
   Flow? _lastSynthesizedFlow;
   Flow? get lastSynthesizedFlow => _lastSynthesizedFlow;
@@ -160,14 +161,22 @@ class AppController extends ChangeNotifier {
 
   /// Start listening for voice input (push-to-talk)
   Future<void> startListening() async {
+    if (_state == AppState.listening) return;
+
     _state = AppState.listening;
     _statusMessage = 'Listening...';
     notifyListeners();
 
-    final transcript = await _asr.listenOnce();
+    String? transcript;
+    try {
+      transcript = await _asr.listenOnce();
+    } catch (e) {
+      debugPrint('ASR failure: $e');
+    }
+
     if (transcript == null || transcript.isEmpty) {
       _state = AppState.idle;
-      _statusMessage = 'No speech detected. Try again.';
+      _statusMessage = _asr.lastError ?? 'No speech detected. Try again.';
       notifyListeners();
       return;
     }
@@ -175,18 +184,39 @@ class AppController extends ChangeNotifier {
     await _processUtterance(transcript);
   }
 
+  /// Run a typed command, used as the fallback when voice is unavailable.
+  Future<void> submitTypedCommand(String utterance) async {
+    final trimmed = utterance.trim();
+    if (trimmed.isEmpty) return;
+    await _processUtterance(trimmed);
+  }
+
   Future<void> _processUtterance(String utterance) async {
     _statusMessage = 'Understanding: "$utterance"';
     notifyListeners();
     final lower = utterance.toLowerCase();
     if (lower.startsWith('teach') || lower.contains('teach me')) {
-      await _startTeaching(utterance, utterance);
+      String intent = utterance;
+      if (lower.startsWith('teach me how to ')) {
+        intent = utterance.substring(16);
+      } else if (lower.startsWith('teach me to ')) {
+        intent = utterance.substring(12);
+      } else if (lower.startsWith('teach me ')) {
+        intent = utterance.substring(9);
+      } else if (lower.startsWith('teach ')) {
+        intent = utterance.substring(6);
+      } else {
+        // Fallback for "teach me" anywhere else
+        intent = utterance.replaceAll(RegExp(r'(teach me how to|teach me to|teach me|teach)\s*', caseSensitive: false), '').trim();
+      }
+      if (intent.isEmpty) intent = utterance;
+      await _startTeaching(intent, intent);
       return;
     }
     try {
       await _startCommand(utterance, {});
     } catch (e, stack) {
-      print('CRITICAL ERROR in processUtterance: $e\n$stack');
+      debugPrint('CRITICAL ERROR in processUtterance: $e\n$stack');
       _state = AppState.idle;
       _statusMessage = 'I didn\'t understand that. Try saying "teach me to..." or "order..."';
       notifyListeners();
@@ -194,6 +224,15 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _startTeaching(String utterance, String taskDescription) async {
+    await checkAccessibility();
+    if (!_isAccessibilityEnabled) {
+      _state = AppState.error;
+      _statusMessage =
+          'Enable the SAAR accessibility service before teaching a flow.';
+      notifyListeners();
+      return;
+    }
+
     _state = AppState.teaching;
     _teachUtterance = utterance;
     _statusMessage = 'Recording your actions... Perform the task now.';
@@ -202,8 +241,9 @@ class AppController extends ChangeNotifier {
     notifyListeners();
 
     // Start teach session via bridge
+    _teachSubscription?.cancel();
     final stream = _bridge.startTeachSession();
-    stream.listen((events) {
+    _teachSubscription = stream.listen((events) {
       _actionTrace.addAll(events);
       _statusMessage = 'Recording... ${_actionTrace.length} actions captured';
       notifyListeners();
@@ -215,9 +255,12 @@ class AppController extends ChangeNotifier {
     _statusMessage = 'Analyzing your actions...';
     notifyListeners();
 
+    _teachSubscription?.cancel();
+    _teachSubscription = null;
+
     try {
       final finalTrace = await _bridge.stopTeachSession();
-      _actionTrace.addAll(finalTrace);
+      _actionTrace = finalTrace;
 
       if (_actionTrace.isEmpty) {
         _state = AppState.error;
@@ -235,9 +278,7 @@ class AppController extends ChangeNotifier {
 
       // Save flow and embedding
       await _store.saveFlow(flow);
-      final embedding = [
-        0.0,
-      ]; // bypass localModel embed for now since we're using ONNX directly
+      final embedding = await _localModel.embed(flow.triggerIntent);
       await _store.saveEmbedding(flow.flowId, embedding);
       await _store.loadEmbeddingsIntoMemory();
       _flows = await _store.getAllFlows();
@@ -316,9 +357,21 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _executeFlow(Flow flow, Map<String, dynamic> slotValues) async {
+    if (!_isAccessibilityEnabled) {
+      await checkAccessibility();
+      if (!_isAccessibilityEnabled) {
+        _state = AppState.error;
+        _statusMessage =
+            'Enable the SAAR accessibility service before running a flow.';
+        notifyListeners();
+        return;
+      }
+    }
+
     _state = AppState.executing;
     notifyListeners();
 
+    await _replaySubscription?.cancel();
     _replaySubscription = _replay.stateStream.listen((replayState) {
       _replayState = replayState;
       _statusMessage = replayState.message ?? 'Executing...';
@@ -332,39 +385,66 @@ class AppController extends ChangeNotifier {
       notifyListeners();
     });
 
-    final result = await _replay.execute(flow, slotValues);
-    _replaySubscription?.cancel();
+    ReplayState? result;
+    String? failure;
+    try {
+      result = await _replay.execute(flow, slotValues);
+    } catch (e) {
+      failure = 'Could not run the flow: $e';
+      debugPrint('Replay failure: $e');
+    } finally {
+      await _replaySubscription?.cancel();
+      _replaySubscription = null;
+    }
 
     final session = _replay.session;
     final report = ExecutionReport(
       runId: session?.runId ?? 'unknown',
       flowId: flow.flowId,
       flowName: flow.triggerIntent,
-      status: result.status == ReplayStatus.completed
-          ? ReportStatus.completed
-          : ReportStatus.halted,
+      status: _reportStatusFor(result),
       stepsCompleted: session?.currentStep ?? 0,
       totalSteps: flow.steps.length,
       recoveriesAttempted: session?.recoveryAttempts ?? 0,
       clarificationsRequested: session?.clarificationCount ?? 0,
-      reason: result.message,
+      reason: failure ?? result?.message,
       startTime: session?.startedAt ?? DateTime.now(),
       endTime: DateTime.now(),
     );
-    await _reporter.save(report);
+    try {
+      await _reporter.save(report);
+    } catch (e) {
+      debugPrint('Failed to save execution report: $e');
+    }
 
-    _state = AppState.idle;
-    _statusMessage = result.message ?? 'Finished execution.';
+    _replayState = null;
+    _clarificationQuestion = null;
+    _clarificationContext = null;
+    _state = failure != null ? AppState.error : AppState.idle;
+    _statusMessage = failure ?? result?.message ?? 'Finished execution.';
     notifyListeners();
   }
 
-  void stopExecution() {
-    if (_state == AppState.executing) {
-      _replay.stop();
+  ReportStatus _reportStatusFor(ReplayState? result) {
+    switch (result?.status) {
+      case ReplayStatus.completed:
+        return ReportStatus.completed;
+      case ReplayStatus.cancelled:
+        return ReportStatus.cancelled;
+      default:
+        return ReportStatus.halted;
     }
+  }
+
+  void stopExecution() {
+    // Also required while waiting for clarification: the replay engine is
+    // parked on a resume signal that only stop() can release.
+    if (_initialized) _replay.stop();
     _state = AppState.idle;
     _statusMessage = 'Execution stopped';
     _replayState = null;
+    _clarificationQuestion = null;
+    _clarificationContext = null;
     notifyListeners();
   }
 
@@ -394,10 +474,12 @@ class AppController extends ChangeNotifier {
     }
 
     if (ctx == ClarificationContext.flowLowConfidence) {
-      if (lower.contains('yes') ||
-          lower.contains('yeah') ||
-          lower.contains('sure')) {
-        await _executeFlow(_pendingFlow!, _pendingSlots ?? {});
+      final pending = _pendingFlow;
+      if (pending != null &&
+          (lower.contains('yes') ||
+              lower.contains('yeah') ||
+              lower.contains('sure'))) {
+        await _executeFlow(pending, _pendingSlots ?? {});
       } else {
         _state = AppState.idle;
         _statusMessage = 'Ok, cancelling.';

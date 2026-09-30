@@ -1,4 +1,4 @@
-﻿package com.lesgo.saar
+package com.lesgo.saar
 
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.GestureDescription
@@ -35,26 +35,26 @@ class SaarAccessibilityService : AccessibilityService() {
         private val actionTrace = mutableListOf<JSONObject>()
         private val actionTraceLock = Any()
 
-        // Sensitive field detection patterns
-        private val SENSITIVE_RESOURCE_PATTERNS = listOf(
-            "password", "passwd", "otp", "pin", "cvv",
-            "card_number", "credit_card", "debit_card",
-            "security_code", "card_num", "expiry", "cvc",
-            "mpin", "secret", "ssn"
+        /**
+         * Credential keywords matched as whole words only.
+         *
+         * Substring matching is unusable here: "pin" appears inside "shopping" and
+         * "spinner", "otp" inside resource ids such as "photo_tp", so a `contains`
+         * check flags almost every ordinary screen and halts the run.
+         */
+        private val SENSITIVE_WORD_REGEX = Regex(
+            "(^|[^a-z0-9])(" +
+                "password|passwd|otp|cvv|cvc|mpin|ssn|pin|" +
+                "card[ _-]?number|card[ _-]?num|credit[ _-]?card|debit[ _-]?card|security[ _-]?code" +
+                ")($|[^a-z0-9])",
+            RegexOption.IGNORE_CASE
         )
 
-        private val SENSITIVE_DESCRIPTION_PATTERNS = listOf(
-            "password", "otp", "pin", "cvv", "card number",
-            "security code", "verification code", "credit card",
-            "debit card", "enter otp", "enter pin", "enter cvv",
-            "enter password", "verify otp", "mpin"
-        )
-
-        private val PASSWORD_INPUT_TYPE_VARIATIONS = listOf(
-            InputType.TYPE_TEXT_VARIATION_PASSWORD,           // 0x80
-            InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD,   // 0x90
-            InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD,       // 0xE0
-            InputType.TYPE_NUMBER_VARIATION_PASSWORD          // 0x10
+        /** Explicit prompts that only ever appear on a credential entry screen. */
+        private val SENSITIVE_PROMPTS = listOf(
+            "enter otp", "enter pin", "enter cvv", "enter cvc", "enter mpin",
+            "enter password", "verify otp", "verification code", "one time password",
+            "security code", "card number"
         )
 
         fun getLatestTreeJson(): String? = latestTreeJson
@@ -135,6 +135,9 @@ class SaarAccessibilityService : AccessibilityService() {
                 synchronized(actionTraceLock) {
                     actionTrace.clear()
                 }
+                instance?.showRecordingOverlay()
+            } else {
+                instance?.hideRecordingOverlay()
             }
             Log.i(TAG, "Teach mode ${if (enabled) "ENABLED" else "DISABLED"}")
         }
@@ -154,83 +157,87 @@ class SaarAccessibilityService : AccessibilityService() {
         }
 
         /**
-         * Deterministic credential/sensitive-screen guard.
-         * Scans the entire current UI tree for password/OTP/payment indicators.
-         * FAIL-CLOSED: returns true (sensitive detected) on any error.
+         * Deterministic credential guard. Scans the current UI tree for password,
+         * OTP and card-entry fields.
+         *
+         * An unreadable window is reported as "not sensitive" rather than blocking:
+         * gesture dispatch already fails without an active window, and reporting
+         * sensitive here would permanently halt the run on a transient null root.
          */
         fun isSensitiveScreenDetected(): Boolean {
             return try {
-                val svc = instance ?: return true // fail-closed: no service = block
-                val rootNode = svc.rootInActiveWindow ?: return true // fail-closed
-                val result = checkNodeTreeForSensitive(rootNode)
+                val svc = instance ?: return false
+                val rootNode = svc.rootInActiveWindow ?: return false
+                val result = checkNodeTreeForSensitive(rootNode, 0)
                 rootNode.recycle()
                 result
             } catch (e: Exception) {
-                Log.e(TAG, "Credential guard error (fail-closed): ${e.message}")
-                true // fail-closed
+                Log.w(TAG, "Credential guard scan failed: ${e.message}")
+                false
             }
         }
 
-        private fun checkNodeTreeForSensitive(node: AccessibilityNodeInfo): Boolean {
+        private fun checkNodeTreeForSensitive(node: AccessibilityNodeInfo, depth: Int): Boolean {
+            if (depth > 60) return false
             try {
                 if (isNodeSensitive(node)) return true
                 for (i in 0 until node.childCount) {
                     val child = node.getChild(i) ?: continue
                     try {
-                        if (checkNodeTreeForSensitive(child)) return true
+                        if (checkNodeTreeForSensitive(child, depth + 1)) return true
                     } finally {
                         child.recycle()
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "Error scanning node tree (fail-closed): ${e.message}")
-                return true // fail-closed on scan error
+                Log.w(TAG, "Error scanning node tree: ${e.message}")
+                return false
             }
             return false
         }
 
         private fun isNodeSensitive(node: AccessibilityNodeInfo): Boolean {
-            // 1. Check isPassword flag directly
             if (node.isPassword) return true
+            if (isPasswordInputType(node.inputType)) return true
 
-            // 2. Check inputType for password variations
-            val inputType = node.inputType
-            if (inputType != 0) {
-                val variation = inputType and 0xFF0
-                if (PASSWORD_INPUT_TYPE_VARIATIONS.any { (inputType and it) == it || variation == it }) {
-                    return true
-                }
-                // Also check TYPE_CLASS_NUMBER with password variation
-                if ((inputType and InputType.TYPE_MASK_CLASS) == InputType.TYPE_CLASS_NUMBER &&
-                    (inputType and InputType.TYPE_NUMBER_VARIATION_PASSWORD) == InputType.TYPE_NUMBER_VARIATION_PASSWORD) {
-                    return true
-                }
-            }
-
-            // 3. Check resourceId (viewIdResourceName)
-            val resourceId = node.viewIdResourceName?.lowercase() ?: ""
-            if (SENSITIVE_RESOURCE_PATTERNS.any { resourceId.contains(it) }) return true
-
-            // 4. Check className
             val className = node.className?.toString()?.lowercase() ?: ""
             if (className.contains("password")) return true
 
-            // 5. Check contentDescription
-            val contentDesc = node.contentDescription?.toString()?.lowercase() ?: ""
-            if (SENSITIVE_DESCRIPTION_PATTERNS.any { contentDesc.contains(it) }) return true
+            val resourceId = node.viewIdResourceName ?: ""
+            val hintText = node.hintText?.toString() ?: ""
+            val contentDesc = node.contentDescription?.toString() ?: ""
+            if (SENSITIVE_WORD_REGEX.containsMatchIn(resourceId) ||
+                SENSITIVE_WORD_REGEX.containsMatchIn(hintText) ||
+                SENSITIVE_WORD_REGEX.containsMatchIn(contentDesc)
+            ) {
+                return true
+            }
 
-            // 6. Check text for login/OTP prompts
             val text = node.text?.toString()?.lowercase() ?: ""
-            val loginTextPatterns = listOf(
-                "enter otp", "enter pin", "enter cvv", "enter password",
-                "verify otp", "verification code", "enter mpin"
-            )
-            if (loginTextPatterns.any { text.contains(it) }) return true
+            return SENSITIVE_PROMPTS.any { text.contains(it) }
+        }
 
-            // 7. Check hintText
-            val hintText = node.hintText?.toString()?.lowercase() ?: ""
-            if (SENSITIVE_RESOURCE_PATTERNS.any { hintText.contains(it) }) return true
+        /**
+         * The variation must be read against the declared class: bare masking
+         * would flag TYPE_TEXT_VARIATION_URI and TYPE_TEXT_VARIATION_PERSON_NAME,
+         * which share bits with the number-password variation.
+         */
+        private fun isPasswordInputType(inputType: Int): Boolean {
+            if (inputType == 0) return false
+            val variation = inputType and InputType.TYPE_MASK_VARIATION
+            val inputClass = inputType and InputType.TYPE_MASK_CLASS
 
+            if (inputClass == InputType.TYPE_CLASS_TEXT || inputClass == 0) {
+                if (variation == InputType.TYPE_TEXT_VARIATION_PASSWORD ||
+                    variation == InputType.TYPE_TEXT_VARIATION_VISIBLE_PASSWORD ||
+                    variation == InputType.TYPE_TEXT_VARIATION_WEB_PASSWORD
+                ) {
+                    return true
+                }
+            }
+            if (inputClass == InputType.TYPE_CLASS_NUMBER || inputClass == 0) {
+                if (variation == InputType.TYPE_NUMBER_VARIATION_PASSWORD) return true
+            }
             return false
         }
     }
@@ -282,9 +289,76 @@ class SaarAccessibilityService : AccessibilityService() {
     }
 
     override fun onDestroy() {
+        hideRecordingOverlay()
         instance = null
         Log.i(TAG, "SaarAccessibilityService destroyed")
         super.onDestroy()
+    }
+
+    // ── Recording Overlay ──────────────────────────────────────────
+
+    private var overlayView: android.view.View? = null
+    private var windowManager: android.view.WindowManager? = null
+
+    fun showRecordingOverlay() {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            try {
+                if (overlayView != null) return@post
+                windowManager = getSystemService(android.content.Context.WINDOW_SERVICE) as android.view.WindowManager
+                
+                val layoutParams = android.view.WindowManager.LayoutParams(
+                    android.view.WindowManager.LayoutParams.WRAP_CONTENT,
+                    android.view.WindowManager.LayoutParams.WRAP_CONTENT,
+                    android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                    android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
+                            android.view.WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE or
+                            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                            android.view.WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                    android.graphics.PixelFormat.TRANSLUCENT
+                )
+                layoutParams.gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+                layoutParams.y = 100 // adjust below notch
+                
+                val container = android.widget.LinearLayout(this)
+                container.orientation = android.widget.LinearLayout.HORIZONTAL
+                container.gravity = android.view.Gravity.CENTER_VERTICAL
+                container.setPadding(60, 30, 60, 30)
+                
+                val bg = android.graphics.drawable.GradientDrawable()
+                bg.cornerRadius = 100f
+                bg.setColor(android.graphics.Color.parseColor("#FF3B30")) // Professional red
+                bg.setStroke(4, android.graphics.Color.parseColor("#4CFF3B30"))
+                container.background = bg
+                container.elevation = 24f
+                
+                val text = android.widget.TextView(this)
+                text.text = "SAAR is Recording Actions"
+                text.setTextColor(android.graphics.Color.WHITE)
+                text.textSize = 16f
+                text.setTypeface(null, android.graphics.Typeface.BOLD)
+                text.setShadowLayer(4f, 0f, 2f, android.graphics.Color.parseColor("#80000000"))
+                
+                container.addView(text)
+                
+                overlayView = container
+                windowManager?.addView(overlayView, layoutParams)
+            } catch (e: Exception) {
+                Log.e(TAG, "Error showing overlay: ${e.message}")
+            }
+        }
+    }
+
+    fun hideRecordingOverlay() {
+        android.os.Handler(android.os.Looper.getMainLooper()).post {
+            try {
+                if (overlayView != null) {
+                    windowManager?.removeView(overlayView)
+                    overlayView = null
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "Error hiding overlay: ${e.message}")
+            }
+        }
     }
 
     // â”€â”€ Tree capture â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -307,6 +381,7 @@ class SaarAccessibilityService : AccessibilityService() {
             obj.put("className", node.className?.toString() ?: "")
             obj.put("text", node.text?.toString() ?: "")
             obj.put("contentDescription", node.contentDescription?.toString() ?: "")
+            obj.put("hintText", node.hintText?.toString() ?: "")
             obj.put("resourceId", node.viewIdResourceName ?: "")
             obj.put("packageName", node.packageName?.toString() ?: "")
 
@@ -389,6 +464,7 @@ class SaarAccessibilityService : AccessibilityService() {
             obj.put("className", node.className?.toString() ?: "")
             obj.put("text", node.text?.toString() ?: "")
             obj.put("contentDescription", node.contentDescription?.toString() ?: "")
+            obj.put("hintText", node.hintText?.toString() ?: "")
             obj.put("resourceId", node.viewIdResourceName ?: "")
             obj.put("packageName", node.packageName?.toString() ?: "")
 

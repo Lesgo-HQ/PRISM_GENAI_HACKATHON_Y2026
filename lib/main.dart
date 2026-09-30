@@ -1,8 +1,9 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import 'app_controller.dart';
 import 'screens/home_screen.dart';
+import 'theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,11 +19,7 @@ class SaarApp extends StatelessWidget {
       child: MaterialApp(
         title: 'SAAR',
         debugShowCheckedModeBanner: false,
-        theme: ThemeData(
-          colorSchemeSeed: const Color(0xFF007BFF),
-          useMaterial3: true,
-          brightness: Brightness.light,
-        ),
+        theme: AppTheme.darkTheme,
         home: const HomeScreen(),
       ),
     );

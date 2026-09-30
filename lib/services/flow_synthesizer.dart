@@ -5,6 +5,13 @@ import 'flow_compiler.dart';
 class FlowSynthesizer {
   final FlowCompiler _compiler = FlowCompiler();
 
+  static final RegExp _sensitiveRole = RegExp(
+    r'(^|[^a-z0-9])('
+    r'password|otp|pin|cvv|cvc|payment|pay|place[ _-]?order'
+    r')($|[^a-z0-9])',
+    caseSensitive: false,
+  );
+
   FlowSynthesizer();
 
   Future<Flow> synthesize(
@@ -31,11 +38,7 @@ class FlowSynthesizer {
         throw Exception('Invalid action ${s.action}');
       }
       if (s.targetRole.isEmpty) throw Exception('Missing target_role');
-      if (RegExp(
-            r'password|otp|pin|cvv|payment|pay\b|place_order',
-            caseSensitive: false,
-          ).hasMatch(s.targetRole) &&
-          s.action != 'stop_before') {
+      if (_sensitiveRole.hasMatch(s.targetRole) && s.action != 'stop_before') {
         throw Exception('Credential/payment role not allowed');
       }
     }

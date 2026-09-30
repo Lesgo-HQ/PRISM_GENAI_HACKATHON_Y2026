@@ -70,14 +70,6 @@ class FlowMatcher {
     if (local != null) {
       try {
         parsed = await local.parse(utterance);
-        if (parsed.isUnknown) {
-          return MatchResult(
-            isUnknown: true,
-            needsClarification: true,
-            clarificationQuestion: "I don't have a learned workflow for that task. Would you like to teach me?",
-            parsedIntent: parsed,
-          );
-        }
       } catch (_) {}
     }
     if (_store.embeddings.isEmpty || local == null) {

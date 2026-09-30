@@ -103,13 +103,21 @@ class FlowCompiler {
     return '${lower}_value';
   }
 
-  bool _isSensitiveRole(String s) => RegExp(
-    r'password|otp|pin|cvv|cvc|payment|pay\b|place_order|login|biometric',
+  /// Whole-word matching only: a plain `contains` would treat "Shopping Bag"
+  /// as sensitive because it contains "pin", turning ordinary taps into
+  /// `stop_before` steps that never replay.
+  static final RegExp _sensitiveWord = RegExp(
+    r'(^|[^a-z0-9])('
+    r'password|otp|pin|cvv|cvc|mpin|payment|pay|place[ _-]?order|login|biometric'
+    r')($|[^a-z0-9])',
     caseSensitive: false,
-  ).hasMatch(s);
+  );
 
+  bool _isSensitiveRole(String s) => _sensitiveWord.hasMatch(s);
+
+  /// Only redacts values that look like a card number. Short numeric values
+  /// are ordinary input (quantities, sizes, house numbers) and redacting them
+  /// would strip the slot the flow needs.
   bool _isSensitiveValue(String s) =>
-      RegExp(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b|\b\d{3}\b')
-          .hasMatch(s) ||
-      s.length <= 2;
+      RegExp(r'\b\d{4}[- ]?\d{4}[- ]?\d{4}[- ]?\d{4}\b').hasMatch(s);
 }
