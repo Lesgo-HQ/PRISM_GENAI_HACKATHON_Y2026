@@ -59,6 +59,11 @@ class SaarAccessibilityService : AccessibilityService() {
 
         fun getLatestTreeJson(): String? = latestTreeJson
 
+        fun refreshTreeJson(): String? {
+            instance?.captureTree()
+            return latestTreeJson
+        }
+
         fun dispatchTap(x: Float, y: Float): Boolean {
             val svc = instance ?: run {
                 Log.e(TAG, "dispatchTap: Service not running")
@@ -113,6 +118,14 @@ class SaarAccessibilityService : AccessibilityService() {
         }
 
         fun isServiceRunning(): Boolean = instance != null
+
+        fun performGlobalAction(action: Int): Boolean {
+            val svc = instance ?: run {
+                Log.e(TAG, "performGlobalAction: Service not running")
+                return false
+            }
+            return svc.performGlobalAction(action)
+        }
 
         fun isTeachModeEnabled(): Boolean = teachModeEnabled
 
@@ -354,6 +367,10 @@ class SaarAccessibilityService : AccessibilityService() {
                 put("node", nodeJson)
                 put("valueTyped", if (action == "type") event.text?.joinToString("") ?: "" else "")
                 put("packageName", event.packageName?.toString() ?: "")
+                if (action == "scroll") {
+                    put("scrollDeltaX", event.scrollDeltaX)
+                    put("scrollDeltaY", event.scrollDeltaY)
+                }
             }
 
             synchronized(actionTraceLock) {

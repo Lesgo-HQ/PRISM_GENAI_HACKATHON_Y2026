@@ -74,6 +74,8 @@ class AppController extends ChangeNotifier {
   String? _clarificationQuestion;
   String? get clarificationQuestion => _clarificationQuestion;
   ClarificationContext? _clarificationContext;
+  bool get isTeachConfirmation =>
+      _clarificationContext == ClarificationContext.unknownIntent;
   String? _pendingUtterance;
   Flow? _pendingFlow;
   Map<String, dynamic>? _pendingSlots;
@@ -129,7 +131,7 @@ class AppController extends ChangeNotifier {
       await file.writeAsString(utterance);
     } catch (_) {}
   }
-  
+
   Future<String?> _loadPendingTeach() async {
     try {
       final dir = await getApplicationDocumentsDirectory();
@@ -182,37 +184,13 @@ class AppController extends ChangeNotifier {
       return;
     }
     try {
-      final parsed = await _localModel.predictIntent(utterance);
-      if (parsed == null || _isUnknown(parsed)) {
-        _state = AppState.waitingForClarification;
-        _clarificationQuestion = "I don't have a learned workflow for that task. Would you like to teach me?";
-        _statusMessage = _clarificationQuestion!;
-        _clarificationContext = ClarificationContext.unknownIntent;
-        _pendingUtterance = utterance;
-        notifyListeners();
-        return;
-      }
-      
-      // Basic slot extraction fallback (since we bypassed it in integration)
-      Map<String, dynamic> dummySlots = {}; 
-      await _startCommand(utterance, dummySlots);
+      await _startCommand(utterance, {});
     } catch (e, stack) {
       print('CRITICAL ERROR in processUtterance: $e\n$stack');
       _state = AppState.idle;
       _statusMessage = 'I didn\'t understand that. Try saying "teach me to..." or "order..."';
       notifyListeners();
     }
-  }
-
-  bool _isUnknown(List<double> logits) {
-    // Assuming 0 is UNKNOWN intent index based on ONNX output mapping
-    if (logits.isEmpty) return true;
-    int maxIdx = 0;
-    double maxVal = logits[0];
-    for(int i=1; i<logits.length; i++) {
-       if(logits[i] > maxVal) { maxVal = logits[i]; maxIdx = i; }
-    }
-    return maxIdx == 0; 
   }
 
   Future<void> _startTeaching(String utterance, String taskDescription) async {
@@ -257,7 +235,9 @@ class AppController extends ChangeNotifier {
 
       // Save flow and embedding
       await _store.saveFlow(flow);
-      final embedding = [0.0]; // bypass localModel embed for now since we're using ONNX directly
+      final embedding = [
+        0.0,
+      ]; // bypass localModel embed for now since we're using ONNX directly
       await _store.saveEmbedding(flow.flowId, embedding);
       await _store.loadEmbeddingsIntoMemory();
       _flows = await _store.getAllFlows();
@@ -291,6 +271,16 @@ class AppController extends ChangeNotifier {
         utterance,
         extractedSlots: extractedSlots,
       );
+
+      if (result.isUnknown) {
+        _state = AppState.waitingForClarification;
+        _clarificationQuestion = "I don't have a learned workflow for that task. Would you like to teach me?";
+        _statusMessage = _clarificationQuestion!;
+        _clarificationContext = ClarificationContext.unknownIntent;
+        _pendingUtterance = utterance;
+        notifyListeners();
+        return;
+      }
 
       if (result.needsClarification || result.flow == null) {
         _state = AppState.waitingForClarification;
@@ -350,7 +340,9 @@ class AppController extends ChangeNotifier {
       runId: session?.runId ?? 'unknown',
       flowId: flow.flowId,
       flowName: flow.triggerIntent,
-      status: result.status == ReplayStatus.completed ? ReportStatus.completed : ReportStatus.halted,
+      status: result.status == ReplayStatus.completed
+          ? ReportStatus.completed
+          : ReportStatus.halted,
       stepsCompleted: session?.currentStep ?? 0,
       totalSteps: flow.steps.length,
       recoveriesAttempted: session?.recoveryAttempts ?? 0,
@@ -360,7 +352,7 @@ class AppController extends ChangeNotifier {
       endTime: DateTime.now(),
     );
     await _reporter.save(report);
-    
+
     _state = AppState.idle;
     _statusMessage = result.message ?? 'Finished execution.';
     notifyListeners();
@@ -380,44 +372,48 @@ class AppController extends ChangeNotifier {
     final ctx = _clarificationContext;
     _clarificationQuestion = null;
     _clarificationContext = null;
-    
+
     final lower = response.toLowerCase();
-    
+
     if (ctx == ClarificationContext.unknownIntent) {
-       if (lower.contains('yes') || lower.contains('yeah') || lower.contains('sure')) {
-           await _startTeaching(_pendingUtterance ?? '', _pendingUtterance ?? '');
-       } else {
-           _state = AppState.idle;
-           _statusMessage = 'Ok, cancelling.';
-           notifyListeners();
-       }
-       return;
+      if (lower.contains('yes') ||
+          lower.contains('yeah') ||
+          lower.contains('sure')) {
+        await _startTeaching(_pendingUtterance ?? '', _pendingUtterance ?? '');
+      } else {
+        _state = AppState.idle;
+        _statusMessage = 'Ok, cancelling.';
+        notifyListeners();
+      }
+      return;
     }
-    
+
     if (ctx == ClarificationContext.flowNeedsClarification) {
-       await _processUtterance("$_pendingUtterance $response");
-       return;
+      await _processUtterance("$_pendingUtterance $response");
+      return;
     }
-    
+
     if (ctx == ClarificationContext.flowLowConfidence) {
-       if (lower.contains('yes') || lower.contains('yeah') || lower.contains('sure')) {
-           await _executeFlow(_pendingFlow!, _pendingSlots ?? {});
-       } else {
-           _state = AppState.idle;
-           _statusMessage = 'Ok, cancelling.';
-           notifyListeners();
-       }
-       return;
+      if (lower.contains('yes') ||
+          lower.contains('yeah') ||
+          lower.contains('sure')) {
+        await _executeFlow(_pendingFlow!, _pendingSlots ?? {});
+      } else {
+        _state = AppState.idle;
+        _statusMessage = 'Ok, cancelling.';
+        notifyListeners();
+      }
+      return;
     }
-    
+
     if (ctx == ClarificationContext.replayStuck) {
-       _clarification.provideResponse(response);
-       _state = AppState.executing;
-       _statusMessage = 'Continuing...';
-       notifyListeners();
-       return;
+      _replay.resume();
+      _state = AppState.executing;
+      _statusMessage = 'Continuing...';
+      notifyListeners();
+      return;
     }
-    
+
     _state = AppState.idle;
     notifyListeners();
   }

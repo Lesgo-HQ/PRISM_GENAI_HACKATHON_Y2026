@@ -8,8 +8,32 @@ import 'settings_screen.dart';
 import 'flow_library_screen.dart';
 import 'report_screen.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed && mounted) {
+      context.read<AppController>().checkAccessibility();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -73,7 +97,10 @@ class _HomeView extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(Icons.library_books_rounded, color: Color(0xFF007BFF)),
+            icon: const Icon(
+              Icons.library_books_rounded,
+              color: Color(0xFF007BFF),
+            ),
             onPressed: () => Navigator.push(
               context,
               MaterialPageRoute(builder: (_) => const FlowLibraryScreen()),
@@ -98,10 +125,16 @@ class _HomeView extends StatelessWidget {
                 borderRadius: BorderRadius.circular(16),
               ),
               child: ListTile(
-                leading: const Icon(Icons.warning_rounded, color: Colors.redAccent),
+                leading: const Icon(
+                  Icons.warning_rounded,
+                  color: Colors.redAccent,
+                ),
                 title: const Text(
                   'Accessibility disabled',
-                  style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.redAccent,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 trailing: TextButton(
                   onPressed: controller.openAccessibilitySettings,
@@ -113,19 +146,26 @@ class _HomeView extends StatelessWidget {
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
               child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24.0, vertical: 32.0),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24.0,
+                  vertical: 32.0,
+                ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const SizedBox(height: 20),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 16,
+                      ),
                       decoration: BoxDecoration(
                         color: Colors.white,
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF007BFF).withOpacity(0.1),
+                            color: const Color(0xFF007BFF)
+                                .withValues(alpha: 0.1),
                             blurRadius: 20,
                             offset: const Offset(0, 10),
                           ),
@@ -161,28 +201,46 @@ class _HomeView extends StatelessWidget {
                       onTapDown: (_) => controller.startListening(),
                       child: AnimatedContainer(
                         duration: const Duration(milliseconds: 200),
-                        width: controller.state == AppState.listening ? 160 : 140,
-                        height: controller.state == AppState.listening ? 160 : 140,
+                        width: controller.state == AppState.listening
+                            ? 160
+                            : 140,
+                        height: controller.state == AppState.listening
+                            ? 160
+                            : 140,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: LinearGradient(
                             colors: controller.state == AppState.listening
-                                ? [const Color(0xFF0056b3), const Color(0xFF007BFF)]
-                                : [const Color(0xFF007BFF), const Color(0xFF3399FF)],
+                                ? [
+                                    const Color(0xFF0056b3),
+                                    const Color(0xFF007BFF),
+                                  ]
+                                : [
+                                    const Color(0xFF007BFF),
+                                    const Color(0xFF3399FF),
+                                  ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF007BFF).withOpacity(0.3),
-                              blurRadius: controller.state == AppState.listening ? 40 : 20,
-                              spreadRadius: controller.state == AppState.listening ? 10 : 5,
+                              color: const Color(0xFF007BFF)
+                                  .withValues(alpha: 0.3),
+                              blurRadius: controller.state == AppState.listening
+                                  ? 40
+                                  : 20,
+                              spreadRadius:
+                                  controller.state == AppState.listening
+                                  ? 10
+                                  : 5,
                             ),
                           ],
                         ),
                         child: Icon(
                           Icons.mic_rounded,
-                          size: controller.state == AppState.listening ? 72 : 56,
+                          size: controller.state == AppState.listening
+                              ? 72
+                              : 56,
                           color: Colors.white,
                         ),
                       ),
@@ -218,7 +276,7 @@ class _HomeView extends StatelessWidget {
                     color: Colors.black12,
                     blurRadius: 10,
                     offset: Offset(0, -5),
-                  )
+                  ),
                 ],
               ),
               child: Column(
@@ -237,33 +295,50 @@ class _HomeView extends StatelessWidget {
                       TextButton(
                         onPressed: () => Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const FlowLibraryScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const FlowLibraryScreen(),
+                          ),
                         ),
-                        child: const Text('View All', style: TextStyle(color: Color(0xFF007BFF))),
+                        child: const Text(
+                          'View All',
+                          style: TextStyle(color: Color(0xFF007BFF)),
+                        ),
                       ),
                     ],
                   ),
                   const SizedBox(height: 12),
-                  ...controller.flows.take(3).map((flow) => Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF8FAFC),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: const Color(0xFFE2E8F0)),
-                    ),
-                    child: ListTile(
-                      leading: const CircleAvatar(
-                        backgroundColor: Color(0xFFE0F2FE),
-                        child: Icon(Icons.bolt_rounded, color: Color(0xFF0EA5E9)),
+                  ...controller.flows
+                      .take(3)
+                      .map(
+                        (flow) => Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFF8FAFC),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: const Color(0xFFE2E8F0)),
+                          ),
+                          child: ListTile(
+                            leading: const CircleAvatar(
+                              backgroundColor: Color(0xFFE0F2FE),
+                              child: Icon(
+                                Icons.bolt_rounded,
+                                color: Color(0xFF0EA5E9),
+                              ),
+                            ),
+                            title: Text(
+                              flow.triggerIntent,
+                              style: const TextStyle(
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            subtitle: Text(' •  steps'),
+                            trailing: const Icon(
+                              Icons.chevron_right_rounded,
+                              color: Color(0xFF94A3B8),
+                            ),
+                          ),
+                        ),
                       ),
-                      title: Text(
-                        flow.triggerIntent,
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                      subtitle: Text(' •  steps'),
-                      trailing: const Icon(Icons.chevron_right_rounded, color: Color(0xFF94A3B8)),
-                    ),
-                  )),
                 ],
               ),
             ),

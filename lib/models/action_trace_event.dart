@@ -6,6 +6,8 @@ class ActionTraceEvent {
   final UiNode? node;
   final String? valueTyped;
   final String? packageName;
+  final int? scrollDeltaX;
+  final int? scrollDeltaY;
 
   ActionTraceEvent({
     required this.timestampMs,
@@ -13,6 +15,8 @@ class ActionTraceEvent {
     this.node,
     this.valueTyped,
     this.packageName,
+    this.scrollDeltaX,
+    this.scrollDeltaY,
   });
 
   factory ActionTraceEvent.fromJson(Map<String, dynamic> json) {
@@ -24,6 +28,8 @@ class ActionTraceEvent {
           : null,
       valueTyped: json['valueTyped'] as String?,
       packageName: json['packageName'] as String?,
+      scrollDeltaX: json['scrollDeltaX'] as int?,
+      scrollDeltaY: json['scrollDeltaY'] as int?,
     );
   }
 
@@ -34,6 +40,8 @@ class ActionTraceEvent {
       if (node != null) 'node': node!.toJson(),
       if (valueTyped != null) 'valueTyped': valueTyped,
       if (packageName != null) 'packageName': packageName,
+      if (scrollDeltaX != null) 'scrollDeltaX': scrollDeltaX,
+      if (scrollDeltaY != null) 'scrollDeltaY': scrollDeltaY,
     };
   }
 }

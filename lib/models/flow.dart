@@ -75,6 +75,11 @@ class FlowStep {
   final int id;
   final String action;
   final String targetRole;
+  final String? targetNodeText;
+  final String? targetNodeContentDescription;
+  final String? targetNodeResourceId;
+  final int? scrollDeltaX;
+  final int? scrollDeltaY;
   final String? valueSlot;
   final String? valueLiteral;
   final StepPrecondition? precondition;
@@ -85,6 +90,11 @@ class FlowStep {
     required this.id,
     required this.action,
     required this.targetRole,
+    this.targetNodeText,
+    this.targetNodeContentDescription,
+    this.targetNodeResourceId,
+    this.scrollDeltaX,
+    this.scrollDeltaY,
     this.valueSlot,
     this.valueLiteral,
     this.precondition,
@@ -97,6 +107,12 @@ class FlowStep {
       id: json['id'] as int,
       action: json['action'] as String,
       targetRole: json['target_role'] as String,
+      targetNodeText: json['target_node_text'] as String?,
+      targetNodeContentDescription:
+          json['target_node_content_description'] as String?,
+      targetNodeResourceId: json['target_node_resource_id'] as String?,
+      scrollDeltaX: json['scroll_delta_x'] as int?,
+      scrollDeltaY: json['scroll_delta_y'] as int?,
       valueSlot: json['value_slot'] as String?,
       valueLiteral: json['value_literal'] as String?,
       precondition: json['precondition'] != null
@@ -120,6 +136,13 @@ class FlowStep {
       'id': id,
       'action': action,
       'target_role': targetRole,
+      if (targetNodeText != null) 'target_node_text': targetNodeText,
+      if (targetNodeContentDescription != null)
+        'target_node_content_description': targetNodeContentDescription,
+      if (targetNodeResourceId != null)
+        'target_node_resource_id': targetNodeResourceId,
+      if (scrollDeltaX != null) 'scroll_delta_x': scrollDeltaX,
+      if (scrollDeltaY != null) 'scroll_delta_y': scrollDeltaY,
       if (valueSlot != null) 'value_slot': valueSlot,
       if (valueLiteral != null) 'value_literal': valueLiteral,
       if (precondition != null) 'precondition': precondition!.toJson(),
@@ -130,7 +153,10 @@ class FlowStep {
 
   bool validatePrecondition(Set<String> screenRoles) {
     if (precondition == null) return true;
-    if (precondition!.requiredRoles.any((r) => !screenRoles.contains(r))) {
+    final requiredRoles = precondition!.requiredRoles.where(
+      (role) => !role.startsWith('GENERIC_'),
+    );
+    if (requiredRoles.any((role) => !screenRoles.contains(role))) {
       return false;
     }
     if (precondition!.forbiddenRoles.any(screenRoles.contains)) return false;

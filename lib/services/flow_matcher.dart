@@ -46,6 +46,25 @@ class FlowMatcher {
     final slots = extractedSlots.isEmpty
         ? _extractor.extract(utterance)
         : extractedSlots;
+
+    final normalizedUtterance = _normalize(utterance);
+    final savedFlows = await _store.getAllFlows();
+    for (final flow in savedFlows) {
+      if (_normalize(flow.triggerIntent) == normalizedUtterance) {
+        final resolved = _resolveSlots(flow, slots);
+        final hasUnresolved = resolved.values.any((v) => v == null);
+        return MatchResult(
+          flow: flow,
+          confidence: 1.0,
+          resolvedSlots: resolved,
+          needsClarification: hasUnresolved,
+          clarificationQuestion: hasUnresolved
+              ? _slotQuestion(flow, resolved)
+              : null,
+        );
+      }
+    }
+
     ParsedIntent? parsed;
     final local = _local;
     if (local != null) {
@@ -152,6 +171,9 @@ class FlowMatcher {
         .join('\n');
     return 'I found two possible workflows:\n$opts\nWhich one do you want?';
   }
+
+  String _normalize(String value) =>
+      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
 
   double _cos(List<double> a, List<double> b) {
     if (a.length != b.length || a.isEmpty) {

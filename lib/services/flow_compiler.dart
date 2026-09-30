@@ -1,4 +1,4 @@
-﻿import 'package:uuid/uuid.dart';
+import 'package:uuid/uuid.dart';
 
 import '../models/flow.dart';
 import '../models/action_trace_event.dart';
@@ -62,7 +62,9 @@ class FlowCompiler {
         }
       }
 
-      final precondition = StepPrecondition(requiredRoles: [role]);
+      final precondition = role.startsWith('GENERIC_')
+          ? null
+          : StepPrecondition(requiredRoles: [role]);
       final recovery = ['dismiss_popup', 'scroll', 'refind_node'];
 
       steps.add(
@@ -70,6 +72,11 @@ class FlowCompiler {
           id: stepId++,
           action: event.action,
           targetRole: role,
+          targetNodeText: node.text,
+          targetNodeContentDescription: node.contentDescription,
+          targetNodeResourceId: node.resourceId,
+          scrollDeltaX: event.scrollDeltaX,
+          scrollDeltaY: event.scrollDeltaY,
           valueSlot: valueSlot,
           valueLiteral: valueLiteral,
           precondition: precondition,

@@ -55,8 +55,13 @@ class MainActivity : FlutterActivity() {
                             result.success(isAccessibilityServiceEnabled())
                         }
 
+                        "performGlobalAction" -> {
+                            val action = call.argument<Int>("action") ?: 0
+                            result.success(SaarAccessibilityService.performGlobalAction(action))
+                        }
+
                         "getLastTree" -> {
-                            val tree = SaarAccessibilityService.getLatestTreeJson()
+                            val tree = SaarAccessibilityService.refreshTreeJson()
                             result.success(tree)
                         }
 

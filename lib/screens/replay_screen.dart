@@ -2,7 +2,6 @@
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
-import '../services/replay_engine.dart';
 
 class ReplayScreen extends StatefulWidget {
   const ReplayScreen({super.key});
@@ -54,7 +53,7 @@ class _ReplayScreenState extends State<ReplayScreen> {
                   borderRadius: BorderRadius.circular(24),
                   boxShadow: [
                     BoxShadow(
-                      color: const Color(0xFF007BFF).withOpacity(0.1),
+                      color: const Color(0xFF007BFF).withValues(alpha: 0.1),
                       blurRadius: 20,
                       offset: const Offset(0, 10),
                     ),
@@ -111,7 +110,8 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 child: Column(
                   children: [
                     Text(
-                      controller.clarificationQuestion ?? 'Clarification needed',
+                      controller.clarificationQuestion ??
+                          'Clarification needed',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         fontSize: 18,
@@ -120,33 +120,59 @@ class _ReplayScreenState extends State<ReplayScreen> {
                       ),
                     ),
                     const SizedBox(height: 20),
-                    TextField(
-                      controller: _clarificationController,
-                      decoration: InputDecoration(
-                        hintText: 'Type your answer...',
-                        filled: true,
-                        fillColor: Colors.white,
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(16),
-                          borderSide: BorderSide.none,
+                    if (controller.isTeachConfirmation)
+                      Row(
+                        children: [
+                          Expanded(
+                            child: OutlinedButton(
+                              onPressed: () =>
+                                  controller.provideClarification('No'),
+                              child: const Text('NO'),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: ElevatedButton(
+                              onPressed: () =>
+                                  controller.provideClarification('Yes'),
+                              child: const Text('YES'),
+                            ),
+                          ),
+                        ],
+                      )
+                    else
+                      TextField(
+                        controller: _clarificationController,
+                        decoration: InputDecoration(
+                          hintText: 'Type your answer...',
+                          filled: true,
+                          fillColor: Colors.white,
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(16),
+                            borderSide: BorderSide.none,
+                          ),
+                          suffixIcon: IconButton(
+                            icon: const Icon(
+                              Icons.send_rounded,
+                              color: Color(0xFF007BFF),
+                            ),
+                            onPressed: () {
+                              if (_clarificationController.text.isNotEmpty) {
+                                controller.provideClarification(
+                                  _clarificationController.text,
+                                );
+                                _clarificationController.clear();
+                              }
+                            },
+                          ),
                         ),
-                        suffixIcon: IconButton(
-                          icon: const Icon(Icons.send_rounded, color: Color(0xFF007BFF)),
-                          onPressed: () {
-                            if (_clarificationController.text.isNotEmpty) {
-                              controller.provideClarification(_clarificationController.text);
-                              _clarificationController.clear();
-                            }
-                          },
-                        ),
+                        onSubmitted: (value) {
+                          if (value.isNotEmpty) {
+                            controller.provideClarification(value);
+                            _clarificationController.clear();
+                          }
+                        },
                       ),
-                      onSubmitted: (value) {
-                        if (value.isNotEmpty) {
-                          controller.provideClarification(value);
-                          _clarificationController.clear();
-                        }
-                      },
-                    ),
                   ],
                 ),
               ),
@@ -171,7 +197,11 @@ class _ReplayScreenState extends State<ReplayScreen> {
                 icon: const Icon(Icons.cancel_rounded, size: 28),
                 label: const Text(
                   'CANCEL EXECUTION',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, letterSpacing: 1),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
             ),

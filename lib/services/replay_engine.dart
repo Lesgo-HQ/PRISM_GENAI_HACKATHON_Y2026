@@ -46,19 +46,27 @@ class ReplayEngine {
   Stream<ReplayState> get stateStream => _states.stream;
   ReplaySession? get session => _session;
 
-  ReplayEngine(this._bridge, this._clarification, {this._stepDelay = const Duration(milliseconds: 800)})
-      : _recovery = RecoveryEngine(_bridge);
+  ReplayEngine(
+    this._bridge,
+    this._clarification, {
+    this._stepDelay = const Duration(milliseconds: 800),
+  }) : _recovery = RecoveryEngine(_bridge);
 
   Future<ReplayState> execute(Flow flow, Map<String, dynamic> slots) async {
     if (_session != null && _isActive(_session!.status)) {
       throw StateError('A replay session is already active.');
     }
-    final session = ReplaySession(runId: const Uuid().v4(), flow: flow, slots: Map.unmodifiable(slots))..start();
+    final session = ReplaySession(
+      runId: const Uuid().v4(),
+      flow: flow,
+      slots: Map.unmodifiable(slots),
+    )..start();
     _session = session;
     _stopRequested = false;
 
     while (session.currentStep < flow.steps.length) {
-      if (_stopRequested) return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
+      if (_stopRequested)
+        return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
       final result = await _executeCurrentStep(session);
       if (result == _StepResult.completed) {
         session.currentStep++;
@@ -66,23 +74,36 @@ class ReplayEngine {
         continue;
       }
       if (result == _StepResult.halted) {
-        return _finish(session, ReplayStatus.haltedSensitive, 'SAAR stopped for safety.');
+        return _finish(
+          session,
+          ReplayStatus.haltedSensitive,
+          'SAAR stopped for safety.',
+        );
       }
 
       session.pause('needs_clarification');
       session.clarificationCount++;
       final step = flow.steps[session.currentStep];
-      _emit(session, message: 'Stuck at step ${session.currentStep + 1}.', question: _clarification.buildReplayClarification(
-        '${step.action} on ${step.targetRole}',
-        _describeScreen(await _bridge.getLastTree()),
-      ));
+      _emit(
+        session,
+        message: 'Stuck at step ${session.currentStep + 1}.',
+        question: _clarification.buildReplayClarification(
+          '${step.action} on ${step.targetRole}',
+          _describeScreen(await _bridge.getLastTree()),
+        ),
+      );
       _resumeSignal = Completer<void>();
       await _resumeSignal!.future;
       _resumeSignal = null;
-      if (_stopRequested) return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
+      if (_stopRequested)
+        return _finish(session, ReplayStatus.cancelled, 'Stopped by user');
       session.resume(); // Remains at same step
     }
-    return _finish(session, ReplayStatus.completed, 'Flow completed successfully');
+    return _finish(
+      session,
+      ReplayStatus.completed,
+      'Flow completed successfully',
+    );
   }
 
   Future<_StepResult> _executeCurrentStep(ReplaySession session) async {
@@ -111,7 +132,14 @@ class ReplayEngine {
         await Future<void>.delayed(_stepDelay);
         continue;
       }
-      final match = _ranker.best(tree.flatten(), step.targetRole, step.action);
+      final match = _ranker.best(
+        tree.flatten(),
+        step.targetRole,
+        step.action,
+        targetNodeText: step.targetNodeText,
+        targetNodeContentDescription: step.targetNodeContentDescription,
+        targetNodeResourceId: step.targetNodeResourceId,
+      );
       if (match != null && match.isAmbiguous) {
         return _StepResult.waiting;
       }
@@ -119,7 +147,8 @@ class ReplayEngine {
       if (target != null && await _performAction(step, target, session.slots)) {
         await Future<void>.delayed(const Duration(milliseconds: 600));
         final afterTree = await _bridge.getLastTree();
-        if (CredentialGuard.isSensitiveScreen(afterTree)) return _StepResult.halted;
+        if (CredentialGuard.isSensitiveScreen(afterTree))
+          return _StepResult.halted;
         if (afterTree != null) {
           final afterRoles = _rolesForTree(afterTree);
           if (!step.validatePostcondition(afterRoles)) {
@@ -130,7 +159,13 @@ class ReplayEngine {
             continue;
           }
         }
-        session.lastScreen = afterTree != null ? ScreenSnapshot.fromTree(afterTree, rolesForNode: (n) => [RoleOntology.inferRole(n)].whereType<String>()) : null;
+        session.lastScreen = afterTree != null
+            ? ScreenSnapshot.fromTree(
+                afterTree,
+                rolesForNode: (n) =>
+                    [RoleOntology.inferRole(n)].whereType<String>(),
+              )
+            : null;
         return _StepResult.completed;
       }
       session.status = ReplayStatus.recovering;
@@ -150,7 +185,11 @@ class ReplayEngine {
     return s;
   }
 
-  Future<bool> _performAction(FlowStep step, UiNode target, Map<String, dynamic> slots) async {
+  Future<bool> _performAction(
+    FlowStep step,
+    UiNode target,
+    Map<String, dynamic> slots,
+  ) async {
     final bounds = target.bounds;
     final x = ((bounds['left'] ?? 0) + (bounds['right'] ?? 0)) / 2;
     final y = ((bounds['top'] ?? 0) + (bounds['bottom'] ?? 0)) / 2;
@@ -160,38 +199,65 @@ class ReplayEngine {
         return _bridge.tap(x, y);
       case 'type':
       case 'set_quantity':
-        final value = step.valueSlot != null && slots.containsKey(step.valueSlot)
+        final value =
+            step.valueSlot != null && slots.containsKey(step.valueSlot)
             ? slots[step.valueSlot].toString()
             : step.valueLiteral ?? '';
         if (value.isEmpty || !await _bridge.tap(x, y)) return false;
         return _bridge.typeIntoFocused(value);
       case 'swipe':
         return _bridge.swipe(x, y + 300, x, y - 300, durationMs: 300);
+      case 'scroll':
+        final horizontalDistance = (step.scrollDeltaX ?? 0) == 0
+            ? 0
+            : (step.scrollDeltaX! > 0 ? -300 : 300);
+        final verticalDistance = (step.scrollDeltaY ?? 0) == 0
+            ? -300
+            : (step.scrollDeltaY! > 0 ? -300 : 300);
+        return _bridge.swipe(
+          x - horizontalDistance,
+          y - verticalDistance,
+          x,
+          y,
+          durationMs: 300,
+        );
       default:
         return false;
     }
   }
 
   void resume() {
-    if (_session?.status == ReplayStatus.waitingForUser && _resumeSignal != null) {
+    if (_session?.status == ReplayStatus.waitingForUser &&
+        _resumeSignal != null) {
       _resumeSignal!.complete();
     }
   }
 
   void stop() {
     _stopRequested = true;
-    if (_resumeSignal != null && !_resumeSignal!.isCompleted) _resumeSignal!.complete();
+    if (_resumeSignal != null && !_resumeSignal!.isCompleted)
+      _resumeSignal!.complete();
   }
 
-  ReplayState _finish(ReplaySession session, ReplayStatus status, String message) {
+  ReplayState _finish(
+    ReplaySession session,
+    ReplayStatus status,
+    String message,
+  ) {
     session.status = status;
     return _emit(session, message: message);
   }
 
-  ReplayState _emit(ReplaySession session, {String? message, String? question}) {
+  ReplayState _emit(
+    ReplaySession session, {
+    String? message,
+    String? question,
+  }) {
     final state = ReplayState(
       status: session.status,
-      currentStep: session.status == ReplayStatus.completed ? session.currentStep : session.currentStep + 1,
+      currentStep: session.status == ReplayStatus.completed
+          ? session.currentStep
+          : session.currentStep + 1,
       totalSteps: session.flow.steps.length,
       message: message,
       clarificationQuestion: question,
@@ -201,12 +267,34 @@ class ReplayEngine {
   }
 
   bool _isActive(ReplayStatus status) =>
-      status == ReplayStatus.executing || status == ReplayStatus.recovering || status == ReplayStatus.waitingForUser;
+      status == ReplayStatus.executing ||
+      status == ReplayStatus.recovering ||
+      status == ReplayStatus.waitingForUser;
 
   String _describeScreen(UiNode? tree) {
-    if (tree == null) return 'unknown screen';
-    final labels = tree.flatten().where((node) => node.isClickable && (node.text?.isNotEmpty ?? false)).take(5).map((node) => node.text);
-    return labels.isEmpty ? 'a screen with no identifiable elements' : 'a screen showing: ${labels.join(', ')}';
+    if (tree == null)
+      return 'the accessibility tree is temporarily unavailable';
+    final interactive = tree
+        .flatten()
+        .where(
+          (node) => node.isClickable || node.isEditable || node.isScrollable,
+        )
+        .take(5)
+        .map((node) {
+          final label = node.text ?? node.contentDescription;
+          if (label != null && label.trim().isNotEmpty) return label.trim();
+          final resourceId = node.resourceId;
+          if (resourceId != null && resourceId.trim().isNotEmpty) {
+            return resourceId.split('/').last;
+          }
+          if (node.isScrollable) return 'scrollable area';
+          if (node.isEditable) return 'text field';
+          return 'interactive control';
+        })
+        .toList();
+    if (interactive.isEmpty)
+      return 'a screen with no interactive controls detected';
+    return 'a screen showing: ${interactive.join(', ')}';
   }
 
   void dispose() {

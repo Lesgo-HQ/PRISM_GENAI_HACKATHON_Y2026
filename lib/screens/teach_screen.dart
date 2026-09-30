@@ -51,7 +51,7 @@ class TeachScreen extends StatelessWidget {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.redAccent.withOpacity(0.3),
+                        color: Colors.redAccent.withValues(alpha: 0.3),
                         blurRadius: 40,
                         spreadRadius: 10,
                       )
@@ -100,7 +100,7 @@ class TeachScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(16),
                       ),
                       elevation: 10,
-                      shadowColor: Colors.redAccent.withOpacity(0.5),
+                      shadowColor: Colors.redAccent.withValues(alpha: 0.5),
                     ),
                     icon: const Icon(Icons.stop_rounded, size: 28),
                     label: const Text(
