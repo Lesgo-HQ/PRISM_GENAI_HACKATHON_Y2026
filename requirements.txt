@@ -1,0 +1,6 @@
+# Optional Python dependencies for the ML training and ONNX export pipeline.
+# Flutter/Android runtime dependencies are declared in pubspec.yaml.
+torch>=2.2,<3
+transformers>=4.40,<5
+onnx>=1.16,<2
+onnxruntime>=1.18,<2

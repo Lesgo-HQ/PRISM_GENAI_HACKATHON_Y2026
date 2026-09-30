@@ -1,34 +1,51 @@
-# SAAR — Smart Automated Action Replay
+# SAAR - Smart Automated Action Replay
 
-**Learn any Android task once. Replay it with your voice.**
+**Learn an Android task once. Replay it with your voice.**
 
-SAAR is an on-device Android assistant that watches you perform a task once (like ordering groceries), learns the abstract workflow, and replays it whenever you ask — with different items, quantities, or addresses — all via voice command.
+SAAR is an on-device Android assistant that records a task performed by a user, converts the interaction trace into an abstract workflow, and replays that workflow with new parameters such as item, quantity, or address. The project is built for the Samsung PRISM GenAI Hackathon.
 
-Built with Flutter + native Kotlin for a hackathon. 
+## Hackathon Submission
+
+| Deliverable | Repository location |
+|---|---|
+| Source code | This repository (`lib/`, `android/`, `test/`) |
+| Flutter dependency manifest | [`pubspec.yaml`](pubspec.yaml) |
+| ML training requirements | [`requirements.txt`](requirements.txt) |
+| Submission presentation | [`SRMIST_Unknowns_Submission_PPT.pdf`](SRMIST_Unknowns_Submission_PPT.pdf) |
+| Demo video | [`Samsung Video.mp4`](Samsung%20Video.mp4) |
+| Architecture and safety documentation | [`docs/`](docs/) |
+| Required GitHub tag | `PRISM_GENAI_HACKATHON_Y2026` |
+
+The demo video is included in the repository and is approximately 15 MB. If the hosting platform or submission form requires external video hosting, upload the same file to YouTube or Google Drive and add the resulting URL beside the video link above.
+
+Create the required tag from the repository root with:
+
+```bash
+git tag -a PRISM_GENAI_HACKATHON_Y2026 -m "Samsung PRISM GenAI Hackathon 2026 submission"
+git push origin PRISM_GENAI_HACKATHON_Y2026
+```
 
 ---
 
 ## Table of Contents
 
-- [How It Works](#how-it-works)
+- [What SAAR Does](#what-saar-does)
 - [Features](#features)
-- [Tech Stack](#tech-stack)
-- [Project Structure](#project-structure)
-- [Setup & Installation](#setup--installation)
-- [Running the App](#running-the-app)
-- [Granting Permissions](#granting-permissions)
-- [Testing Your First Flow](#testing-your-first-flow)
 - [Architecture](#architecture)
-- [Flow JSON Schema](#flow-json-schema)
-- [Credential Guard](#credential-guard)
-- [Role Ontology](#role-ontology)
-- [Configuration](#configuration)
-- [Known Limitations](#known-limitations)
-- [License](#license)
+- [Repository Guide](#repository-guide)
+- [Requirements](#requirements)
+- [Setup](#setup)
+- [Run and Build](#run-and-build)
+- [First Demo Flow](#first-demo-flow)
+- [Safety Model](#safety-model)
+- [ML Pipeline](#ml-pipeline)
+- [Testing](#testing)
+- [FAQ](#faq)
+- [Limitations](#limitations)
 
 ---
 
-## How It Works
+## What SAAR Does
 
 ```
 ┌──────────────┐     ┌──────────────┐     ┌──────────────┐
@@ -43,225 +60,203 @@ Built with Flutter + native Kotlin for a hackathon.
 └──────────────┘     └──────────────┘     └──────────────┘
 ```
 
-1. **Teach** — Tap the mic, say "teach me to order on Zepto", then switch to Zepto and perform the task normally. SAAR records every tap, type, and scroll via Android's Accessibility Service.
-2. **Learn** — When you tap "Stop & Save", the raw action trace is abstracted into a generalised flow with parametrised slots (item name, quantity, address) entirely on-device.
-3. **Replay** — Next time, say "order 2 kg rice from Zepto". SAAR matches the utterance to the learned flow using its local NLU, fills in the slots, and executes step-by-step — stopping automatically before any payment/credential screen.
+1. **Teach:** Speak a teaching command, switch to the target app, and perform the task normally. Android's Accessibility Service records taps, text entry, scrolling, and relevant UI state.
+2. **Learn:** When teaching stops, the trace is normalized and compiled into a reusable flow described by semantic roles and parameterized slots.
+3. **Replay:** Speak a new command. Local intent parsing and flow matching select the saved flow, extract slot values, semantically locate each target, and execute one step at a time.
+
+The runtime is designed to work locally without an LLM API key or a production NLU HTTP request. It stops before password, OTP, payment, or other credential-sensitive interactions.
 
 ---
 
 ## Features
 
-| Feature | Status |
-|---------|--------|
-| Voice-triggered teach & command | ✅ |
-| One-shot learning from demonstration | ✅ |
-| Abstract flows over element roles (not coordinates) | ✅ |
-| Parametrised slots (item, quantity, address) | ✅ |
-| Local Intent classification | ✅ |
-| Paraphrase handling ("buy groceries" = "order food") | ✅ |
-| **Fail-closed credential guard** (dual Kotlin + Dart) | ✅ |
-| Popup/dialog auto-dismiss during replay | ✅ |
-| Scroll-to-find target elements | ✅ |
-| Ask-when-stuck clarification dialogs | ✅ |
-| Noise filtering during teach (system UI, duplicates) | ✅ |
-| Manual STOP kill-switch during execution | ✅ |
-| Flow library — view, expand, delete saved flows | ✅ |
-| Session logging (teach & replay history) | ✅ |
+- Voice-triggered teaching and replay
+ - One-shot workflow learning from a real demonstration
+ - Semantic UI roles instead of fixed screen coordinates
+ - Item, quantity, address, app, and other flow slots
+ - Local intent classification and slot extraction
+ - Exact and paraphrased flow matching
+ - Popup dismissal, scrolling, retry, and back-navigation recovery
+ - Clarification when a target is unavailable or multiple flows are ambiguous
+ - Manual STOP kill-switch during replay
+ - Flow library with saved-flow inspection and deletion
+ - Session history and execution reports
+ - Dual-layer, fail-closed credential protection in Dart and Kotlin
 
 ---
 
-## Tech Stack
+## Architecture
 
-| Layer | Technology |
-|-------|-----------|
-| UI & app logic | Flutter 3.x (Dart), Material 3 |
-| State management | Provider (`ChangeNotifier`) |
-| Screen automation | Native Kotlin `AccessibilityService` |
-| Flutter ↔ Kotlin bridge | `MethodChannel` + `EventChannel` |
-| On-device ASR | `speech_to_text` plugin |
-| Local NLU Pipeline | `SAAR-NLU` (Regex baseline / Future ONNX) |
-| Local storage | `sqflite` (flows + session logs) |
+```mermaid
+flowchart TD
+    User([User]) -->|Speech| ASR[Android SpeechRecognizer]
+    ASR --> NLU[SAAR NLU]
+    NLU -->|Parsed intent and slots| Matcher[Flow Matcher]
+    Matcher --> Session[Replay Session]
+    Session --> Snapshot[Screen Snapshot]
+    Snapshot --> Guard[Credential Guard]
+    Guard --> Ranker[Semantic Node Ranker]
+    Ranker --> Recovery[Recovery Engine]
+    Recovery --> Bridge[Flutter Method/Event Channels]
+    Bridge --> Service[Native Kotlin AccessibilityService]
+    Service --> Target[Target Android App]
+    Target --> Service
+```
 
----
+The state-aware replay loop is:
 
-## Project Structure
+```text
+screen snapshot -> safety check -> precondition -> semantic target -> action
+-> wait for UI update -> new snapshot -> postcondition -> next step
+```
+
+The Flutter layer owns UI, state, local storage, NLU, flow compilation, matching, replay coordination, and reporting. The Kotlin layer captures the accessibility tree and dispatches supported gestures through `AccessibilityService`. `MethodChannel` and `EventChannel` connect the two layers.
+
+## Repository Guide
 
 ```
 SAAR/
-├── pubspec.yaml                                  # Flutter dependencies
-├── README.md                                     # This file
-│
-├── android/
-│   └── app/src/main/
-│       ├── AndroidManifest.xml                   # Permissions + service declaration
-│       ├── res/xml/
-│       │   └── accessibility_service_config.xml  # Accessibility service config
-│       └── kotlin/com/lesgo/saar/
-│           ├── SaarAccessibilityService.kt       # UI tree capture, gestures, credential guard
-│           └── MainActivity.kt                   # MethodChannel + EventChannel bridge
-│
-├── lib/
-│   ├── main.dart                                 # Entry point, Provider
-│   ├── app_controller.dart                       # Central state machine
-│   │
-│   ├── models/
-│   │   ├── flow.dart                             # Flow, FlowStep, Slot
-│   │   ├── ui_node.dart                          # Accessibility tree node
-│   │   ├── action_trace_event.dart               # Teach-session event
-│   │   └── role_ontology.dart                    # UI roles + heuristic matcher
-│   │
-│   ├── services/
-│   │   ├── accessibility_bridge.dart             # Typed wrapper over native channels
-│   │   ├── asr_service.dart                      # Speech-to-text push-to-talk
-│   │   ├── flow_store.dart                       # SQLite CRUD
-│   │   ├── flow_matcher.dart                     # Flow matching logic
-│   │   ├── flow_synthesizer.dart                 # Action trace → abstract flow
-│   │   ├── replay_engine.dart                    # Step executor with guard + adaptation
-│   │   ├── credential_guard.dart                 # Fail-closed sensitive field check
-│   │   └── saar_nlu.dart                         # On-device natural language understanding
-│   │
-│   └── screens/
-│       ├── home_screen.dart                      # Mic button, status, flow list
-│       ├── teach_screen.dart                     # Recording indicator, Stop & Save
-│       ├── replay_screen.dart                    # Step progress, STOP button, clarification
-│       ├── flow_library_screen.dart              # List / expand / delete flows
-│       ├── report_screen.dart                    # Execution reports UI
-│       └── settings_screen.dart                  # Accessibility toggle
-│
-└── test/
-    └── models_test.dart
-    └── services_test.dart
+├── android/                  Android project, manifest, Gradle files, and Kotlin bridge
+├── assets/                   App images, vocabulary, and model metadata
+├── docs/                     Architecture, safety, limitations, and PRISM test matrix
+├── lib/                      Flutter entry point, models, services, and screens
+├── ml/                       Dataset, training, evaluation, export, and ONNX model files
+├── test/                     Dart model, service, and widget tests
+├── PLAN.md                   Engineering audit and implementation plan
+├── pubspec.yaml              Flutter and Dart dependencies
+├── requirements.txt          Optional Python ML dependencies
+├── SRMIST_Unknowns_Submission_PPT.pdf
+├── Samsung Video.mp4
+└── .env.example              Optional local environment template
 ```
 
----
+## Requirements
 
-## Setup & Installation
+### Runtime and Android build
 
-### Prerequisites
+- Flutter 3.x and Dart SDK compatible with `pubspec.yaml` (`^3.13.4`)
+- Android SDK API 24 or newer
+- Android Studio or an Android SDK with Gradle support
+- Physical Android device recommended; Accessibility Service behavior varies by emulator and manufacturer
+- Microphone and Accessibility permissions
 
-- **Flutter** 3.13+ with Dart 3.13+
-- **Android SDK** (API level 24+ / Android 7.0+)
-- **Android device or emulator** with Accessibility support
+### Optional ML development
 
-### Step 1 — Clone
+Python dependencies for dataset generation, training, ONNX export, and quantization are listed in [`requirements.txt`](requirements.txt). The Flutter app does not use it to install runtime dependencies; use `pubspec.yaml` for that.
+
+## Setup
 
 ```bash
 git clone https://github.com/Lesgo-HQ/SAAR.git
 cd SAAR
 ```
 
-### Step 2 — Install Dependencies
-
 ```bash
 flutter pub get
-```
-
-### Step 3 — Verify
-
-```bash
 flutter analyze
 ```
 
----
-
-## Running the App
-
-### On a physical device (recommended)
+For the optional ML workflow:
 
 ```bash
-flutter run
+python -m venv .venv
+# Windows PowerShell
+.\.venv\Scripts\Activate.ps1
+python -m pip install -r requirements.txt
 ```
 
-### Build an APK
+Do not commit `.env` or API keys. The committed `.env.example` is only a configuration reference.
+
+## Run and Build
 
 ```bash
-# Debug APK (faster build, larger size)
+flutter devices
+flutter run
 flutter build apk --debug
-
-# Release APK
 flutter build apk --release
 ```
 
----
+After launching, enable SAAR under Android Settings > Accessibility. Allow microphone access when the app first starts speech recognition.
 
-## Granting Permissions
+## First Demo Flow
 
-### 1. Accessibility Service (required)
-1. Launch SAAR → you'll see a **red banner**: *"Accessibility service disabled"*
-2. Tap **ENABLE**
-3. Toggle **ON** and tap **Allow** on the confirmation dialog
-4. Return to SAAR — the banner should disappear and the status shows green
+1. Open SAAR and enable its Accessibility Service.
+2. Tap the microphone and say, **"Teach me to search on Amazon."**
+3. Switch to the target app and perform a search, such as `headphones`.
+4. Return to SAAR and tap **Stop & Save**.
+5. Speak **"Search for wireless earbuds on Amazon."** to replay with a changed item.
+6. Try a changed quantity or address where the saved flow exposes those slots.
+7. Navigate to a password or payment screen and verify that the credential guard stops execution.
 
-### 2. Microphone (auto-prompted)
-The first time you tap the mic button, Android will prompt for microphone permission. Tap **Allow**.
+The full PRISM scenario list is in [`docs/prism-test-matrix.md`](docs/prism-test-matrix.md). T1-T14 entries currently require physical-device verification and must not be treated as evidence until observed and recorded.
 
----
+## Safety Model
 
-## Testing Your First Flow
+- The Dart credential guard runs before an action is sent to native code.
+- The Kotlin guard runs again before gesture dispatch.
+- Password, OTP, payment, and credential-like fields are never read, entered, or replayed.
+- The user can stop an active replay with the STOP control.
+- Unknown intents, low-confidence matches, ambiguous flows, and unrecoverable states clarify or stop rather than guess.
 
-#### Phase 1 — Teach a Flow
+See [`docs/safety.md`](docs/safety.md) for the detailed safety rules.
 
-1. Open SAAR
-2. Tap the **mic button** 🎤
-3. Say: **"teach me to search on Amazon"**
-4. SAAR will show "Recording your actions..." and switch you to teach mode
-5. **Switch to Amazon**
-6. Perform the task: tap the search bar → type "headphones" → tap search → tap a result
-7. **Switch back to SAAR**
-8. Tap the red **Stop & Save** button
+## ML Pipeline
 
-#### Phase 2 — Replay with Different Parameters
+The `ml/` directory is optional for contributors working on the local NLU model:
 
-1. Tap the **mic button** 🎤
-2. Say: **"search for wireless earbuds on Amazon"**
-3. SAAR will match your utterance to the learned flow, fill slots, and execute step-by-step.
-
-#### Phase 3 — Test the Credential Guard
-
-1. Navigate to any app's login page (with a password field visible)
-2. Try to replay a flow — SAAR will **immediately halt** with a safety message.
-
----
-
-## Architecture
-
-### System Overview
-
-SAAR operates entirely on-device with zero cloud dependencies at runtime, ensuring maximal privacy and security.
-
-```mermaid
-flowchart TD
-    User([User]) -->|Speech| ASR[ASR System]
-    ASR -->|Text Query| NLU[SAAR-NLU]
-    NLU -->|ParsedIntent| FM[Flow Matcher]
-    FM -->|Flow ID| SE[Script Engine]
-    SE -->|Flow Steps| AS[Accessibility Service]
-    AS -->|Inject Events| App[Target App]
-    AS -->|Screen Nodes| SE
+```bash
+python ml/dataset/generate.py
+python ml/dataset/validate.py
+python ml/training/train.py
+python ml/training/evaluate.py
+python ml/training/export_onnx.py
+python ml/training/quantize.py
 ```
 
+The checked-in `ml/models/saar_nlu.onnx` and metadata assets support local model experimentation. The deterministic local intent and slot pipeline remains the fallback path when a trained model is unavailable.
+
+## Testing
+
+```bash
+flutter analyze
+flutter test
+```
+
+The test suite includes model, service, and widget coverage. Accessibility behavior, speech recognition, permissions, cross-app grounding, and the T1-T14 matrix require an Android device and cannot be fully verified by host-side unit tests alone.
+
+## FAQ
+
+### Does SAAR require an API key?
+
+No. Normal runtime operation is intended to use local NLU and local storage. Never commit credentials. The repository's `.env.example` is not a secret store.
+
+### Why is `requirements.txt` separate from `pubspec.yaml`?
+
+`pubspec.yaml` installs Flutter application dependencies. `requirements.txt` is only for the optional Python ML dataset and model workflow.
+
+### Where are the presentation and demo?
+
+They are checked into the repository as [`SRMIST_Unknowns_Submission_PPT.pdf`](SRMIST_Unknowns_Submission_PPT.pdf) and [`Samsung Video.mp4`](Samsung%20Video.mp4). If a submission portal rejects the MP4 size, host it on YouTube or Google Drive and add that URL to the Hackathon Submission table.
+
+### What does the required tag mean?
+
+`PRISM_GENAI_HACKATHON_Y2026` is the submission tag and should point to the exact commit submitted for judging.
+
+### What apps and tasks are supported?
+
+The current focus is generic navigation and e-commerce-style flows. Cross-app generalization is an architectural goal and must be demonstrated on-device before being claimed as verified.
+
 ---
 
-## Credential Guard
+## Limitations
 
-The credential guard runs as a **dual-layer, deterministic, fail-closed** check before every single dispatched action.
+- NLU quality is limited by the current local model and regex/keyword fallback.
+- Cross-app generalization is not yet fully proven across real applications.
+- Android speech recognition may require network connectivity depending on the device and OS.
+- There is no persistent floating overlay for pause/resume.
+- Noisy or unnecessary teaching actions can reduce flow quality.
+- The current ontology is focused on e-commerce and generic navigation.
+- The supported language is English.
+- Accessibility behavior differs across Android versions, OEM skins, and target apps.
 
-- Runs in Dart before calling the bridge.
-- Runs natively in Kotlin before gesture dispatch.
-
----
-
-## Known Limitations
-
-1. **Regex-based NLU Baseline**: The current NLU is based on regex (`saar-nlu-lite`). It is not a trained neural model.
-2. **Generalization**: Cross-app generalization is currently an architectural design rather than a physically demonstrated capability.
-3. **ASR Network Dependency**: ASR relies on Android's native `SpeechRecognizer`, which may require network.
-4. **No Overlay UI**: Currently, there is no floating overlay UI to pause/resume.
-5. **Trace Quality**: Flow synthesis quality relies heavily on clean action traces during teaching.
-6. **Domain Restriction**: Largely limited to e-commerce patterns currently.
-
----
-
-## License
-
-Built for hackathon use. See repository for license details.
+See [`docs/limitations.md`](docs/limitations.md) and [`PLAN.md`](PLAN.md) for the full audit and remaining work.
