@@ -1,4 +1,4 @@
-﻿name: saar
+name: saar
 description: "SAAR - Smart Automated Action Replay"
 publish_to: 'none'
 version: 1.0.0+1
@@ -18,6 +18,9 @@ dependencies:
   path_provider: ^2.1.5
   permission_handler: ^13.0.2
   huggingface_dart: ^0.0.2
+  shared_preferences: ^2.3.2
+  http: ^1.2.2
+  flutter_dotenv: ^5.2.1
 
 dev_dependencies:
   flutter_test:
@@ -28,6 +31,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
   assets:
+    - .env
     - assets/models/
     - assets/images/
 flutter_launcher_icons:

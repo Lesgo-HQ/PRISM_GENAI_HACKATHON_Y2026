@@ -1,4 +1,4 @@
-﻿package com.lesgo.saar
+package com.lesgo.saar
 
 import android.content.Context
 import android.content.ComponentName
@@ -191,6 +191,55 @@ class MainActivity : FlutterActivity() {
 
                         "isSensitiveScreen" -> {
                             result.success(SaarAccessibilityService.isSensitiveScreenDetected())
+                        }
+
+                        "getInstalledApps" -> {
+                            Thread {
+                                val apps = SaarAccessibilityService.getInstalledApps(this@MainActivity)
+                                Handler(Looper.getMainLooper()).post {
+                                    result.success(apps)
+                                }
+                            }.start()
+                        }
+
+                        "captureScreenshot" -> {
+                            SaarAccessibilityService.takeScreenshotBase64 { base64 ->
+                                Handler(Looper.getMainLooper()).post {
+                                    result.success(base64)
+                                }
+                            }
+                        }
+
+                        "longPress" -> {
+                            val x = (call.argument<Double>("x") ?: 0.0).toFloat()
+                            val y = (call.argument<Double>("y") ?: 0.0).toFloat()
+                            Thread {
+                                val success = SaarAccessibilityService.performLongPress(x, y)
+                                Handler(Looper.getMainLooper()).post {
+                                    result.success(success)
+                                }
+                            }.start()
+                        }
+
+                        "doubleTap" -> {
+                            val x = (call.argument<Double>("x") ?: 0.0).toFloat()
+                            val y = (call.argument<Double>("y") ?: 0.0).toFloat()
+                            Thread {
+                                val success = SaarAccessibilityService.performDoubleTap(x, y)
+                                Handler(Looper.getMainLooper()).post {
+                                    result.success(success)
+                                }
+                            }.start()
+                        }
+
+                        "setFocusOnNode" -> {
+                            val nodeId = call.argument<String>("nodeId") ?: ""
+                            Thread {
+                                val success = SaarAccessibilityService.setFocusOnNode(nodeId)
+                                Handler(Looper.getMainLooper()).post {
+                                    result.success(success)
+                                }
+                            }.start()
                         }
 
                         else -> {

@@ -240,6 +240,82 @@ class SaarAccessibilityService : AccessibilityService() {
             }
             return false
         }
+
+        fun getInstalledApps(context: android.content.Context): String {
+            val pm = context.packageManager
+            val intent = android.content.Intent(android.content.Intent.ACTION_MAIN).apply {
+                addCategory(android.content.Intent.CATEGORY_LAUNCHER)
+            }
+            val resolveInfos = pm.queryIntentActivities(intent, 0)
+            val apps = JSONArray()
+            for (info in resolveInfos) {
+                val appInfo = info.activityInfo.applicationInfo
+                val isSystem = (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
+                if (!isSystem) {
+                    val obj = JSONObject()
+                    obj.put("packageName", appInfo.packageName)
+                    obj.put("appName", appInfo.loadLabel(pm).toString())
+                    obj.put("canLaunch", true)
+                    apps.put(obj)
+                }
+            }
+            return apps.toString()
+        }
+
+        fun takeScreenshotBase64(callback: (String?) -> Unit) {
+            val svc = instance ?: run {
+                Log.e(TAG, "takeScreenshotBase64: Service not running")
+                callback(null)
+                return
+            }
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+                svc.takeScreenshot(android.view.Display.DEFAULT_DISPLAY, svc.mainExecutor, object : AccessibilityService.TakeScreenshotCallback {
+                    override fun onSuccess(screenshot: AccessibilityService.ScreenshotResult) {
+                        try {
+                            val hardwareBuffer = screenshot.hardwareBuffer
+                            val bitmap = android.graphics.Bitmap.wrapHardwareBuffer(hardwareBuffer, screenshot.colorSpace)
+                            if (bitmap != null) {
+                                val out = java.io.ByteArrayOutputStream()
+                                bitmap.compress(android.graphics.Bitmap.CompressFormat.JPEG, 50, out)
+                                val bytes = out.toByteArray()
+                                val base64 = android.util.Base64.encodeToString(bytes, android.util.Base64.NO_WRAP)
+                                callback(base64)
+                            } else {
+                                callback(null)
+                            }
+                            hardwareBuffer.close()
+                        } catch (e: Exception) {
+                            Log.e(TAG, "Error processing screenshot", e)
+                            callback(null)
+                        }
+                    }
+                    override fun onFailure(errorCode: Int) {
+                        Log.e(TAG, "Screenshot failed with error code: $errorCode")
+                        callback(null)
+                    }
+                })
+            } else {
+                Log.e(TAG, "takeScreenshot requires API 30+")
+                callback(null)
+            }
+        }
+
+        fun performLongPress(x: Float, y: Float): Boolean {
+            val svc = instance ?: return false
+            if (isSensitiveScreenDetected()) return false
+            return svc.doPerformLongPress(x, y)
+        }
+
+        fun performDoubleTap(x: Float, y: Float): Boolean {
+            val svc = instance ?: return false
+            if (isSensitiveScreenDetected()) return false
+            return svc.doPerformDoubleTap(x, y)
+        }
+
+        fun setFocusOnNode(nodeId: String): Boolean {
+            val svc = instance ?: return false
+            return svc.doSetFocusOnNode(nodeId)
+        }
     }
 
     override fun onServiceConnected() {
@@ -641,6 +717,76 @@ class SaarAccessibilityService : AccessibilityService() {
             }
         }
         return null
+    }
+
+    fun doPerformLongPress(x: Float, y: Float): Boolean {
+        return try {
+            val path = Path().apply { moveTo(x, y) }
+            val stroke = GestureDescription.StrokeDescription(path, 0, 800)
+            val gesture = GestureDescription.Builder().addStroke(stroke).build()
+            var success = false
+            val latch = java.util.concurrent.CountDownLatch(1)
+            dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    success = true
+                    latch.countDown()
+                }
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    success = false
+                    latch.countDown()
+                }
+            }, null)
+            latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in doPerformLongPress", e)
+            false
+        }
+    }
+
+    fun doPerformDoubleTap(x: Float, y: Float): Boolean {
+        return try {
+            val path = Path().apply { moveTo(x, y) }
+            val stroke1 = GestureDescription.StrokeDescription(path, 0, 50)
+            val stroke2 = GestureDescription.StrokeDescription(path, 150, 50)
+            val gesture = GestureDescription.Builder().addStroke(stroke1).addStroke(stroke2).build()
+            var success = false
+            val latch = java.util.concurrent.CountDownLatch(1)
+            dispatchGesture(gesture, object : GestureResultCallback() {
+                override fun onCompleted(gestureDescription: GestureDescription?) {
+                    success = true
+                    latch.countDown()
+                }
+                override fun onCancelled(gestureDescription: GestureDescription?) {
+                    success = false
+                    latch.countDown()
+                }
+            }, null)
+            latch.await(2, java.util.concurrent.TimeUnit.SECONDS)
+            success
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in doPerformDoubleTap", e)
+            false
+        }
+    }
+
+    fun doSetFocusOnNode(nodeId: String): Boolean {
+        val root = rootInActiveWindow ?: return false
+        return try {
+            val target = findNodeByResourceId(root, nodeId)
+            if (target != null) {
+                val result = target.performAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS)
+                target.recycle()
+                result
+            } else {
+                false
+            }
+        } catch (e: Exception) {
+            Log.e(TAG, "Error in doSetFocusOnNode", e)
+            false
+        } finally {
+            root.recycle()
+        }
     }
 }
 

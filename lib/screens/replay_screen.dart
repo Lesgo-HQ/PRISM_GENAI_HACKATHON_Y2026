@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../app_controller.dart';
+import '../theme.dart';
 
 class ReplayScreen extends StatefulWidget {
   const ReplayScreen({super.key});
@@ -10,12 +11,27 @@ class ReplayScreen extends StatefulWidget {
   State<ReplayScreen> createState() => _ReplayScreenState();
 }
 
-class _ReplayScreenState extends State<ReplayScreen> {
+class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderStateMixin {
   final _clarificationController = TextEditingController();
+  late AnimationController _pulseController;
+  late Animation<double> _pulseAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    )..repeat(reverse: true);
+    _pulseAnimation = Tween<double>(begin: 0.3, end: 1.0).animate(
+      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
+    );
+  }
 
   @override
   void dispose() {
     _clarificationController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -28,255 +44,206 @@ class _ReplayScreenState extends State<ReplayScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final controller = context.watch<AppController>();
     final isClarifying = controller.state == AppState.waitingForClarification;
     final replayState = controller.replayState;
+    final currentStep = replayState?.currentStep ?? 0;
+    final totalSteps = replayState?.totalSteps ?? 0;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      // The clarification field opens the keyboard; the body scrolls instead of
-      // being squeezed, so the content never overflows.
-      resizeToAvoidBottomInset: true,
+      backgroundColor: AppTheme.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
+        title: Text(
+          isClarifying ? 'NEEDS INPUT' : 'EXECUTING TASK',
+          style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+        ),
         centerTitle: true,
         automaticallyImplyLeading: false,
-        title: Text(
-          isClarifying ? 'NEEDS INPUT' : 'EXECUTING',
-          style: TextStyle(
-            color: theme.primaryColor,
-            fontWeight: FontWeight.w800,
-            letterSpacing: 1.2,
-          ),
-        ),
       ),
-      body: SafeArea(
-        child: LayoutBuilder(
-          builder: (context, constraints) {
-            return SingleChildScrollView(
-              physics: const ClampingScrollPhysics(),
-              padding: const EdgeInsets.symmetric(
-                horizontal: 24.0,
-                vertical: 24.0,
-              ),
-              child: ConstrainedBox(
-                constraints: BoxConstraints(
-                  minHeight: constraints.maxHeight - 48,
-                ),
-                child: IntrinsicHeight(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 8),
-                      if (replayState != null) ...[
-                        _ProgressCard(
-                          currentStep: replayState.currentStep,
-                          totalSteps: replayState.totalSteps,
-                        ),
-                        const SizedBox(height: 32),
-                      ],
-                      Text(
-                        controller.statusMessage,
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color:
-                              theme.textTheme.bodyLarge?.color ?? Colors.white,
-                        ),
-                      ),
-                      if (isClarifying) ...[
-                        const SizedBox(height: 32),
-                        _ClarificationCard(
-                          question: controller.clarificationQuestion ??
-                              'Clarification needed',
-                          isConfirmation: controller.isTeachConfirmation,
-                          textController: _clarificationController,
-                          onSubmit: (value) =>
-                              _submitClarification(controller, value),
-                          onYes: () => controller.provideClarification('Yes'),
-                          onNo: () => controller.provideClarification('No'),
-                        ),
-                      ],
-                      const SizedBox(height: 40),
-                      const Spacer(),
-                      SizedBox(
-                        width: double.infinity,
-                        height: 60,
-                        child: ElevatedButton.icon(
-                          onPressed: controller.stopExecution,
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: theme.cardTheme.color,
-                            foregroundColor: theme.colorScheme.error,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 0,
-                          ),
-                          icon: const Icon(Icons.cancel_rounded, size: 26),
-                          label: const Text(
-                            'CANCEL EXECUTION',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 1,
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
-                ),
-              ),
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-class _ProgressCard extends StatelessWidget {
-  final int currentStep;
-  final int totalSteps;
-
-  const _ProgressCard({required this.currentStep, required this.totalSteps});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: theme.cardTheme.color,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.25),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
+      body: Column(
         children: [
-          Text(
-            'Step $currentStep of $totalSteps',
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: theme.textTheme.bodyLarge?.color ?? Colors.white,
-            ),
-          ),
-          const SizedBox(height: 20),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(8),
-            child: LinearProgressIndicator(
-              minHeight: 12,
-              backgroundColor: theme.scaffoldBackgroundColor,
-              color: theme.primaryColor,
-              value: totalSteps > 0 ? currentStep / totalSteps : null,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ClarificationCard extends StatelessWidget {
-  final String question;
-  final bool isConfirmation;
-  final TextEditingController textController;
-  final ValueChanged<String> onSubmit;
-  final VoidCallback onYes;
-  final VoidCallback onNo;
-
-  const _ClarificationCard({
-    required this.question,
-    required this.isConfirmation,
-    required this.textController,
-    required this.onSubmit,
-    required this.onYes,
-    required this.onNo,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Container(
-      padding: const EdgeInsets.all(20.0),
-      decoration: BoxDecoration(
-        color: theme.primaryColor.withValues(alpha: 0.12),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: theme.primaryColor.withValues(alpha: 0.35)),
-      ),
-      child: Column(
-        children: [
-          Text(
-            question,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 17,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.secondary,
-            ),
-          ),
-          const SizedBox(height: 20),
-          if (isConfirmation)
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: onNo,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor:
-                          theme.textTheme.bodyMedium?.color ?? Colors.white70,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      side: BorderSide(color: Colors.white24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+          if (totalSteps > 0) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: LinearProgressIndicator(
+                        value: currentStep / totalSteps,
+                        minHeight: 8,
+                        backgroundColor: AppTheme.surface,
+                        color: AppTheme.primary,
                       ),
                     ),
-                    child: const Text('NO'),
                   ),
+                  const SizedBox(width: 16),
+                  Text(
+                    '$currentStep / $totalSteps',
+                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                  ),
+                ],
+              ),
+            ),
+          ],
+          
+          Container(
+            margin: const EdgeInsets.symmetric(horizontal: 24),
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: AppTheme.card,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: AppTheme.surface),
+            ),
+            child: Row(
+              children: [
+                FadeTransition(
+                  opacity: _pulseAnimation,
+                  child: const Icon(Icons.settings_suggest_rounded, color: AppTheme.primary, size: 28),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: 16),
                 Expanded(
-                  child: ElevatedButton(
-                    onPressed: onYes,
-                    child: const Text('YES'),
+                  child: Text(
+                    controller.statusMessage,
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
                   ),
                 ),
               ],
-            )
-          else
-            TextField(
-              controller: textController,
-              textInputAction: TextInputAction.send,
-              style: TextStyle(
-                color: theme.textTheme.bodyLarge?.color ?? Colors.white,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Type your answer...',
-                hintStyle: TextStyle(
-                  color: theme.textTheme.bodyMedium?.color ?? Colors.white54,
-                ),
-                filled: true,
-                fillColor: theme.scaffoldBackgroundColor,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide.none,
-                ),
-                suffixIcon: IconButton(
-                  icon: Icon(Icons.send_rounded, color: theme.primaryColor),
-                  onPressed: () => onSubmit(textController.text),
-                ),
-              ),
-              onSubmitted: onSubmit,
             ),
+          ),
+          
+          Expanded(
+            child: ListView.builder(
+              padding: const EdgeInsets.all(24),
+              itemCount: totalSteps,
+              itemBuilder: (context, index) {
+                final isCompleted = index < (currentStep - 1);
+                final isCurrent = index == (currentStep - 1);
+                
+                Color iconColor = AppTheme.textSecondary;
+                IconData iconData = Icons.radio_button_unchecked_rounded;
+                
+                if (isCompleted) {
+                  iconColor = AppTheme.success;
+                  iconData = Icons.check_circle_rounded;
+                } else if (isCurrent) {
+                  iconColor = AppTheme.primary;
+                  iconData = Icons.play_circle_fill_rounded;
+                }
+                
+                return AnimatedContainer(
+                  duration: const Duration(milliseconds: 300),
+                  margin: const EdgeInsets.only(bottom: 12),
+                  decoration: BoxDecoration(
+                    color: isCurrent ? AppTheme.surface : Colors.transparent,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: isCurrent ? AppTheme.primary.withValues(alpha: 0.3) : Colors.transparent,
+                    ),
+                  ),
+                  child: ListTile(
+                    leading: Icon(iconData, color: iconColor),
+                    title: Text(
+                      'Step ${index + 1}',
+                      style: TextStyle(
+                        color: isCurrent ? AppTheme.textPrimary : AppTheme.textSecondary,
+                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                      ),
+                    ),
+                    subtitle: isCurrent ? const Text('Running...', style: TextStyle(color: AppTheme.primary)) : null,
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          if (isClarifying)
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: AppTheme.card,
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                boxShadow: [
+                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, -5))
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(Icons.help_outline_rounded, color: AppTheme.accent),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          controller.clarificationQuestion ?? 'Clarification needed',
+                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  if (controller.isTeachConfirmation)
+                    Row(
+                      children: [
+                        Expanded(
+                          child: OutlinedButton(
+                            onPressed: () => controller.provideClarification('No'),
+                            style: OutlinedButton.styleFrom(
+                              foregroundColor: AppTheme.textPrimary,
+                              side: const BorderSide(color: AppTheme.surface),
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                            ),
+                            child: const Text('NO'),
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: ElevatedButton(
+                            onPressed: () => controller.provideClarification('Yes'),
+                            child: const Text('YES'),
+                          ),
+                        ),
+                      ],
+                    )
+                  else
+                    TextField(
+                      controller: _clarificationController,
+                      style: const TextStyle(color: AppTheme.textPrimary),
+                      decoration: InputDecoration(
+                        hintText: 'Type your answer...',
+                        filled: true,
+                        fillColor: AppTheme.surface,
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        suffixIcon: IconButton(
+                          icon: const Icon(Icons.send_rounded, color: AppTheme.primary),
+                          onPressed: () => _submitClarification(controller, _clarificationController.text),
+                        ),
+                      ),
+                      onSubmitted: (val) => _submitClarification(controller, val),
+                    ),
+                ],
+              ),
+            ),
+            
+          Padding(
+            padding: const EdgeInsets.all(24.0),
+            child: SizedBox(
+              width: double.infinity,
+              height: 56,
+              child: ElevatedButton.icon(
+                onPressed: controller.stopExecution,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.error.withValues(alpha: 0.1),
+                  foregroundColor: AppTheme.error,
+                  elevation: 0,
+                ),
+                icon: const Icon(Icons.stop_rounded),
+                label: const Text('STOP EXECUTION', style: TextStyle(fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
         ],
       ),
     );

@@ -87,13 +87,15 @@ class NodeRanker {
     if (actionType == 'type' || actionType == 'set_quantity') {
       if (node.isEditable) {
         classScore = 1.0;
-      } else if (node.className?.contains('EditText') == true)
+      } else if (node.className?.contains('EditText') == true) {
         classScore = 1.0;
+      }
     } else {
       if (node.isClickable) {
         classScore = 1.0;
-      } else if (node.className?.contains('Button') == true)
+      } else if (node.className?.contains('Button') == true) {
         classScore = 1.0;
+      }
     }
 
     final clickEditScore = (node.isClickable || node.isEditable) ? 1.0 : 0.0;
@@ -139,3 +141,4 @@ class NodeRanker {
     return (score + identityScore).clamp(0.0, 1.0).toDouble();
   }
 }
+

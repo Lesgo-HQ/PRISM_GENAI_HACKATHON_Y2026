@@ -6,6 +6,7 @@ import 'package:path_provider/path_provider.dart';
 
 import 'models/flow.dart';
 import 'models/action_trace_event.dart';
+import 'models/chat_message.dart';
 import 'models/replay_session.dart';
 import 'services/accessibility_bridge.dart';
 import 'services/asr_service.dart';
@@ -36,7 +37,16 @@ enum ClarificationContext {
   replayStuck,
 }
 
+
 class AppController extends ChangeNotifier {
+  final List<ChatMessage> _messages = [];
+  List<ChatMessage> get messages => _messages;
+
+  void addMessage(ChatMessage msg) {
+    _messages.add(msg);
+    notifyListeners();
+  }
+
   final AccessibilityBridge _bridge = AccessibilityBridge();
   final AsrService _asr = AsrService();
   late final FlowStore _store;

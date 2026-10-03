@@ -1,9 +1,11 @@
-﻿import 'package:flutter/services.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/foundation.dart';
 import 'dart:convert';
 import 'dart:math' as math;
 
 import '../models/parsed_intent.dart';
 import 'slot_extractor.dart';
+import 'llm_client.dart';
 
 class LocalIntentModel {
   static const MethodChannel _channel = MethodChannel('saar/accessibility');
@@ -19,7 +21,7 @@ class LocalIntentModel {
         _vocab[lines[i].trim()] = i;
       }
     } catch (e) {
-      print("Failed to load vocab.txt: $e");
+      debugPrint("Failed to load vocab.txt: $e");
     }
   }
 
@@ -54,7 +56,7 @@ class LocalIntentModel {
       });
       return logits?.map((e) => (e as num).toDouble()).toList();
     } catch (e) {
-      print("Failed to run ONNX model: $e");
+      debugPrint("Failed to run ONNX model: $e");
       return null;
     }
   }
@@ -63,7 +65,7 @@ class LocalIntentModel {
     final lower = text.trim().toLowerCase();
     if (lower.isEmpty) return ParsedIntent.unknown();
 
-    final intent = switch (true) {
+    var intent = switch (true) {
       _ when lower.contains('teach') => 'teach',
       _ when lower.contains('search') || lower.contains('find') => 'search',
       _ when lower.contains('order') || lower.contains('buy') => 'order',
@@ -75,15 +77,35 @@ class LocalIntentModel {
       _ when lower.contains('sort') => 'sort',
       _ => null,
     };
+
+    double confidence = 0.9;
+
+    if (intent == null) {
+      final llmResult = await understandWithLlm(text);
+      if (llmResult != null) {
+        try {
+          final map = jsonDecode(llmResult);
+          intent = map['intent'];
+          confidence = (map['confidence'] as num?)?.toDouble() ?? 0.8;
+        } catch (_) {}
+      }
+    }
+
     if (intent == null) return ParsedIntent.unknown();
 
     return ParsedIntent(
       intent: intent,
       app: _slotExtractor.extractApp(lower),
       slots: _slotExtractor.extract(text),
-      confidence: 0.9,
+      confidence: confidence,
       embedding: await embed(text),
     );
+  }
+
+  Future<String?> understandWithLlm(String utterance) async {
+    return LlmClient.instance.understandIntent(utterance, [
+      'teach', 'search', 'order', 'add_to_cart', 'checkout', 'change_quantity', 'select_address', 'filter', 'sort'
+    ]);
   }
 
   Future<List<double>> embed(String text) async {
