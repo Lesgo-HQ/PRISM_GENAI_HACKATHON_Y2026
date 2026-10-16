@@ -186,6 +186,21 @@ class Flow {
     required this.steps,
   });
 
+  /// Keep demonstration values as examples, not fixed parts of the capability.
+  String get procedureTemplate {
+    var result = triggerIntent;
+    for (final slot in slots) {
+      final example = slot.defaultValue?.toString();
+      if (example != null && example.isNotEmpty) {
+        result = result.replaceAll(
+          RegExp(RegExp.escape(example), caseSensitive: false),
+          '{${slot.name}}',
+        );
+      }
+    }
+    return result;
+  }
+
   factory Flow.fromJson(Map<String, dynamic> json) {
     return Flow(
       flowId: json['flow_id'] as String,

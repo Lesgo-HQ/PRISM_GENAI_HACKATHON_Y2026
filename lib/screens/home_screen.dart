@@ -487,6 +487,31 @@ class _HomeViewState extends State<_HomeView>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          if (!_showTypedCommand)
+            Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: Wrap(
+                spacing: 8,
+                children: [
+                  ActionChip(
+                    label: const Text('Operate an app'),
+                    avatar: const Icon(Icons.touch_app, size: 18),
+                    onPressed: () {
+                      _commandController.text = 'do ';
+                      setState(() => _showTypedCommand = true);
+                    },
+                  ),
+                  ActionChip(
+                    label: const Text('Teach a skill'),
+                    avatar: const Icon(Icons.school_outlined, size: 18),
+                    onPressed: () {
+                      _commandController.text = 'teach me to ';
+                      setState(() => _showTypedCommand = true);
+                    },
+                  ),
+                ],
+              ),
+            ),
           if (controller.flows.isNotEmpty && !_showTypedCommand)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,

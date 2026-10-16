@@ -33,6 +33,15 @@ class SaarAccessibilityService : AccessibilityService() {
         private var teachModeEnabled = false
 
         private val actionTrace = mutableListOf<JSONObject>()
+        var onAgentControl: ((String) -> Unit)? = null
+        fun updateAgentCapsule(message: String?) {
+            instance?.let { service ->
+                android.os.Handler(android.os.Looper.getMainLooper()).post {
+                    service.renderAgentCapsule(message)
+                }
+            }
+        }
+
         private val actionTraceLock = Any()
 
         /**
@@ -60,6 +69,7 @@ class SaarAccessibilityService : AccessibilityService() {
         fun getLatestTreeJson(): String? = latestTreeJson
 
         fun refreshTreeJson(): String? {
+            latestTreeJson = null
             instance?.captureTree()
             return latestTreeJson
         }
@@ -74,7 +84,7 @@ class SaarAccessibilityService : AccessibilityService() {
                 Log.w(TAG, "dispatchTap BLOCKED: sensitive screen detected")
                 return false
             }
-            return svc.performTap(x, y)
+            return svc.withCapsuleHidden { svc.performTap(x, y) }
         }
 
         fun dispatchSwipe(
@@ -90,7 +100,7 @@ class SaarAccessibilityService : AccessibilityService() {
                 Log.w(TAG, "dispatchSwipe BLOCKED: sensitive screen detected")
                 return false
             }
-            return svc.performSwipe(startX, startY, endX, endY, durationMs)
+            return svc.withCapsuleHidden { svc.performSwipe(startX, startY, endX, endY, durationMs) }
         }
 
         fun typeIntoFocused(value: String): Boolean {
@@ -249,8 +259,7 @@ class SaarAccessibilityService : AccessibilityService() {
             val apps = JSONArray()
             for (info in resolveInfos) {
                 val appInfo = info.activityInfo.applicationInfo
-                val isSystem = (appInfo.flags and android.content.pm.ApplicationInfo.FLAG_SYSTEM) != 0
-                if (!isSystem) {
+                if (appInfo.packageName != context.packageName) {
                     val obj = JSONObject()
                     obj.put("packageName", appInfo.packageName)
                     obj.put("appName", appInfo.loadLabel(pm).toString())
@@ -365,9 +374,63 @@ class SaarAccessibilityService : AccessibilityService() {
 
     override fun onDestroy() {
         hideRecordingOverlay()
+        renderAgentCapsule(null)
         instance = null
         Log.i(TAG, "SaarAccessibilityService destroyed")
         super.onDestroy()
+    }
+
+    private var agentCapsule: android.view.View? = null
+    private var agentLabel: android.widget.TextView? = null
+    private fun renderAgentCapsule(message: String?) {
+        val wm = getSystemService(WINDOW_SERVICE) as android.view.WindowManager
+        if (message == null) {
+            agentCapsule?.let { runCatching { wm.removeView(it) } }
+            agentCapsule = null
+            agentLabel = null
+            return
+        }
+        if (agentCapsule == null) {
+            val box = android.widget.LinearLayout(this).apply {
+                orientation = android.widget.LinearLayout.VERTICAL
+                setPadding(20, 10, 20, 10)
+                setBackgroundColor(android.graphics.Color.rgb(22, 29, 42))
+            }
+            agentLabel = android.widget.TextView(this).apply {
+                setTextColor(android.graphics.Color.WHITE)
+                textSize = 12f
+                maxLines = 2
+            }
+            box.addView(agentLabel)
+            val controls = android.widget.LinearLayout(this)
+            listOf("Pause" to "pause", "Resume" to "continue", "Talk" to "talk", "Stop" to "stop").forEach { (label, command) ->
+                controls.addView(android.widget.Button(this).apply {
+                    text = label
+                    textSize = 11f
+                    minWidth = 0
+                    setOnClickListener {
+                        if (command == "talk") {
+                            packageManager.getLaunchIntentForPackage(packageName)?.let {
+                                it.addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                startActivity(it)
+                            }
+                        }
+                        onAgentControl?.invoke(command)
+                    }
+                }, android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+            }
+            box.addView(controls)
+            val width = (resources.displayMetrics.widthPixels * 0.92).toInt()
+            val params = android.view.WindowManager.LayoutParams(width, -2,
+                android.view.WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+                android.view.WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE,
+                android.graphics.PixelFormat.TRANSLUCENT).apply {
+                    gravity = android.view.Gravity.TOP or android.view.Gravity.CENTER_HORIZONTAL
+                    y = 40
+                }
+            runCatching { wm.addView(box, params); agentCapsule = box }
+        }
+        agentLabel?.text = "SAAR · $message"
     }
 
     // ── Recording Overlay ──────────────────────────────────────────
@@ -483,7 +546,7 @@ class SaarAccessibilityService : AccessibilityService() {
                 val child = node.getChild(i)
                 if (child != null) {
                     try {
-                        children.put(serializeNode(child))
+                        if (child.isVisibleToUser) children.put(serializeNode(child))
                     } finally {
                         child.recycle()
                     }
@@ -569,6 +632,24 @@ class SaarAccessibilityService : AccessibilityService() {
     }
 
     // â”€â”€ Gesture dispatch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+
+    // Gesture dispatch runs on the bridge worker thread. Hide our own touchable
+    // window before injecting a gesture so it cannot receive the intended app tap.
+    private fun withCapsuleHidden(action: () -> Boolean): Boolean {
+        val hidden = java.util.concurrent.CountDownLatch(1)
+        val handler = android.os.Handler(android.os.Looper.getMainLooper())
+        handler.post {
+            agentCapsule?.visibility = android.view.View.GONE
+            hidden.countDown()
+        }
+        return try {
+            if (!hidden.await(1, java.util.concurrent.TimeUnit.SECONDS)) return false
+            Thread.sleep(100) // Allow WindowManager to apply the touch-region change.
+            if (isSensitiveScreenDetected()) false else action()
+        } finally {
+            handler.post { agentCapsule?.visibility = android.view.View.VISIBLE }
+        }
+    }
 
     private fun performTap(x: Float, y: Float): Boolean {
         return try {

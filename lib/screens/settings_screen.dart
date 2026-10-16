@@ -157,6 +157,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
             title: const Text('Learned skills'),
             subtitle: Text('${app.flows.length} stored on this device'),
           ),
+          ListTile(
+            title: const Text('Open source licenses'),
+            onTap: () =>
+                showLicensePage(context: context, applicationName: 'SAAR'),
+          ),
           const Text(
             'Speech recognition uses the device speech service. Offline availability depends on installed language packs. '
             'Credential and payment steps stay under your control.',

@@ -10,6 +10,9 @@ import 'models/chat_message.dart';
 import 'models/replay_session.dart';
 import 'services/accessibility_bridge.dart';
 import 'services/conversation_service.dart';
+import 'services/adaptive_agent.dart';
+import 'services/memory_context.dart';
+import 'models/agent_task.dart';
 import 'services/slot_extractor.dart';
 import 'services/asr_service.dart';
 import 'services/flow_store.dart';
@@ -37,6 +40,9 @@ enum ClarificationContext {
   flowNeedsClarification,
   flowLowConfidence,
   replayStuck,
+  agentApp,
+  agentConfirm,
+  agentInput,
 }
 
 class AppController extends ChangeNotifier {
@@ -52,12 +58,19 @@ class AppController extends ChangeNotifier {
        _conversation = conversation ?? ConversationService(),
        _localModel = intentModel ?? LocalIntentModel();
   final ConversationService _conversation;
+  AdaptiveAgent? _agent;
+  AgentTask? _agentRecovered;
+  String? _agentGoal;
+  String? _agentPackage;
+  List<Map<String, dynamic>> _availableApps = [];
+  StreamSubscription<String>? _controlSubscription;
   bool _processing = false;
   String? _pendingInterruption;
   bool _disposed = false;
   int _turn = 0;
   ReplaySession? _recovered;
-  bool get hasActiveTask => _initialized && _replay.isActive;
+  bool get hasActiveTask =>
+      _initialized && (_replay.isActive || (_agent?.running ?? false));
   void _say(String text) {
     if (_disposed) return;
     _statusMessage = text;
@@ -154,8 +167,21 @@ class AppController extends ChangeNotifier {
       } catch (_) {}
       await checkAccessibility();
       await _checkRecoverTeaching();
+      _agentRecovered = await _store.loadAgentCheckpoint();
+      _conversation.memory = await _store.readMemory('user');
+      _controlSubscription = _bridge.agentControls.listen((command) {
+        if (command == 'talk') {
+          startListening();
+        } else {
+          submitTypedCommand(command);
+        }
+      }, onError: (_) {});
       _recovered = await _store.loadCheckpoint();
-      if (_recovered != null) {
+      if (_agentRecovered != null) {
+        _say(
+          'Your adaptive task is saved: ${_agentRecovered!.goal}. Say resume task to continue or cancel.',
+        );
+      } else if (_recovered != null) {
         _say(
           'I saved your unfinished task: ${_recovered!.flow.triggerIntent}. Say resume task to review and continue, or cancel to discard it.',
         );
@@ -226,7 +252,10 @@ class AppController extends ChangeNotifier {
     await _bridge.stopSpeaking();
 
     final previousState = _state;
-    if (hasActiveTask) _replay.pause();
+    if (hasActiveTask) {
+      _replay.pause();
+      _agent?.pause();
+    }
     if (!hasActiveTask) _state = AppState.listening;
     _statusMessage = 'Listening...';
     notifyListeners();
@@ -266,7 +295,11 @@ class AppController extends ChangeNotifier {
       _turn++;
       stopExecution();
       _recovered = null;
-      if (_initialized) await _store.clearCheckpoint();
+      _agentRecovered = null;
+      if (_initialized) {
+        await _store.clearCheckpoint();
+        await _store.clearAgentCheckpoint();
+      }
       _say('Task cancelled.');
       return;
     }
@@ -276,11 +309,19 @@ class AppController extends ChangeNotifier {
     }
     if (['pause', 'wait', 'hold on'].contains(lower) && hasActiveTask) {
       _replay.pause();
+      _agent?.pause();
       _say('Pausing at the next action boundary. Your progress is kept.');
       return;
     }
     if (_clarificationContext != null) {
       await provideClarification(text);
+      return;
+    }
+    if (_agentRecovered != null &&
+        ['resume', 'resume task', 'continue'].contains(lower)) {
+      final task = _agentRecovered!;
+      _agentRecovered = null;
+      await _runAgent(task);
       return;
     }
     if (_recovered != null &&
@@ -296,6 +337,7 @@ class AppController extends ChangeNotifier {
     }
     if (hasActiveTask) {
       _replay.pause();
+      _agent?.pause();
       _pendingInterruption = text;
       _say('I’m pausing your task to apply your change.');
       return;
@@ -304,6 +346,28 @@ class AppController extends ChangeNotifier {
         _state == AppState.synthesizing ||
         _state == AppState.teaching) {
       _say('Finish the current request or teaching session first.');
+      return;
+    }
+    if (lower.startsWith('remember ')) {
+      final content = '${_conversation.memory}\n${text.substring(9).trim()}'
+          .trim();
+      try {
+        await _store.writeMemory('user', content);
+        _conversation.memory = content;
+        _say('I saved that in your local memory.');
+      } catch (_) {
+        _say('Could not save memory. Keep it under 8 KB.');
+      }
+      return;
+    }
+    if (lower == 'forget my preferences') {
+      await _store.writeMemory('user', '');
+      _conversation.memory = '';
+      _say('Your saved preferences are cleared.');
+      return;
+    }
+    if (lower.startsWith('do ')) {
+      await _prepareAgent(text.substring(3));
       return;
     }
     _processing = true;
@@ -322,7 +386,7 @@ class AppController extends ChangeNotifier {
       ].contains(lower)) {
         _say(
           _flows.isEmpty
-              ? 'Hi! I can learn a task by watching you, then reuse it with new inputs. Say “teach me to search for a product” to begin.'
+              ? 'Hi! I can operate an app with “do …”, or learn a task by watching you and reuse it with new inputs. Say “teach me to search for a product” to begin.'
               : 'I remember: ${_flows.map((f) => f.triggerIntent).join('; ')}. Which task would you like?',
         );
         return;
@@ -419,7 +483,9 @@ class AppController extends ChangeNotifier {
   }
 
   Future<void> _startTeaching(String utterance, String taskDescription) async {
+    final turn = _turn;
     await checkAccessibility();
+    if (_disposed || turn != _turn) return;
     if (!_isAccessibilityEnabled) {
       _state = AppState.error;
       _statusMessage =
@@ -594,6 +660,7 @@ class AppController extends ChangeNotifier {
     _replaySubscription = _replay.stateStream.listen((replayState) {
       _replayState = replayState;
       _statusMessage = replayState.message ?? 'Executing...';
+      unawaited(_bridge.updateCapsule(_statusMessage));
 
       if (replayState.status == ReplayStatus.waitingForUser) {
         _state = AppState.waitingForClarification;
@@ -639,6 +706,7 @@ class AppController extends ChangeNotifier {
       debugPrint('Failed to save execution report: $e');
     }
 
+    unawaited(_bridge.updateCapsule(null));
     _replayState = null;
     _clarificationQuestion = null;
     _clarificationContext = null;
@@ -662,8 +730,11 @@ class AppController extends ChangeNotifier {
     // Also required while waiting for clarification: the replay engine is
     // parked on a resume signal that only stop() can release.
     if (_initialized) _replay.stop();
+    _agent?.stop();
+    unawaited(_bridge.updateCapsule(null));
     _state = AppState.idle;
     _statusMessage = 'Execution stopped';
+    unawaited(_bridge.updateCapsule(null));
     _replayState = null;
     _clarificationQuestion = null;
     _clarificationContext = null;
@@ -683,6 +754,56 @@ class AppController extends ChangeNotifier {
       'sure',
       'proceed',
     ].contains(lower);
+
+    if (ctx == ClarificationContext.agentApp) {
+      final number = int.tryParse(response.trim());
+      final names = _availableApps
+          .where(
+            (a) =>
+                (a['appName'] as String).toLowerCase() == lower ||
+                a['packageName'] == response.trim(),
+          )
+          .toList();
+      final selected =
+          number != null && number > 0 && number <= _availableApps.length
+          ? _availableApps[number - 1]
+          : (names.length == 1 ? names.single : null);
+      if (selected == null) {
+        _clarificationContext = ctx;
+        _clarificationQuestion =
+            'Choose an installed app by number or exact name.';
+        _say(_clarificationQuestion!);
+        return;
+      }
+      _agentPackage = selected['packageName'] as String;
+      _clarificationContext = ClarificationContext.agentConfirm;
+      _clarificationQuestion =
+          'Let SAAR operate ${selected['appName']} to “$_agentGoal”? The current screen text will be sent to your configured model. Say yes to start.';
+      _say(_clarificationQuestion!);
+      return;
+    }
+    if (ctx == ClarificationContext.agentConfirm) {
+      if (approved) {
+        await _runAgent(
+          AgentTask(
+            id: DateTime.now().microsecondsSinceEpoch.toString(),
+            goal: _agentGoal!,
+            package: _agentPackage!,
+          ),
+        );
+      } else {
+        _state = AppState.idle;
+        _say('Task cancelled.');
+      }
+      return;
+    }
+    if (ctx == ClarificationContext.agentInput) {
+      _agent?.resume(response);
+      _state = AppState.executing;
+      _statusMessage = 'Continuing with your update…';
+      notifyListeners();
+      return;
+    }
 
     if (ctx == ClarificationContext.unknownIntent) {
       if (approved) {
@@ -800,6 +921,105 @@ class AppController extends ChangeNotifier {
     notifyListeners();
   }
 
+  Future<void> _prepareAgent(String goal) async {
+    final turn = ++_turn;
+    if (goal.trim().isEmpty) {
+      _say('Tell me the task after “do”.');
+      return;
+    }
+    await checkAccessibility();
+    if (_disposed || turn != _turn) return;
+    if (!_isAccessibilityEnabled) {
+      _say(
+        'Enable accessibility in Settings before asking me to operate an app.',
+      );
+      return;
+    }
+    try {
+      _availableApps = (await _bridge.installedApps())
+          .where((a) => a['packageName'] != 'com.lesgo.saar')
+          .toList();
+      if (_disposed || turn != _turn) return;
+      final seen = <String>{};
+      _availableApps.removeWhere((a) => !seen.add(a['packageName'] as String));
+      _availableApps.sort(
+        (a, b) => (a['appName'] as String).compareTo(b['appName'] as String),
+      );
+      if (_availableApps.isEmpty) {
+        _say('No launchable apps were found.');
+        return;
+      }
+      _agentGoal = goal;
+      _state = AppState.waitingForClarification;
+      _clarificationContext = ClarificationContext.agentApp;
+      _clarificationQuestion =
+          'Which app should I use?\n${_availableApps.asMap().entries.map((e) => "${e.key + 1}. ${e.value['appName']}").join("\n")}';
+      _say(_clarificationQuestion!);
+    } catch (_) {
+      _say('Could not read installed apps. Check accessibility access.');
+    }
+  }
+
+  Future<void> _runAgent(AgentTask task) async {
+    if (hasActiveTask) {
+      _say('Pause or finish the current task first.');
+      return;
+    }
+    _state = AppState.executing;
+    _agent = AdaptiveAgent(
+      bridge: _bridge,
+      checkpoint: _store.saveAgentCheckpoint,
+      onStatus: (message, waiting) {
+        _statusMessage = message;
+        _state = waiting
+            ? AppState.waitingForClarification
+            : AppState.executing;
+        _clarificationContext = waiting
+            ? ClarificationContext.agentInput
+            : null;
+        _clarificationQuestion = waiting ? message : null;
+        unawaited(_bridge.updateCapsule(message));
+        if (waiting && _pendingInterruption != null) {
+          final update = _pendingInterruption!;
+          _pendingInterruption = null;
+          unawaited(provideClarification(update));
+        }
+        notifyListeners();
+      },
+    );
+    try {
+      await _agent!.run(
+        task,
+        _flows,
+        memory: MemoryContext.recall(
+          user: _conversation.memory,
+          app: await _store.readMemory(task.package),
+        ),
+      );
+      if (task.status == 'completed') {
+        await _store.writeMemory(
+          task.package,
+          'Previously verified task: ${task.goal}'.substring(
+            0,
+            ('Previously verified task: ${task.goal}').length.clamp(0, 2000),
+          ),
+        );
+      }
+    } catch (_) {
+      if (task.status != 'completed' && task.status != 'cancelled') {
+        task.status = 'paused';
+      }
+      _statusMessage = 'Task interrupted. Check storage and model connection before resuming.';
+    } finally {
+      _agentRecovered = task.status == 'paused' ? task : null;
+      _clarificationContext = null;
+      _clarificationQuestion = null;
+      _state = AppState.idle;
+      await _bridge.updateCapsule(null);
+      _say(_statusMessage);
+    }
+  }
+
   Future<void> deleteFlow(String flowId) async {
     await _store.deleteFlow(flowId);
     _flows = await _store.getAllFlows();
@@ -816,6 +1036,9 @@ class AppController extends ChangeNotifier {
     _disposed = true;
     _turn++;
     _teachSubscription?.cancel();
+    _controlSubscription?.cancel();
+    _agent?.stop();
+    unawaited(_bridge.updateCapsule(null));
     _replaySubscription?.cancel();
     try {
       if (_initialized) _replay.dispose();

@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saar/app_controller.dart';
 import 'package:saar/models/chat_message.dart';
+import 'package:saar/models/agent_task.dart';
 import 'package:saar/models/flow.dart';
 import 'package:saar/models/parsed_intent.dart';
 import 'package:saar/models/replay_session.dart';
@@ -39,6 +40,13 @@ class MemoryStore extends FlowStore {
   @override
   Future<void> clearCheckpoint() async {}
   @override
+  Future<AgentTask?> loadAgentCheckpoint() async => null;
+  @override
+  Future<void> clearAgentCheckpoint() async {}
+  @override
+  Future<String> readMemory(String scope) async => '';
+
+  @override
   Future<void> logSession({
     required String? flowId,
     required String sessionType,
@@ -48,6 +56,10 @@ class MemoryStore extends FlowStore {
 }
 
 class SilentBridge extends AccessibilityBridge {
+  @override
+  Stream<String> get agentControls => const Stream.empty();
+  @override
+  Future<void> updateCapsule(String? message) async {}
   @override
   Future<bool> isServiceEnabled() async => false;
   @override

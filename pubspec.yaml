@@ -33,6 +33,7 @@ flutter:
   assets:
     - assets/models/
     - assets/images/
+    - assets/licenses/
 flutter_launcher_icons:
   android: true
   ios: true

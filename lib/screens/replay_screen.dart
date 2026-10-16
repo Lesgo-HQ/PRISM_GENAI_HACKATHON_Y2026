@@ -223,13 +223,18 @@ class _ReplayScreenState extends State<ReplayScreen>
                       ),
                       const SizedBox(width: 12),
                       Expanded(
-                        child: Text(
-                          controller.clarificationQuestion ??
-                              'Clarification needed',
-                          style: const TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppTheme.textPrimary,
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxHeight: 180),
+                          child: SingleChildScrollView(
+                            child: Text(
+                              controller.clarificationQuestion ??
+                                  'Clarification needed',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.textPrimary,
+                              ),
+                            ),
                           ),
                         ),
                       ),

@@ -5,6 +5,8 @@ import 'dart:convert';
 
 import '../models/flow.dart';
 import '../models/replay_session.dart';
+import '../models/agent_task.dart';
+import 'memory_context.dart';
 
 class FlowStore {
   static Database? _database;
@@ -21,8 +23,16 @@ class FlowStore {
     final dbPath = await getDatabasesPath();
     return openDatabase(
       join(dbPath, 'saar.db'),
-      version: 2,
+      version: 3,
       onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 3) {
+          await db.execute(
+            'CREATE TABLE agent_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
+          );
+          await db.execute(
+            'CREATE TABLE memories (scope TEXT PRIMARY KEY, content TEXT NOT NULL)',
+          );
+        }
         if (oldVersion < 2) {
           await db.execute(
             'CREATE TABLE task_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
@@ -30,6 +40,12 @@ class FlowStore {
         }
       },
       onCreate: (db, version) async {
+        await db.execute(
+          'CREATE TABLE agent_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
+        );
+        await db.execute(
+          'CREATE TABLE memories (scope TEXT PRIMARY KEY, content TEXT NOT NULL)',
+        );
         await db.execute(
           'CREATE TABLE task_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
         );
@@ -66,6 +82,57 @@ class FlowStore {
         ''');
       },
     );
+  }
+
+  Future<void> saveAgentCheckpoint(AgentTask task) async {
+    final db = await database;
+    if (['completed', 'cancelled'].contains(task.status)) {
+      await db.delete('agent_checkpoint');
+      await logSession(
+        flowId: null,
+        sessionType: 'adaptive',
+        status: task.status,
+        details: jsonEncode(task.toJson()),
+      );
+    } else {
+      await db.insert('agent_checkpoint', {
+        'id': 1,
+        'payload': jsonEncode(task.toJson()),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  Future<AgentTask?> loadAgentCheckpoint() async {
+    final rows = await (await database).query('agent_checkpoint', limit: 1);
+    return rows.isEmpty
+        ? null
+        : AgentTask.fromJson(jsonDecode(rows.single['payload'] as String));
+  }
+
+  Future<void> clearAgentCheckpoint() async =>
+      (await database).delete('agent_checkpoint');
+  Future<String> readMemory(String scope) async {
+    final rows = await (await database).query(
+      'memories',
+      where: 'scope = ?',
+      whereArgs: [scope],
+    );
+    return rows.isEmpty
+        ? ''
+        : MemoryContext.keepBlock(rows.single['content'] as String);
+  }
+
+  Future<void> writeMemory(String scope, String content) async {
+    if (!RegExp(r'^[a-zA-Z0-9_.]+$').hasMatch(scope) ||
+        utf8.encode(content).length > 8192) {
+      throw const FormatException(
+        'Memory must fit in 8 KB and use a valid scope.',
+      );
+    }
+    await (await database).insert('memories', {
+      'scope': scope,
+      'content': content,
+    }, conflictAlgorithm: ConflictAlgorithm.replace);
   }
 
   Future<void> saveCheckpoint(ReplaySession session) async {

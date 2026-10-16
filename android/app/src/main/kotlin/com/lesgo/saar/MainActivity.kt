@@ -46,11 +46,27 @@ class MainActivity : FlutterActivity() {
             Log.e(TAG, "Failed to load ONNX model: ${e.message}", e)
         }
 
+        EventChannel(flutterEngine.dartExecutor.binaryMessenger, "saar/agent_controls")
+            .setStreamHandler(object : EventChannel.StreamHandler {
+                override fun onListen(arguments: Any?, sink: EventChannel.EventSink) {
+                    SaarAccessibilityService.onAgentControl = { command ->
+                        Handler(Looper.getMainLooper()).post { sink.success(command) }
+                    }
+                }
+                override fun onCancel(arguments: Any?) {
+                    SaarAccessibilityService.onAgentControl = null
+                }
+            })
+
         // â”€â”€ MethodChannel â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, METHOD_CHANNEL)
             .setMethodCallHandler { call, result ->
                 try {
                     when (call.method) {
+                        "updateAgentCapsule" -> {
+                            SaarAccessibilityService.updateAgentCapsule(call.argument<String>("message"))
+                            result.success(true)
+                        }
                         "speak" -> {
                             val text = call.argument<String>("text") ?: ""
                             result.success(speechReady && speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "saar_reply") == TextToSpeech.SUCCESS)
@@ -367,6 +383,8 @@ class MainActivity : FlutterActivity() {
         stopTeachPolling()
         speech?.stop()
         speech?.shutdown()
+        SaarAccessibilityService.onAgentControl = null
+        SaarAccessibilityService.updateAgentCapsule(null)
         nluEngine?.close()
         super.onDestroy()
     }

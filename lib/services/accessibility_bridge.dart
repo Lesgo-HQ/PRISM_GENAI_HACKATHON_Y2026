@@ -23,6 +23,28 @@ class AccessibilityBridge {
     return result ?? false;
   }
 
+  Stream<String> get agentControls =>
+      const EventChannel('saar/agent_controls')
+          .receiveBroadcastStream()
+          .where((e) => e is String)
+          .cast<String>();
+  Future<void> updateCapsule(String? message) async {
+    try {
+      await _methodChannel.invokeMethod('updateAgentCapsule', {
+        'message': message,
+      });
+    } catch (_) {}
+  }
+
+  Future<List<Map<String, dynamic>>> installedApps() async {
+    final raw = await _methodChannel.invokeMethod<String>('getInstalledApps');
+    return raw == null
+        ? []
+        : (jsonDecode(raw) as List)
+              .map((e) => Map<String, dynamic>.from(e as Map))
+              .toList();
+  }
+
   Future<void> speak(String text) async {
     try {
       await _methodChannel.invokeMethod('speak', {'text': text});
