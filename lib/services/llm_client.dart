@@ -1,121 +1,74 @@
-﻿import 'dart:convert';
-import 'package:flutter_dotenv/flutter_dotenv.dart';
+import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// LLM client backed by Groq's OpenAI-compatible API.
-///
-/// Key resolution priority:
-///   1. GROQ_API_KEY in .env file  (bundled asset — never committed to git)
-///   2. 'groq_api_key' in SharedPreferences  (user entered in Settings screen)
-///
-/// Model: llama-3.1-8b-instant — fast, free, great for intent classification.
-/// Docs : https://console.groq.com/docs/openai
+/// Explicitly configured OpenAI-compatible local model server (llama.cpp).
+/// No bundled credentials, implicit cloud fallback, or fabricated success.
 class LlmClient {
-  static final LlmClient instance = LlmClient._internal();
-  LlmClient._internal();
+  static final LlmClient instance = LlmClient();
+  final http.Client _http;
+  LlmClient({http.Client? client}) : _http = client ?? http.Client();
 
-  static const _endpoint = 'https://api.groq.com/openai/v1/chat/completions';
-  static const _defaultModel = 'llama-3.1-8b-instant';
-
-  // ── Key resolution ────────────────────────────────────────────────────────
-
-  /// Returns the first non-empty key found, or null.
-  Future<String?> _apiKey() async {
-    // 1. .env file (highest priority)
-    final envKey = dotenv.maybeGet('GROQ_API_KEY');
-    if (envKey != null && envKey.isNotEmpty && !envKey.startsWith('gsk_placeholder')) {
-      return envKey;
-    }
-    // 2. SharedPreferences (entered by user in Settings screen)
-    final prefs = await SharedPreferences.getInstance();
-    final userKey = prefs.getString('groq_api_key');
-    if (userKey != null && userKey.isNotEmpty) return userKey;
-    return null;
-  }
-
-  String get _model => dotenv.maybeGet('GROQ_MODEL') ?? _defaultModel;
-
-  // ── Public API ────────────────────────────────────────────────────────────
-
-  /// Sends a prompt to Groq and returns the text response.
   Future<String?> generateContent(
     String prompt, {
     String? systemInstruction,
+    List<Map<String, String>> history = const [],
+    Map<String, dynamic>? schema,
+    String schemaName = 'saar_decision',
   }) async {
-    final apiKey = await _apiKey();
-    if (apiKey == null) return null;
-
-    final messages = <Map<String, String>>[];
-    if (systemInstruction != null) {
-      messages.add({'role': 'system', 'content': systemInstruction});
+    final prefs = await SharedPreferences.getInstance();
+    if (!(prefs.getBool('enable_llm') ?? false)) return null;
+    final endpoint = prefs.getString('model_endpoint') ?? '';
+    final uri = Uri.tryParse(endpoint);
+    if (uri == null ||
+        !['http', 'https'].contains(uri.scheme) ||
+        uri.host.isEmpty) {
+      throw const FormatException('Set a valid model endpoint in Settings.');
     }
-    messages.add({'role': 'user', 'content': prompt});
-
-    try {
-      final response = await http
-          .post(
-            Uri.parse(_endpoint),
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': 'Bearer $apiKey',
-            },
-            body: jsonEncode({
-              'model': _model,
-              'messages': messages,
-              'temperature': 0.1,
-              'max_tokens': 512,
-            }),
-          )
-          .timeout(const Duration(seconds: 30));
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-        return data['choices']?[0]?['message']?['content'] as String?;
-      }
-    } catch (_) {
-      // Network unavailable — fall back silently
+    final response = await _http
+        .post(
+          uri,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'model': prefs.getString('model_name') ?? 'local',
+            'messages': [
+              if (systemInstruction != null)
+                {'role': 'system', 'content': systemInstruction},
+              ...history,
+              {'role': 'user', 'content': prompt},
+            ],
+            'temperature': 0.2,
+            'max_tokens': 768,
+            if (schema != null)
+              'response_format': {
+                'type': 'json_schema',
+                'json_schema': {
+                  'name': schemaName,
+                  'strict': true,
+                  'schema': schema,
+                },
+              },
+          }),
+        )
+        .timeout(const Duration(seconds: 45));
+    if (response.statusCode != 200) {
+      throw StateError('Model server returned HTTP ${response.statusCode}.');
     }
-    return null;
+    if (response.body.length > 100000) {
+      throw const FormatException('Model response too large.');
+    }
+    final body = jsonDecode(response.body);
+    final content = body['choices']?[0]?['message']?['content'];
+    if (content is! String || content.trim().isEmpty) {
+      throw const FormatException('Model returned no answer.');
+    }
+    return content.trim();
   }
 
-  /// Classifies a user utterance against known flow names.
-  Future<String?> understandIntent(
-    String utterance,
-    List<String> knownFlows,
-  ) async {
-    final prompt =
-        'Classify the intent of: "$utterance"\n'
-        'Known intents: ${knownFlows.join(", ")}\n'
-        'Reply ONLY with JSON: {"intent":"<intent>","confidence":<0-1>}';
-    final response = await generateContent(
-      prompt,
-      systemInstruction: 'You are a concise intent classifier. Return valid JSON only.',
-    );
-    if (response == null) return null;
-    final match = RegExp(r'\{.*?\}', dotAll: true).firstMatch(response);
-    return match?.group(0) ?? response;
-  }
-
-  /// Plans a multi-step UI automation sequence.
-  Future<Map<String, dynamic>?> planActions(
-    String task,
-    String screenDescription,
-  ) async {
-    final prompt =
-        'Task: "$task"\nScreen: "$screenDescription"\n'
-        'Return JSON with "taskSummary" (string) and "steps" '
-        '(array of {action, description}).';
-    final response = await generateContent(
-      prompt,
-      systemInstruction: 'You are a UI automation planner. Return valid JSON only.',
-    );
-    if (response == null) return null;
-    try {
-      final match = RegExp(r'\{.*\}', dotAll: true).firstMatch(response);
-      return match != null ? jsonDecode(match.group(0)!) : null;
-    } catch (_) {
-      return null;
-    }
-  }
+  Future<String?> understandIntent(String utterance, List<String> knownFlows) =>
+      generateContent(
+        jsonEncode({'utterance': utterance, 'intents': knownFlows}),
+        systemInstruction: 'Classify the requested action. Return JSON with intent (one of the supplied intents or unknown) and confidence (0 to 1).',
+      );
 }

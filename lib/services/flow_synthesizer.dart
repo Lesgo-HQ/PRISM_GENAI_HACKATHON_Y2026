@@ -24,6 +24,9 @@ class FlowSynthesizer {
   }
 
   void _validate(Flow f) {
+    if (f.steps.isEmpty) {
+      throw const FormatException('No reusable actions captured.');
+    }
     const allowed = {
       'tap',
       'type',

@@ -3,6 +3,7 @@ package com.lesgo.saar
 import android.content.Context
 import android.content.ComponentName
 import android.content.Intent
+import android.speech.tts.TextToSpeech
 import android.os.Handler
 import android.os.Looper
 import android.provider.Settings
@@ -21,6 +22,8 @@ class MainActivity : FlutterActivity() {
         private const val EVENT_CHANNEL = "saar/accessibility_events"
     }
 
+    private var speech: TextToSpeech? = null
+    private var speechReady = false
     private var eventSink: EventChannel.EventSink? = null
     private var nluEngine: LocalNluEngine? = null
     private var teachPollHandler: Handler? = null
@@ -29,6 +32,9 @@ class MainActivity : FlutterActivity() {
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+        speech = TextToSpeech(this) { status ->
+            speechReady = status == TextToSpeech.SUCCESS
+        }
 
         try {
             val modelFile = java.io.File(filesDir, "saar_nlu.onnx")
@@ -45,6 +51,14 @@ class MainActivity : FlutterActivity() {
             .setMethodCallHandler { call, result ->
                 try {
                     when (call.method) {
+                        "speak" -> {
+                            val text = call.argument<String>("text") ?: ""
+                            result.success(speechReady && speech?.speak(text, TextToSpeech.QUEUE_FLUSH, null, "saar_reply") == TextToSpeech.SUCCESS)
+                        }
+                        "stopSpeaking" -> {
+                            speech?.stop()
+                            result.success(true)
+                        }
                         "openAccessibilitySettings" -> {
                             val intent = Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
                             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
@@ -351,6 +365,9 @@ class MainActivity : FlutterActivity() {
 
     override fun onDestroy() {
         stopTeachPolling()
+        speech?.stop()
+        speech?.shutdown()
+        nluEngine?.close()
         super.onDestroy()
     }
 }

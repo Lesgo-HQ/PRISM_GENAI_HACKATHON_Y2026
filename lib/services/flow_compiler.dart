@@ -5,6 +5,7 @@ import '../models/action_trace_event.dart';
 import '../models/role_ontology.dart';
 import '../models/ui_node.dart';
 import 'trace_normalizer.dart';
+import 'credential_guard.dart';
 
 class FlowCompiler {
   final TraceNormalizer _normalizer = TraceNormalizer();
@@ -33,12 +34,16 @@ class FlowCompiler {
     for (final event in trace) {
       final node = event.node;
       if (node == null || event.action == 'focus') continue;
+      if (_applicationPackage(event) != appPackage) continue;
 
       final role = _roleForAction(node, event.action, stepId);
 
       final roleLower = role.toLowerCase();
       final textLower = (node.text ?? '').toLowerCase();
-      if (_isSensitiveRole(roleLower) || _isSensitiveRole(textLower)) {
+      if (_isSensitiveRole(roleLower) ||
+          _isSensitiveRole(textLower) ||
+          CredentialGuard.isSensitiveScreen(node) ||
+          event.valueTyped == '<REDACTED>') {
         steps.add(
           FlowStep(id: stepId++, action: 'stop_before', targetRole: role),
         );
@@ -56,14 +61,21 @@ class FlowCompiler {
             final slotName = _slotNameFromRole(role);
             if (!slotNames.contains(slotName)) {
               slotNames.add(slotName);
-              slots.add(Slot(name: slotName, description: 'Value for $role'));
+              slots.add(
+                Slot(
+                  name: slotName,
+                  defaultValue: typed,
+                  description: 'Value for $role',
+                ),
+              );
             }
             valueSlot = slotName;
           }
         }
       }
 
-      final precondition = role.startsWith('GENERIC_')
+      final precondition =
+          role.startsWith('GENERIC_') || role.startsWith('UI_ELEMENT_')
           ? null
           : StepPrecondition(requiredRoles: [role]);
       final recovery = ['dismiss_popup', 'scroll', 'refind_node'];

@@ -9,7 +9,6 @@ import 'flow_library_screen.dart';
 import '../models/chat_message.dart';
 import '../theme.dart';
 
-
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -69,7 +68,8 @@ class _HomeView extends StatefulWidget {
   State<_HomeView> createState() => _HomeViewState();
 }
 
-class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixin {
+class _HomeViewState extends State<_HomeView>
+    with SingleTickerProviderStateMixin {
   final _commandController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _showTypedCommand = false;
@@ -95,7 +95,7 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
     _pulseController.dispose();
     super.dispose();
   }
-  
+
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
       _scrollController.animateTo(
@@ -111,28 +111,10 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
     if (text.isEmpty) return;
     FocusScope.of(context).unfocus();
     _commandController.clear();
-    
-    // Add user message
-    controller.addMessage(ChatMessage(
-      text: text,
-      isUser: true,
-      type: ChatMessageType.user,
-      timestamp: DateTime.now(),
-    ));
-    
-    // Add agent thinking mock
-    Future.delayed(const Duration(milliseconds: 500), () {
-      controller.addMessage(ChatMessage(
-        text: 'Analyzing command...',
-        isUser: false,
-        type: ChatMessageType.agentThinking,
-        timestamp: DateTime.now(),
-      ));
-    });
 
     setState(() => _showTypedCommand = false);
     controller.submitTypedCommand(text);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -140,9 +122,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
   Widget build(BuildContext context) {
     final controller = context.watch<AppController>();
     final isListening = controller.state == AppState.listening;
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_scrollController.hasClients && _scrollController.position.pixels < _scrollController.position.maxScrollExtent) {
+      if (_scrollController.hasClients &&
+          _scrollController.position.pixels <
+              _scrollController.position.maxScrollExtent) {
         _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
       }
     });
@@ -152,11 +136,12 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
       appBar: _buildAppBar(context, controller),
       body: Column(
         children: [
-          if (!controller.isAccessibilityEnabled) _buildAccessibilityBanner(context, controller),
+          if (!controller.isAccessibilityEnabled)
+            _buildAccessibilityBanner(context, controller),
           Expanded(
-            child: controller.messages.isEmpty 
-              ? _buildEmptyState(context)
-              : _buildChatList(context, controller),
+            child: controller.messages.isEmpty
+                ? _buildEmptyState(context)
+                : _buildChatList(context, controller),
           ),
           _buildBottomArea(context, controller, isListening),
         ],
@@ -164,7 +149,10 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
     );
   }
 
-  PreferredSizeWidget _buildAppBar(BuildContext context, AppController controller) {
+  PreferredSizeWidget _buildAppBar(
+    BuildContext context,
+    AppController controller,
+  ) {
     return AppBar(
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       elevation: 0,
@@ -172,7 +160,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
       title: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.bubble_chart_rounded, color: AppTheme.primary, size: 28),
+          const Icon(
+            Icons.bubble_chart_rounded,
+            color: AppTheme.primary,
+            size: 28,
+          ),
           const SizedBox(width: 8),
           const Text(
             'SAAR',
@@ -186,43 +178,53 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: controller.state == AppState.error 
+              color: controller.state == AppState.error
                   ? AppTheme.error.withValues(alpha: 0.2)
                   : AppTheme.primary.withValues(alpha: 0.2),
               borderRadius: BorderRadius.circular(12),
               border: Border.all(
-                color: controller.state == AppState.error 
-                  ? AppTheme.error.withValues(alpha: 0.5)
-                  : AppTheme.primary.withValues(alpha: 0.5),
-              )
+                color: controller.state == AppState.error
+                    ? AppTheme.error.withValues(alpha: 0.5)
+                    : AppTheme.primary.withValues(alpha: 0.5),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 8, height: 8,
+                  width: 8,
+                  height: 8,
                   decoration: BoxDecoration(
-                    color: controller.state == AppState.error ? AppTheme.error : AppTheme.success,
+                    color: controller.state == AppState.error
+                        ? AppTheme.error
+                        : AppTheme.success,
                     shape: BoxShape.circle,
                   ),
                 ),
                 const SizedBox(width: 6),
                 Text(
-                  controller.state == AppState.idle ? 'Online' : controller.statusMessage,
+                  controller.state == AppState.idle
+                      ? 'Online'
+                      : controller.statusMessage,
                   style: TextStyle(
                     fontSize: 12,
-                    color: controller.state == AppState.error ? AppTheme.error : AppTheme.success,
+                    color: controller.state == AppState.error
+                        ? AppTheme.error
+                        : AppTheme.success,
                     fontWeight: FontWeight.w600,
                   ),
-                )
+                ),
               ],
             ),
-          )
+          ),
         ],
       ),
       actions: [
         IconButton(
-          icon: const Icon(Icons.settings_rounded, color: AppTheme.textSecondary),
+          icon: const Icon(
+            Icons.settings_rounded,
+            color: AppTheme.textSecondary,
+          ),
           onPressed: () => Navigator.push(
             context,
             MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -232,7 +234,10 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
     );
   }
 
-  Widget _buildAccessibilityBanner(BuildContext context, AppController controller) {
+  Widget _buildAccessibilityBanner(
+    BuildContext context,
+    AppController controller,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
@@ -244,7 +249,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
         leading: const Icon(Icons.warning_amber_rounded, color: AppTheme.error),
         title: const Text(
           'Accessibility service disabled',
-          style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold, fontSize: 14),
+          style: TextStyle(
+            color: AppTheme.error,
+            fontWeight: FontWeight.bold,
+            fontSize: 14,
+          ),
         ),
         trailing: TextButton(
           onPressed: controller.openAccessibilitySettings,
@@ -259,12 +268,20 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.smart_toy_rounded, size: 64, color: AppTheme.primary.withValues(alpha: 0.5)),
+          Icon(
+            Icons.smart_toy_rounded,
+            size: 64,
+            color: AppTheme.primary.withValues(alpha: 0.5),
+          ),
           const SizedBox(height: 16),
           const Text(
             'How can I help you today?',
-            style: TextStyle(fontSize: 18, color: AppTheme.textSecondary, fontWeight: FontWeight.w500),
-          )
+            style: TextStyle(
+              fontSize: 18,
+              color: AppTheme.textSecondary,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
         ],
       ),
     );
@@ -284,16 +301,19 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
 
   Widget _buildMessageBubble(ChatMessage msg) {
     final isUser = msg.isUser;
-    
+
     Color textColor = AppTheme.textPrimary;
     Widget content = Text(msg.text, style: TextStyle(color: textColor));
     Color bgColor = AppTheme.card;
-    
+
     switch (msg.type) {
       case ChatMessageType.user:
       case ChatMessageType.userCommand:
         bgColor = AppTheme.primary;
-        content = Text(msg.text, style: TextStyle(color: textColor, fontSize: 16));
+        content = Text(
+          msg.text,
+          style: TextStyle(color: textColor, fontSize: 16),
+        );
         break;
       case ChatMessageType.agentThinking:
         bgColor = AppTheme.card;
@@ -302,11 +322,18 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
           mainAxisSize: MainAxisSize.min,
           children: [
             const SizedBox(
-              width: 16, height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2, color: AppTheme.accent),
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppTheme.accent,
+              ),
             ),
             const SizedBox(width: 12),
-            Text(msg.text, style: TextStyle(color: textColor, fontStyle: FontStyle.italic)),
+            Text(
+              msg.text,
+              style: TextStyle(color: textColor, fontStyle: FontStyle.italic),
+            ),
           ],
         );
         break;
@@ -315,7 +342,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
         content = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.play_arrow_rounded, color: AppTheme.accent, size: 20),
+            const Icon(
+              Icons.play_arrow_rounded,
+              color: AppTheme.accent,
+              size: 20,
+            ),
             const SizedBox(width: 8),
             Text(msg.text, style: TextStyle(color: textColor)),
           ],
@@ -328,9 +359,18 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
         content = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.check_circle_rounded, color: AppTheme.success, size: 20),
+            const Icon(
+              Icons.check_circle_rounded,
+              color: AppTheme.success,
+              size: 20,
+            ),
             const SizedBox(width: 8),
-            Flexible(child: Text(msg.text, style: TextStyle(color: textColor, fontWeight: FontWeight.bold))),
+            Flexible(
+              child: Text(
+                msg.text,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         );
         break;
@@ -342,7 +382,12 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
           children: [
             const Icon(Icons.cancel_rounded, color: AppTheme.error, size: 20),
             const SizedBox(width: 8),
-            Flexible(child: Text(msg.text, style: TextStyle(color: textColor, fontWeight: FontWeight.bold))),
+            Flexible(
+              child: Text(
+                msg.text,
+                style: TextStyle(color: textColor, fontWeight: FontWeight.bold),
+              ),
+            ),
           ],
         );
         break;
@@ -351,30 +396,45 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
         content = Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.help_outline_rounded, color: AppTheme.accent, size: 20),
+            const Icon(
+              Icons.help_outline_rounded,
+              color: AppTheme.accent,
+              size: 20,
+            ),
             const SizedBox(width: 8),
-            Flexible(child: Text(msg.text, style: TextStyle(color: textColor))),
+            Flexible(
+              child: Text(msg.text, style: TextStyle(color: textColor)),
+            ),
           ],
         );
         break;
       case ChatMessageType.systemInfo:
         bgColor = AppTheme.surface;
         textColor = AppTheme.textSecondary;
-        content = Text(msg.text, style: TextStyle(color: textColor, fontSize: 12));
+        content = Text(
+          msg.text,
+          style: TextStyle(color: textColor, fontSize: 12),
+        );
         break;
     }
 
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
       child: Row(
-        mainAxisAlignment: isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
             CircleAvatar(
               radius: 16,
               backgroundColor: AppTheme.primary.withValues(alpha: 0.2),
-              child: const Icon(Icons.smart_toy_rounded, size: 18, color: AppTheme.accent),
+              child: const Icon(
+                Icons.smart_toy_rounded,
+                size: 18,
+                color: AppTheme.accent,
+              ),
             ),
             const SizedBox(width: 8),
           ],
@@ -390,8 +450,8 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
                   bottomRight: Radius.circular(isUser ? 4 : 20),
                 ),
                 border: !isUser && msg.type != ChatMessageType.agentResult
-                  ? Border.all(color: AppTheme.surface)
-                  : null,
+                    ? Border.all(color: AppTheme.surface)
+                    : null,
               ),
               child: content,
             ),
@@ -401,7 +461,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
             const CircleAvatar(
               radius: 16,
               backgroundColor: AppTheme.surface,
-              child: Icon(Icons.person_rounded, size: 18, color: AppTheme.textSecondary),
+              child: Icon(
+                Icons.person_rounded,
+                size: 18,
+                color: AppTheme.textSecondary,
+              ),
             ),
           ],
         ],
@@ -409,7 +473,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
     );
   }
 
-  Widget _buildBottomArea(BuildContext context, AppController controller, bool isListening) {
+  Widget _buildBottomArea(
+    BuildContext context,
+    AppController controller,
+    bool isListening,
+  ) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
       decoration: const BoxDecoration(
@@ -424,18 +492,25 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.only(bottom: 16),
               child: Row(
-                children: controller.flows.take(4).map((flow) => Padding(
-                  padding: const EdgeInsets.only(right: 8),
-                  child: ActionChip(
-                    backgroundColor: AppTheme.card,
-                    side: const BorderSide(color: AppTheme.surface),
-                    label: Text(flow.triggerIntent, style: const TextStyle(color: AppTheme.textPrimary)),
-                    onPressed: () {
-                       controller.submitTypedCommand(flow.triggerIntent);
-                       controller.addMessage(ChatMessage(text: flow.triggerIntent, isUser: true, type: ChatMessageType.user, timestamp: DateTime.now()));
-                    },
-                  ),
-                )).toList(),
+                children: controller.flows
+                    .take(4)
+                    .map(
+                      (flow) => Padding(
+                        padding: const EdgeInsets.only(right: 8),
+                        child: ActionChip(
+                          backgroundColor: AppTheme.card,
+                          side: const BorderSide(color: AppTheme.surface),
+                          label: Text(
+                            flow.triggerIntent,
+                            style: const TextStyle(color: AppTheme.textPrimary),
+                          ),
+                          onPressed: () {
+                            controller.submitTypedCommand(flow.triggerIntent);
+                          },
+                        ),
+                      ),
+                    )
+                    .toList(),
               ),
             ),
           if (_showTypedCommand)
@@ -451,7 +526,10 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
                       hintStyle: const TextStyle(color: AppTheme.textSecondary),
                       filled: true,
                       fillColor: AppTheme.card,
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(24),
                         borderSide: BorderSide.none,
@@ -468,7 +546,7 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
                     icon: const Icon(Icons.send_rounded, color: Colors.white),
                     onPressed: () => _submitTypedCommand(controller),
                   ),
-                )
+                ),
               ],
             )
           else
@@ -476,7 +554,11 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.keyboard_rounded, color: AppTheme.textSecondary, size: 28),
+                  icon: const Icon(
+                    Icons.keyboard_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 28,
+                  ),
                   onPressed: () => setState(() => _showTypedCommand = true),
                 ),
                 const SizedBox(width: 24),
@@ -491,14 +573,20 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
                 ),
                 const SizedBox(width: 24),
                 IconButton(
-                  icon: const Icon(Icons.library_books_rounded, color: AppTheme.textSecondary, size: 28),
+                  icon: const Icon(
+                    Icons.library_books_rounded,
+                    color: AppTheme.textSecondary,
+                    size: 28,
+                  ),
                   onPressed: () => Navigator.push(
                     context,
-                    MaterialPageRoute(builder: (_) => const FlowLibraryScreen()),
+                    MaterialPageRoute(
+                      builder: (_) => const FlowLibraryScreen(),
+                    ),
                   ),
                 ),
               ],
-            )
+            ),
         ],
       ),
     );
@@ -522,7 +610,7 @@ class _HomeViewState extends State<_HomeView> with SingleTickerProviderStateMixi
             color: AppTheme.primary.withValues(alpha: isListening ? 0.6 : 0.3),
             blurRadius: isListening ? 30 : 15,
             spreadRadius: isListening ? 8 : 0,
-          )
+          ),
         ],
       ),
       child: const Icon(Icons.mic_rounded, size: 36, color: Colors.white),

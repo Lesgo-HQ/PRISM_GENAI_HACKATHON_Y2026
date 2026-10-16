@@ -33,7 +33,10 @@ class TraceNormalizer {
             event.node?.nodeId != null &&
             event.node?.nodeId == lastEvent.node?.nodeId &&
             event.node!.nodeId!.isNotEmpty;
-        if (timeDiff < 100 && sameNode && event.action == lastEvent.action) {
+        if (timeDiff < 100 &&
+            sameNode &&
+            event.action != 'type' &&
+            event.action == lastEvent.action) {
           continue;
         }
 

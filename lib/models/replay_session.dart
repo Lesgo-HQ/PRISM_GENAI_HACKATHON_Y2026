@@ -18,6 +18,9 @@ class ReplaySession {
   final Map<String, dynamic> slots;
   int currentStep;
   ReplayStatus status;
+  bool actionPending = false;
+  bool manualStep = false;
+  int stepRecoveryAttempts = 0;
   int recoveryAttempts;
   int clarificationCount;
   ScreenSnapshot? lastScreen;
@@ -35,6 +38,39 @@ class ReplaySession {
     this.clarificationCount = 0,
     this.lastScreen,
   });
+
+  Map<String, dynamic> toJson() => {
+    'runId': runId,
+    'flow': flow.toJson(),
+    'slots': slots,
+    'currentStep': currentStep,
+    'actionPending': actionPending,
+    'manualStep': manualStep,
+    'status': status.name,
+    'recoveryAttempts': recoveryAttempts,
+    'clarificationCount': clarificationCount,
+    'startedAt': startedAt?.toIso8601String(),
+  };
+
+  factory ReplaySession.fromJson(Map<String, dynamic> json) {
+    final flow = Flow.fromJson(Map<String, dynamic>.from(json['flow'] as Map));
+    final step = json['currentStep'] as int;
+    if (step < 0 || step > flow.steps.length) {
+      throw const FormatException('Invalid checkpoint');
+    }
+    return ReplaySession(
+        runId: json['runId'] as String,
+        flow: flow,
+        slots: Map<String, dynamic>.from(json['slots'] as Map),
+        currentStep: step,
+        status: ReplayStatus.waitingForUser,
+        recoveryAttempts: (json['recoveryAttempts'] as int?) ?? 0,
+        clarificationCount: (json['clarificationCount'] as int?) ?? 0,
+      )
+      ..manualStep = json['manualStep'] == true
+      ..actionPending = json['actionPending'] == true
+      ..startedAt = DateTime.tryParse(json['startedAt'] as String? ?? '');
+  }
 
   void start() {
     status = ReplayStatus.executing;

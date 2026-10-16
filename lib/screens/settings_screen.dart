@@ -1,391 +1,168 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../app_controller.dart';
-import '../theme.dart';
+import '../services/llm_client.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
-
   @override
   State<SettingsScreen> createState() => _SettingsScreenState();
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  final _apiKeyController = TextEditingController();
-  bool _llmEnabled = true;
-  bool _showApiKey = false;
-  double _stepDelay = 800;
-  double _maxRetries = 5;
-  bool _isSaving = false;
-
+  final _endpoint = TextEditingController();
+  final _model = TextEditingController();
+  bool _enabled = false;
+  bool _busy = false;
+  String _status = 'Connection not tested';
   @override
   void initState() {
     super.initState();
-    _loadSettings();
+    _load();
+  }
+
+  Future<void> _load() async {
+    final prefs = await SharedPreferences.getInstance();
+    if (!mounted) return;
+    setState(() {
+      _endpoint.text =
+          prefs.getString('model_endpoint') ??
+          'http://127.0.0.1:8080/v1/chat/completions';
+      _model.text = prefs.getString('model_name') ?? 'local';
+      _enabled = prefs.getBool('enable_llm') ?? false;
+    });
+  }
+
+  Future<void> _save({bool test = false}) async {
+    final uri = Uri.tryParse(_endpoint.text.trim());
+    if (uri == null ||
+        !['http', 'https'].contains(uri.scheme) ||
+        uri.host.isEmpty ||
+        uri.userInfo.isNotEmpty) {
+      setState(
+        () => _status =
+            'Enter a valid HTTP or HTTPS endpoint without credentials.',
+      );
+      return;
+    }
+    setState(() => _busy = true);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString('model_endpoint', uri.toString());
+      await prefs.setString('model_name', _model.text.trim());
+      await prefs.setBool('enable_llm', _enabled);
+      var status = 'Settings saved. Connection not tested.';
+      if (test) {
+        final answer = await LlmClient.instance.generateContent(
+          'Reply with a short greeting.',
+        );
+        status = answer == null
+            ? 'Enable local model conversation first.'
+            : 'Connected. Model replied: $answer';
+      }
+      if (mounted) setState(() => _status = status);
+    } catch (e) {
+      if (mounted) setState(() => _status = 'Connection failed: $e');
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
   }
 
   @override
   void dispose() {
-    _apiKeyController.dispose();
+    _endpoint.dispose();
+    _model.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadSettings() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      if (mounted) {
-        setState(() {
-          _apiKeyController.text = prefs.getString('groq_api_key') ?? '';
-          _llmEnabled = prefs.getBool('llm_enabled') ?? true;
-          _stepDelay = (prefs.getInt('step_delay_ms') ?? 800).toDouble();
-          _maxRetries = (prefs.getInt('max_retries') ?? 5).toDouble();
-        });
-      }
-    } catch (_) {}
-  }
-
-  Future<void> _saveApiKey() async {
-    setState(() => _isSaving = true);
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setString('groq_api_key', _apiKeyController.text.trim());
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('API key saved'),
-            backgroundColor: AppTheme.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error: $e')),
-        );
-      }
-    } finally {
-      if (mounted) setState(() => _isSaving = false);
-    }
-  }
-
-  Future<void> _savePrefs() async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('llm_enabled', _llmEnabled);
-      await prefs.setInt('step_delay_ms', _stepDelay.toInt());
-      await prefs.setInt('max_retries', _maxRetries.toInt());
-    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
-    final controller = context.watch<AppController>();
-
+    final app = context.watch<AppController>();
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      appBar: AppBar(
-        title: const Text('Settings'),
-        centerTitle: true,
-        backgroundColor: AppTheme.background,
-      ),
+      appBar: AppBar(title: const Text('Settings')),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+        padding: const EdgeInsets.all(24),
         children: [
-          _sectionHeader('AI Configuration'),
-          _card([
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Groq API Key',
-                    style: TextStyle(
-                      color: AppTheme.textPrimary,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 14,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: TextField(
-                          controller: _apiKeyController,
-                          obscureText: !_showApiKey,
-                          style: const TextStyle(color: AppTheme.textPrimary),
-                          decoration: InputDecoration(
-                            hintText: 'AIza...',
-                            hintStyle: const TextStyle(color: AppTheme.textSecondary),
-                            filled: true,
-                            fillColor: AppTheme.surface,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: BorderSide.none,
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(
-                              horizontal: 14,
-                              vertical: 12,
-                            ),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _showApiKey ? Icons.visibility_off : Icons.visibility,
-                                color: AppTheme.textSecondary,
-                                size: 20,
-                              ),
-                              onPressed: () => setState(() => _showApiKey = !_showApiKey),
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      SizedBox(
-                        height: 48,
-                        child: ElevatedButton(
-                          onPressed: _isSaving ? null : _saveApiKey,
-                          child: _isSaving
-                              ? const SizedBox(
-                                  width: 16,
-                                  height: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Save'),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Get a free key at console.groq.com',
-                    style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-                  ),
-                ],
-              ),
+          Text(
+            'Conversation model',
+            style: Theme.of(context).textTheme.headlineSmall,
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'Connect your own llama.cpp server for natural conversation and skill selection. '
+            'Your messages and learned skill descriptions are sent only to this address. '
+            'Device actions remain controlled by SAAR.',
+          ),
+          SwitchListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Enable local model conversation'),
+            value: _enabled,
+            onChanged: _busy
+                ? null
+                : (value) => setState(() => _enabled = value),
+          ),
+          TextField(
+            controller: _endpoint,
+            decoration: const InputDecoration(
+              labelText: 'Chat completion endpoint',
             ),
-            _divider(),
-            SwitchListTile(
-              title: const Text('Enable LLM', style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: const Text(
-                'Use Groq LLM for enhanced understanding',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-              ),
-              value: _llmEnabled,
-              activeThumbColor: AppTheme.primary,
-              activeTrackColor: AppTheme.primary,
-              onChanged: (val) {
-                setState(() => _llmEnabled = val);
-                _savePrefs();
-              },
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _model,
+            decoration: const InputDecoration(
+              labelText: 'Model name / server alias',
             ),
-            _divider(),
-            const ListTile(
-              leading: Icon(Icons.model_training, color: AppTheme.accent),
-              title: Text('Model', style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: Text('Llama 3.1 8B (Groq)', style: TextStyle(color: AppTheme.textSecondary)),
-              trailing: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle, color: AppTheme.success, size: 16),
-                  SizedBox(width: 4),
-                  Text('Active', style: TextStyle(color: AppTheme.success, fontSize: 12)),
-                ],
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'For an Android emulator use 10.0.2.2 instead of 127.0.0.1. '
+            'For a USB-connected phone, forward port 8080 as described in the README. '
+            'The server must support JSON schema responses.',
+          ),
+          const SizedBox(height: 16),
+          Wrap(
+            spacing: 12,
+            children: [
+              FilledButton(
+                onPressed: _busy ? null : () => _save(),
+                child: const Text('Save'),
               ),
+              OutlinedButton(
+                onPressed: _busy ? null : () => _save(test: true),
+                child: const Text('Save & test connection'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(_busy ? 'Contacting model…' : _status),
+          const Divider(height: 48),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Android accessibility'),
+            subtitle: Text(
+              app.isAccessibilityEnabled
+                  ? 'Enabled'
+                  : 'Enable to teach and run tasks',
             ),
-          ]),
-          const SizedBox(height: 24),
-          _sectionHeader('Accessibility'),
-          _card([
-            ListTile(
-              leading: Icon(
-                controller.isAccessibilityEnabled ? Icons.accessibility_new : Icons.accessibility,
-                color: controller.isAccessibilityEnabled ? AppTheme.success : AppTheme.error,
-              ),
-              title: const Text('Service Status', style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: Text(
-                controller.isAccessibilityEnabled ? 'Enabled — SAAR is active' : 'Disabled — tap to enable',
-                style: TextStyle(
-                  color: controller.isAccessibilityEnabled ? AppTheme.success : AppTheme.error,
-                  fontSize: 12,
-                ),
-              ),
-              trailing: TextButton(
-                onPressed: controller.openAccessibilitySettings,
-                child: Text(
-                  controller.isAccessibilityEnabled ? 'Manage' : 'Enable',
-                  style: TextStyle(
-                    color: controller.isAccessibilityEnabled ? AppTheme.textSecondary : AppTheme.primary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
+            trailing: TextButton(
+              onPressed: app.openAccessibilitySettings,
+              child: const Text('Manage'),
             ),
-          ]),
-          const SizedBox(height: 24),
-          _sectionHeader('Automation'),
-          _card([
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Step Delay', style: TextStyle(color: AppTheme.textPrimary)),
-                      Text('${_stepDelay.toInt()} ms',
-                          style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  Slider(
-                    value: _stepDelay,
-                    min: 300,
-                    max: 2000,
-                    divisions: 17,
-                    activeColor: AppTheme.primary,
-                    inactiveColor: AppTheme.surface,
-                    onChanged: (v) => setState(() => _stepDelay = v),
-                    onChangeEnd: (_) => _savePrefs(),
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text('Max Retries', style: TextStyle(color: AppTheme.textPrimary)),
-                      Text('${_maxRetries.toInt()}x',
-                          style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.bold)),
-                    ],
-                  ),
-                  Slider(
-                    value: _maxRetries,
-                    min: 2,
-                    max: 10,
-                    divisions: 8,
-                    activeColor: AppTheme.primary,
-                    inactiveColor: AppTheme.surface,
-                    onChanged: (v) => setState(() => _maxRetries = v),
-                    onChangeEnd: (_) => _savePrefs(),
-                  ),
-                ],
-              ),
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _sectionHeader('Data'),
-          _card([
-            ListTile(
-              leading: const Icon(Icons.storage_rounded, color: AppTheme.accent),
-              title: const Text('Saved Workflows', style: TextStyle(color: AppTheme.textPrimary)),
-              trailing: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.primary,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${controller.flows.length}',
-                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-              ),
-            ),
-            _divider(),
-            ListTile(
-              leading: const Icon(Icons.delete_forever_rounded, color: AppTheme.error),
-              title: const Text('Clear All Workflows', style: TextStyle(color: AppTheme.error)),
-              onTap: () async {
-                final ok = await showDialog<bool>(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    backgroundColor: AppTheme.card,
-                    title: const Text('Confirm Delete'),
-                    content: const Text('Delete all saved workflows? This cannot be undone.'),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx, false),
-                        child: const Text('Cancel'),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(backgroundColor: AppTheme.error),
-                        onPressed: () => Navigator.pop(ctx, true),
-                        child: const Text('Delete All'),
-                      ),
-                    ],
-                  ),
-                );
-                if (ok == true && context.mounted) {
-                  for (final f in controller.flows.toList()) {
-                    await controller.deleteFlow(f.flowId);
-                  }
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('All workflows deleted'),
-                        backgroundColor: AppTheme.error,
-                      ),
-                    );
-                  }
-                }
-              },
-            ),
-          ]),
-          const SizedBox(height: 24),
-          _sectionHeader('About'),
-          _card([
-            const ListTile(
-              leading: Icon(Icons.info_outline_rounded, color: AppTheme.accent),
-              title: Text('SAAR AI Assistant', style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: Text(
-                'v1.0.0 — Smart Automated Action Replay',
-                style: TextStyle(color: AppTheme.textSecondary, fontSize: 12),
-              ),
-            ),
-            _divider(),
-            ListTile(
-              leading: const Icon(Icons.code_rounded, color: AppTheme.accent),
-              title: const Text('GitHub', style: TextStyle(color: AppTheme.textPrimary)),
-              subtitle: const Text('github.com/lesgo/saar',
-                  style: TextStyle(color: AppTheme.accent, fontSize: 12)),
-              trailing: const Icon(Icons.open_in_new_rounded, color: AppTheme.textSecondary, size: 18),
-              onTap: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('github.com/lesgo/saar')),
-              ),
-            ),
-          ]),
-          const SizedBox(height: 40),
+          ),
+          ListTile(
+            contentPadding: EdgeInsets.zero,
+            title: const Text('Learned skills'),
+            subtitle: Text('${app.flows.length} stored on this device'),
+          ),
+          const Text(
+            'Speech recognition uses the device speech service. Offline availability depends on installed language packs. '
+            'Credential and payment steps stay under your control.',
+          ),
         ],
       ),
     );
   }
-
-  Widget _sectionHeader(String label) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 10),
-      child: Text(
-        label.toUpperCase(),
-        style: const TextStyle(
-          color: AppTheme.accent,
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          letterSpacing: 1.8,
-        ),
-      ),
-    );
-  }
-
-  Widget _divider() => const Divider(height: 1, indent: 16, endIndent: 16, color: AppTheme.surface);
-
-  Widget _card(List<Widget> children) {
-    return Card(
-      margin: EdgeInsets.zero,
-      color: AppTheme.card,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Column(children: children),
-    );
-  }
 }
-
-

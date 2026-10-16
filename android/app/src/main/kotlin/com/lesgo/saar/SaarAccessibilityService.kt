@@ -160,25 +160,24 @@ class SaarAccessibilityService : AccessibilityService() {
          * Deterministic credential guard. Scans the current UI tree for password,
          * OTP and card-entry fields.
          *
-         * An unreadable window is reported as "not sensitive" rather than blocking:
-         * gesture dispatch already fails without an active window, and reporting
-         * sensitive here would permanently halt the run on a transient null root.
+         * An unreadable window blocks native gestures. Dart preserves the task
+         * and asks the user to resume after the screen becomes readable.
          */
         fun isSensitiveScreenDetected(): Boolean {
             return try {
-                val svc = instance ?: return false
-                val rootNode = svc.rootInActiveWindow ?: return false
+                val svc = instance ?: return true
+                val rootNode = svc.rootInActiveWindow ?: return true
                 val result = checkNodeTreeForSensitive(rootNode, 0)
                 rootNode.recycle()
                 result
             } catch (e: Exception) {
                 Log.w(TAG, "Credential guard scan failed: ${e.message}")
-                false
+                true
             }
         }
 
         private fun checkNodeTreeForSensitive(node: AccessibilityNodeInfo, depth: Int): Boolean {
-            if (depth > 60) return false
+            if (depth > 60) return true
             try {
                 if (isNodeSensitive(node)) return true
                 for (i in 0 until node.childCount) {
@@ -191,7 +190,7 @@ class SaarAccessibilityService : AccessibilityService() {
                 }
             } catch (e: Exception) {
                 Log.w(TAG, "Error scanning node tree: ${e.message}")
-                return false
+                return true
             }
             return false
         }
@@ -455,8 +454,8 @@ class SaarAccessibilityService : AccessibilityService() {
         try {
             obj.put("nodeId", node.viewIdResourceName ?: "")
             obj.put("className", node.className?.toString() ?: "")
-            obj.put("text", node.text?.toString() ?: "")
-            obj.put("contentDescription", node.contentDescription?.toString() ?: "")
+            obj.put("text", if (isNodeSensitive(node)) "<REDACTED>" else node.text?.toString() ?: "")
+            obj.put("contentDescription", if (isNodeSensitive(node)) "Sensitive field" else node.contentDescription?.toString() ?: "")
             obj.put("hintText", node.hintText?.toString() ?: "")
             obj.put("resourceId", node.viewIdResourceName ?: "")
             obj.put("packageName", node.packageName?.toString() ?: "")
@@ -502,6 +501,7 @@ class SaarAccessibilityService : AccessibilityService() {
     private fun recordAction(action: String, event: AccessibilityEvent) {
         try {
             val source = event.source
+            val sensitive = event.isPassword || source == null || isNodeSensitive(source)
             val nodeJson = if (source != null) {
                 try {
                     serializeNodeFlat(source)
@@ -516,7 +516,7 @@ class SaarAccessibilityService : AccessibilityService() {
                 put("timestampMs", System.currentTimeMillis())
                 put("action", action)
                 put("node", nodeJson)
-                put("valueTyped", if (action == "type") event.text?.joinToString("") ?: "" else "")
+                put("valueTyped", if (sensitive) "<REDACTED>" else if (action == "type") event.text?.joinToString("") ?: "" else "")
                 put("packageName", event.packageName?.toString() ?: "")
                 if (action == "scroll") {
                     put("scrollDeltaX", event.scrollDeltaX)
@@ -538,8 +538,8 @@ class SaarAccessibilityService : AccessibilityService() {
         try {
             obj.put("nodeId", node.viewIdResourceName ?: "")
             obj.put("className", node.className?.toString() ?: "")
-            obj.put("text", node.text?.toString() ?: "")
-            obj.put("contentDescription", node.contentDescription?.toString() ?: "")
+            obj.put("text", if (isNodeSensitive(node)) "<REDACTED>" else node.text?.toString() ?: "")
+            obj.put("contentDescription", if (isNodeSensitive(node)) "Sensitive field" else node.contentDescription?.toString() ?: "")
             obj.put("hintText", node.hintText?.toString() ?: "")
             obj.put("resourceId", node.viewIdResourceName ?: "")
             obj.put("packageName", node.packageName?.toString() ?: "")

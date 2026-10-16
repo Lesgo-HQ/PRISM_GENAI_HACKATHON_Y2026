@@ -11,7 +11,8 @@ class ReplayScreen extends StatefulWidget {
   State<ReplayScreen> createState() => _ReplayScreenState();
 }
 
-class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderStateMixin {
+class _ReplayScreenState extends State<ReplayScreen>
+    with SingleTickerProviderStateMixin {
   final _clarificationController = TextEditingController();
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -38,7 +39,7 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
   void _submitClarification(AppController controller, String value) {
     if (value.trim().isEmpty) return;
     FocusScope.of(context).unfocus();
-    controller.provideClarification(value.trim());
+    controller.submitTypedCommand(value.trim());
     _clarificationController.clear();
   }
 
@@ -55,7 +56,11 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
       appBar: AppBar(
         title: Text(
           isClarifying ? 'NEEDS INPUT' : 'EXECUTING TASK',
-          style: const TextStyle(color: AppTheme.accent, fontWeight: FontWeight.w800, letterSpacing: 1.2),
+          style: const TextStyle(
+            color: AppTheme.accent,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 1.2,
+          ),
         ),
         centerTitle: true,
         automaticallyImplyLeading: false,
@@ -81,13 +86,16 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                   const SizedBox(width: 16),
                   Text(
                     '$currentStep / $totalSteps',
-                    style: const TextStyle(fontWeight: FontWeight.bold, color: AppTheme.textSecondary),
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: AppTheme.textSecondary,
+                    ),
                   ),
                 ],
               ),
             ),
           ],
-          
+
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 24),
             padding: const EdgeInsets.all(16),
@@ -100,19 +108,27 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
               children: [
                 FadeTransition(
                   opacity: _pulseAnimation,
-                  child: const Icon(Icons.settings_suggest_rounded, color: AppTheme.primary, size: 28),
+                  child: const Icon(
+                    Icons.settings_suggest_rounded,
+                    color: AppTheme.primary,
+                    size: 28,
+                  ),
                 ),
                 const SizedBox(width: 16),
                 Expanded(
                   child: Text(
                     controller.statusMessage,
-                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600, color: AppTheme.textPrimary),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.textPrimary,
+                    ),
                   ),
                 ),
               ],
             ),
           ),
-          
+
           Expanded(
             child: ListView.builder(
               padding: const EdgeInsets.all(24),
@@ -120,10 +136,10 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
               itemBuilder: (context, index) {
                 final isCompleted = index < (currentStep - 1);
                 final isCurrent = index == (currentStep - 1);
-                
+
                 Color iconColor = AppTheme.textSecondary;
                 IconData iconData = Icons.radio_button_unchecked_rounded;
-                
+
                 if (isCompleted) {
                   iconColor = AppTheme.success;
                   iconData = Icons.check_circle_rounded;
@@ -131,7 +147,7 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                   iconColor = AppTheme.primary;
                   iconData = Icons.play_circle_fill_rounded;
                 }
-                
+
                 return AnimatedContainer(
                   duration: const Duration(milliseconds: 300),
                   margin: const EdgeInsets.only(bottom: 12),
@@ -139,7 +155,9 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                     color: isCurrent ? AppTheme.surface : Colors.transparent,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: isCurrent ? AppTheme.primary.withValues(alpha: 0.3) : Colors.transparent,
+                      color: isCurrent
+                          ? AppTheme.primary.withValues(alpha: 0.3)
+                          : Colors.transparent,
                     ),
                   ),
                   child: ListTile(
@@ -147,25 +165,51 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                     title: Text(
                       'Step ${index + 1}',
                       style: TextStyle(
-                        color: isCurrent ? AppTheme.textPrimary : AppTheme.textSecondary,
-                        fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
+                        color: isCurrent
+                            ? AppTheme.textPrimary
+                            : AppTheme.textSecondary,
+                        fontWeight: isCurrent
+                            ? FontWeight.bold
+                            : FontWeight.normal,
                       ),
                     ),
-                    subtitle: isCurrent ? const Text('Running...', style: TextStyle(color: AppTheme.primary)) : null,
+                    subtitle: isCurrent
+                        ? const Text(
+                            'Running...',
+                            style: TextStyle(color: AppTheme.primary),
+                          )
+                        : null,
                   ),
                 );
               },
             ),
           ),
-          
+
+          if (!isClarifying)
+            TextButton.icon(
+              onPressed: () => controller.submitTypedCommand('pause'),
+              icon: const Icon(Icons.pause),
+              label: const Text('Pause task'),
+            ),
+          IconButton(
+            tooltip: 'Speak to SAAR',
+            onPressed: controller.startListening,
+            icon: const Icon(Icons.mic),
+          ),
           if (isClarifying)
             Container(
               padding: const EdgeInsets.all(24),
               decoration: BoxDecoration(
                 color: AppTheme.card,
-                borderRadius: const BorderRadius.vertical(top: Radius.circular(32)),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(32),
+                ),
                 boxShadow: [
-                  BoxShadow(color: Colors.black.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, -5))
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.3),
+                    blurRadius: 20,
+                    offset: const Offset(0, -5),
+                  ),
                 ],
               ),
               child: Column(
@@ -173,12 +217,20 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                 children: [
                   Row(
                     children: [
-                      const Icon(Icons.help_outline_rounded, color: AppTheme.accent),
+                      const Icon(
+                        Icons.help_outline_rounded,
+                        color: AppTheme.accent,
+                      ),
                       const SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          controller.clarificationQuestion ?? 'Clarification needed',
-                          style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppTheme.textPrimary),
+                          controller.clarificationQuestion ??
+                              'Clarification needed',
+                          style: const TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: AppTheme.textPrimary,
+                          ),
                         ),
                       ),
                     ],
@@ -189,7 +241,8 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                       children: [
                         Expanded(
                           child: OutlinedButton(
-                            onPressed: () => controller.provideClarification('No'),
+                            onPressed: () =>
+                                controller.provideClarification('No'),
                             style: OutlinedButton.styleFrom(
                               foregroundColor: AppTheme.textPrimary,
                               side: const BorderSide(color: AppTheme.surface),
@@ -201,7 +254,8 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                         const SizedBox(width: 16),
                         Expanded(
                           child: ElevatedButton(
-                            onPressed: () => controller.provideClarification('Yes'),
+                            onPressed: () =>
+                                controller.provideClarification('Yes'),
                             child: const Text('YES'),
                           ),
                         ),
@@ -215,18 +269,28 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                         hintText: 'Type your answer...',
                         filled: true,
                         fillColor: AppTheme.surface,
-                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          borderSide: BorderSide.none,
+                        ),
                         suffixIcon: IconButton(
-                          icon: const Icon(Icons.send_rounded, color: AppTheme.primary),
-                          onPressed: () => _submitClarification(controller, _clarificationController.text),
+                          icon: const Icon(
+                            Icons.send_rounded,
+                            color: AppTheme.primary,
+                          ),
+                          onPressed: () => _submitClarification(
+                            controller,
+                            _clarificationController.text,
+                          ),
                         ),
                       ),
-                      onSubmitted: (val) => _submitClarification(controller, val),
+                      onSubmitted: (val) =>
+                          _submitClarification(controller, val),
                     ),
                 ],
               ),
             ),
-            
+
           Padding(
             padding: const EdgeInsets.all(24.0),
             child: SizedBox(
@@ -240,7 +304,10 @@ class _ReplayScreenState extends State<ReplayScreen> with SingleTickerProviderSt
                   elevation: 0,
                 ),
                 icon: const Icon(Icons.stop_rounded),
-                label: const Text('STOP EXECUTION', style: TextStyle(fontWeight: FontWeight.bold)),
+                label: const Text(
+                  'STOP EXECUTION',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
               ),
             ),
           ),

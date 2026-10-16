@@ -31,7 +31,7 @@ class ScreenSnapshot {
         if (normalized.isNotEmpty) text.add(normalized);
       }
       structure.add(
-        '${_normalize(node.className)}:${node.isClickable}:${node.isEditable}:${node.isScrollable}',
+        '${_normalize(node.className)}:${node.isClickable}:${node.isEditable}:${node.isScrollable}:${node.isFocused}:${node.isChecked}',
       );
     }
     final canonical = jsonEncode({

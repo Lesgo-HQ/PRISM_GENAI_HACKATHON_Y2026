@@ -19,7 +19,9 @@ class AsrService {
       _isInitialized = await _speech.initialize(
         onError: (error) {
           _lastError = error.errorMsg;
-          debugPrint('ASR Error: ${error.errorMsg} (permanent: ${error.permanent})');
+          debugPrint(
+            'ASR Error: ${error.errorMsg} (permanent: ${error.permanent})',
+          );
         },
         onStatus: (status) => debugPrint('ASR Status: $status'),
         debugLogging: false,

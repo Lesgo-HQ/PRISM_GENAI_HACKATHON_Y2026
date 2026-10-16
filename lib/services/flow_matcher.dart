@@ -8,6 +8,7 @@ import 'slot_extractor.dart';
 
 class MatchResult {
   final Flow? flow;
+  final List<Flow> candidates;
   final double confidence;
   final double margin;
   final Map<String, dynamic> resolvedSlots;
@@ -17,6 +18,7 @@ class MatchResult {
   final ParsedIntent? parsedIntent;
   MatchResult({
     this.flow,
+    this.candidates = const [],
     this.confidence = 0,
     this.margin = 0,
     this.resolvedSlots = const {},
@@ -106,7 +108,7 @@ class FlowMatcher {
         parsedIntent: parsed,
       );
     }
-    final candidates = [] as List<Flow>;
+    final candidates = <Flow>[];
     for (final e in top) {
       final f = await _store.getFlow(e.key.flowId);
       if (f != null) candidates.add(f);
@@ -126,11 +128,15 @@ class FlowMatcher {
         margin: margin,
         needsClarification: true,
         clarificationQuestion: q,
+        candidates: candidates.take(2).toList(),
+        resolvedSlots: slots,
         parsedIntent: parsed,
       );
     }
     if (best.value < _threshold) {
       return MatchResult(
+        flow: candidates.first,
+        resolvedSlots: _resolveSlots(candidates.first, slots),
         confidence: best.value,
         margin: margin,
         needsClarification: true,

@@ -23,6 +23,18 @@ class AccessibilityBridge {
     return result ?? false;
   }
 
+  Future<void> speak(String text) async {
+    try {
+      await _methodChannel.invokeMethod('speak', {'text': text});
+    } catch (_) {}
+  }
+
+  Future<void> stopSpeaking() async {
+    try {
+      await _methodChannel.invokeMethod('stopSpeaking');
+    } catch (_) {}
+  }
+
   // Opens system accessibility settings
   Future<void> openAccessibilitySettings() async {
     await _methodChannel.invokeMethod('openAccessibilitySettings');

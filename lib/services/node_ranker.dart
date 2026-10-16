@@ -141,4 +141,3 @@ class NodeRanker {
     return (score + identityScore).clamp(0.0, 1.0).toDouble();
   }
 }
-

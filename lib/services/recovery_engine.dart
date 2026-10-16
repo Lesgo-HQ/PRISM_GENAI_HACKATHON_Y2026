@@ -1,5 +1,6 @@
 import '../models/ui_node.dart';
 import 'accessibility_bridge.dart';
+import 'credential_guard.dart';
 
 enum RecoveryAction {
   refreshed,
@@ -23,65 +24,51 @@ class RecoveryResult {
 class RecoveryEngine {
   final AccessibilityBridge _bridge;
   String? _expectedPackage;
-  int _consecutiveFailures = 0;
 
   RecoveryEngine(this._bridge);
 
   void setExpectedPackage(String packageName) {
     _expectedPackage = packageName;
-    _consecutiveFailures = 0;
   }
 
-  Future<RecoveryResult> recover(UiNode tree) async {
-    _consecutiveFailures++;
+  Future<RecoveryResult> recover(UiNode tree, {bool Function()? isCancelled}) async {
     final refreshed = await _bridge.getLastTree();
-    final current = refreshed ?? tree;
+    final current = refreshed;
+    if (current == null ||
+        CredentialGuard.isSensitiveScreen(current) ||
+        await _bridge.isSensitiveScreen()) {
+      return const RecoveryResult(RecoveryAction.unavailable, null);
+    }
 
     // Detect wrong package
     if (_expectedPackage != null &&
+        _expectedPackage!.isNotEmpty &&
         current.packageName != null &&
         current.packageName != _expectedPackage) {
       return RecoveryResult(RecoveryAction.wrongPackage, current);
     }
 
+    if (isCancelled?.call() == true) return RecoveryResult(RecoveryAction.unavailable, current);
     if (await _dismissSafePopup(current)) {
-      _consecutiveFailures = 0;
       return RecoveryResult(
         RecoveryAction.dismissedPopup,
         await _bridge.getLastTree(),
       );
     }
 
+    if (isCancelled?.call() == true) return RecoveryResult(RecoveryAction.unavailable, current);
     if (await _scroll(current)) {
-      _consecutiveFailures = 0;
       return RecoveryResult(
         RecoveryAction.scrolled,
         await _bridge.getLastTree(),
       );
     }
 
-    // After multiple failures, try pressing back to escape a wrong screen
-    if (_consecutiveFailures > 2) {
-      if (await _bridge.performGlobalAction(
-        AccessibilityBridge.globalActionBack,
-      )) {
-        _consecutiveFailures = 0;
-        await Future<void>.delayed(const Duration(milliseconds: 1000));
-        return RecoveryResult(
-          RecoveryAction.backPressed,
-          await _bridge.getLastTree(),
-        );
-      }
-    }
-
-    return refreshed == null
-        ? const RecoveryResult(RecoveryAction.unavailable, null)
-        : RecoveryResult(RecoveryAction.refreshed, refreshed);
+    return RecoveryResult(RecoveryAction.refreshed, refreshed);
   }
 
   Future<bool> _dismissSafePopup(UiNode tree) async {
     const safe = {
-      'ok',
       'close',
       'dismiss',
       'not now',
@@ -111,7 +98,7 @@ class RecoveryEngine {
 
       bool isSafe = false;
       for (final s in safe) {
-        if (label == s || label.startsWith('$s ')) {
+        if (label == s) {
           isSafe = true;
           break;
         }

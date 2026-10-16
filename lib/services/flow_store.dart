@@ -4,6 +4,7 @@ import 'package:path/path.dart';
 import 'dart:convert';
 
 import '../models/flow.dart';
+import '../models/replay_session.dart';
 
 class FlowStore {
   static Database? _database;
@@ -20,8 +21,18 @@ class FlowStore {
     final dbPath = await getDatabasesPath();
     return openDatabase(
       join(dbPath, 'saar.db'),
-      version: 1,
+      version: 2,
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute(
+            'CREATE TABLE task_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
+          );
+        }
+      },
       onCreate: (db, version) async {
+        await db.execute(
+          'CREATE TABLE task_checkpoint (id INTEGER PRIMARY KEY, payload TEXT NOT NULL)',
+        );
         await db.execute('''
           CREATE TABLE flows (
             flow_id TEXT PRIMARY KEY,
@@ -56,6 +67,31 @@ class FlowStore {
       },
     );
   }
+
+  Future<void> saveCheckpoint(ReplaySession session) async {
+    final db = await database;
+    if (session.status == ReplayStatus.completed ||
+        session.status == ReplayStatus.cancelled) {
+      await db.delete('task_checkpoint');
+    } else {
+      await db.insert('task_checkpoint', {
+        'id': 1,
+        'payload': jsonEncode(session.toJson()),
+      }, conflictAlgorithm: ConflictAlgorithm.replace);
+    }
+  }
+
+  Future<ReplaySession?> loadCheckpoint() async {
+    final db = await database;
+    final rows = await db.query('task_checkpoint', limit: 1);
+    if (rows.isEmpty) return null;
+    return ReplaySession.fromJson(
+      jsonDecode(rows.single['payload'] as String) as Map<String, dynamic>,
+    );
+  }
+
+  Future<void> clearCheckpoint() async =>
+      (await database).delete('task_checkpoint');
 
   // CRUD operations for flows
   Future<void> saveFlow(Flow flow) async {
