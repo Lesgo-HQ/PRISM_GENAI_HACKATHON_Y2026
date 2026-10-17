@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:saar/models/agent_task.dart';
 import 'package:saar/models/ui_node.dart';
 import 'package:saar/services/adaptive_agent.dart';
@@ -20,8 +21,13 @@ UiNode screen(String text) => UiNode.fromJson({
 class Device extends AccessibilityBridge {
   UiNode tree = screen('Search');
   int taps = 0;
+  int opens = 0;
   @override
-  Future<bool> openApp(String packageName) async => true;
+  Future<bool> openApp(String packageName) async {
+    opens++;
+    return true;
+  }
+
   @override
   Future<UiNode?> getLastTree() async => tree;
   @override
@@ -34,8 +40,24 @@ class Device extends AccessibilityBridge {
   }
 }
 
+class LaunchingDevice extends Device {
+  int launchReads = 0;
+  bool neverReady = false;
+  @override
+  Future<UiNode?> getLastTree() async {
+    launchReads++;
+    if (neverReady || launchReads == 1) return null;
+    if (launchReads == 2) {
+      return UiNode.fromJson({'packageName': 'com.lesgo.saar', 'children': []});
+    }
+    return tree;
+  }
+}
+
 class Model extends LlmClient {
   Model(this.replies);
+  @override
+  Future<String?> connectionIssue() async => null;
   final List<String> replies;
   int calls = 0;
   @override
@@ -49,6 +71,8 @@ class Model extends LlmClient {
 }
 
 class SlowModel extends LlmClient {
+  @override
+  Future<String?> connectionIssue() async => null;
   final response = Completer<String?>();
   final started = Completer<void>();
   @override
@@ -73,6 +97,81 @@ String action(String name, {int? target, String evidence = ''}) => jsonEncode({
 });
 AgentTask task() => AgentTask(id: 'test', goal: 'Find pizza', package: 'shop');
 void main() {
+  test(
+    'disabled model does not open an app and strand the user there',
+    () async {
+      SharedPreferences.setMockInitialValues({'enable_llm': false});
+      final device = Device();
+      late AdaptiveAgent agent;
+      agent = AdaptiveAgent(
+        bridge: device,
+        model: LlmClient(),
+        checkpoint: (_) async {},
+        onStatus: (_, waiting) {
+          if (waiting) agent.stop();
+        },
+        settleDelay: Duration.zero,
+      );
+      await agent.run(task(), []);
+      expect(device.opens, 0);
+      expect(device.taps, 0);
+    },
+  );
+  test('cold launch waits through missing and previous-app screens before planning', () async {
+    final device = LaunchingDevice();
+    final waits = <String>[];
+    late AdaptiveAgent agent;
+    agent = AdaptiveAgent(
+      bridge: device,
+      model: Model([
+        action('tap', target: 0),
+        '{"outcome":"A","error":"None"}',
+        action('finish', evidence: 'Pizza results'),
+        '{"verified":true}',
+      ]),
+      checkpoint: (_) async {},
+      onStatus: (message, waiting) {
+        if (waiting) {
+          waits.add(message);
+          agent.stop();
+        }
+      },
+      settleDelay: Duration.zero,
+    );
+    final t = task();
+    await agent.run(t, []);
+    expect(waits, isEmpty);
+    expect(device.taps, 1);
+    expect(t.status, 'completed');
+  });
+  test(
+    'missing launch screen times out with an accessibility explanation',
+    () async {
+      final device = LaunchingDevice()..neverReady = true;
+      final model = Model([]);
+      final waits = <String>[];
+      late AdaptiveAgent agent;
+      agent = AdaptiveAgent(
+        bridge: device,
+        model: model,
+        checkpoint: (_) async {},
+        onStatus: (message, waiting) {
+          if (waiting) {
+            waits.add(message);
+            agent.stop();
+          }
+        },
+        settleDelay: Duration.zero,
+      );
+      await agent.run(task(), []);
+      expect(waits.single, contains('screen'));
+      expect(waits.single, contains('accessibility'));
+      expect(waits.single, isNot(contains('sign-in')));
+      expect(model.calls, 0);
+      expect(device.taps, 0);
+      expect(device.launchReads, lessThanOrEqualTo(12));
+    },
+  );
   test('rejects invented screen targets and unsupported actions', () {
     final observation = AgentObservation(screen('Search'));
     expect(

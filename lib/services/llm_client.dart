@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:async';
 
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -9,6 +10,37 @@ class LlmClient {
   static final LlmClient instance = LlmClient();
   final http.Client _http;
   LlmClient({http.Client? client}) : _http = client ?? http.Client();
+
+  /// Check the same structured-response path needed by execution before
+  /// switching away from SAAR. Never send screen data for this probe.
+  Future<String?> connectionIssue() async {
+    try {
+      final raw = await generateContent(
+        'Return {"ready":true}. This checks your structured response connection.',
+        schemaName: 'saar_connection_check',
+        schema: {
+          'type': 'object',
+          'additionalProperties': false,
+          'properties': {
+            'ready': {'type': 'boolean', 'const': true},
+          },
+          'required': ['ready'],
+        },
+      );
+      if (raw == null) {
+        return 'Enable the model in SAAR Settings and test its connection before running an app task. flutter run alone does not start the model server.';
+      }
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map || decoded['ready'] != true) {
+        return 'The model did not return the required structured response. Check the server configuration in Settings.';
+      }
+      return null;
+    } on TimeoutException {
+      return 'The model connection timed out. Check Settings and confirm the server is running and reachable from this phone.';
+    } catch (_) {
+      return 'Cannot connect to a compatible model server. Check Settings. On a phone, 127.0.0.1 means the phone itself unless USB port forwarding is configured.';
+    }
+  }
 
   Future<String?> generateContent(
     String prompt, {

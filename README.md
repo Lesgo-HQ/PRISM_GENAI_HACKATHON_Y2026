@@ -50,6 +50,19 @@ HTTP is allowed only for local development addresses. This configuration runs in
 
 The 4B model passed the six-case live routing check after prompt/schema fixes, but also made incorrect proposals during development. Schema validation does not guarantee semantic correctness. Compatibility checks, action validation, result checks and human handoff remain necessary.
 
+## If the app opens and then appears stuck
+
+`flutter run` starts the Android app, not the AI server. For adaptive tasks, start the model server described above, connect the phone to that computer by USB, and run:
+
+```sh
+adb reverse tcp:8080 tcp:8080
+flutter run
+```
+
+In SAAR Settings, enable the AI model, set endpoint `http://127.0.0.1:8080/v1/chat/completions` and model name `local`, then use **Save & test connection**. It must report that structured responses work. Port forwarding needs to be restored after reconnecting the phone. A phone on a different computer cannot use the original developer's loopback server.
+
+SAAR checks model connectivity before opening an app and waits for a readable target screen after launch. If it pauses, read the status in the floating controls or return to SAAR; missing accessibility access, an unreachable model and manual sign-in each need different handling.
+
 ## Try the workflows
 
 1. Start with a reversible task such as searching a catalog or navigating Settings.

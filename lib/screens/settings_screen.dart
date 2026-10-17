@@ -55,12 +55,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
       await prefs.setBool('enable_llm', _enabled);
       var status = 'Settings saved. Connection not tested.';
       if (test) {
-        final answer = await LlmClient.instance.generateContent(
-          'Reply with a short greeting.',
-        );
-        status = answer == null
-            ? 'Enable local model conversation first.'
-            : 'Connected. Model replied: $answer';
+        final issue = await LlmClient.instance.connectionIssue();
+        status = issue ?? 'Connected. Structured model responses are working.';
       }
       if (mounted) setState(() => _status = status);
     } catch (e) {
@@ -91,13 +87,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 12),
           const Text(
-            'Connect your own llama.cpp server for natural conversation and skill selection. '
+            'Connect your model server for conversation, skill selection and app tasks. '
             'Your messages and learned skill descriptions are sent only to this address. '
             'Device actions remain controlled by SAAR.',
           ),
           SwitchListTile(
             contentPadding: EdgeInsets.zero,
-            title: const Text('Enable local model conversation'),
+            title: const Text('Enable AI model'),
             value: _enabled,
             onChanged: _busy
                 ? null

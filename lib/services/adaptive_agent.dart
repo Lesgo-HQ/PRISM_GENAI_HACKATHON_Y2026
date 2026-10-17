@@ -41,13 +41,23 @@ class AdaptiveAgent {
     _pause = false;
     task = current;
     try {
+      onStatus('Checking model connection before opening the app…', false);
+      final connectionIssue = await model.connectionIssue();
+      if (_stop || connectionIssue != null) {
+        current.status = _stop ? 'cancelled' : 'paused';
+        await checkpoint(current);
+        onStatus(_stop ? 'Task cancelled.' : connectionIssue!, false);
+        return;
+      }
       if (current.actionPending) {
         await _wait(
           'An action was interrupted before its result was verified. Check the app, then continue. I will reobserve before planning.',
         );
       }
-      if (!_stop && !await bridge.openApp(current.package)) {
-        await _wait('Open the selected app yourself, then continue.');
+      if (!_stop && !_pause && !await _openTargetApp(current.package)) {
+        await _wait(
+          'Could not read the selected app screen. Check SAAR accessibility access, open the app, then continue.',
+        );
       }
       var staleObservations = 0;
       final turnLimit = current.turns + 30;
@@ -57,6 +67,12 @@ class AdaptiveAgent {
           continue;
         }
         final tree = await bridge.getLastTree();
+        if (tree == null) {
+          await _wait(
+            'Cannot read the app screen. Check SAAR accessibility access, then continue.',
+          );
+          continue;
+        }
         if (CredentialGuard.isSensitiveScreen(tree) ||
             await bridge.isSensitiveScreen()) {
           await _wait(
@@ -64,7 +80,7 @@ class AdaptiveAgent {
           );
           continue;
         }
-        final observation = AgentObservation(tree!);
+        final observation = AgentObservation(tree);
         if (observation.package != current.package) {
           await _wait(
             'Return to the approved app. Switching to another app needs a new task.',
@@ -365,6 +381,25 @@ For scroll, text is up or down. For type, text is the input. Reason is a concise
     }
   }
 
+  Future<bool> _openTargetApp(String package) async {
+    if (_stop || _pause) return false;
+    onStatus('Opening $package · waiting for its screen…', false);
+    if (_stop || _pause || !await bridge.openApp(package)) return false;
+    // Android startActivity acknowledges dispatch, not a ready accessibility tree.
+    // Wait through the previous activity and transient null roots on cold launch.
+    for (var attempt = 0; attempt < 12 && !_stop && !_pause; attempt++) {
+      final tree = await bridge.getLastTree();
+      if (_stop || _pause) return false;
+      if (tree != null &&
+          tree.packageName == package &&
+          AgentObservation(tree).nodes.isNotEmpty) {
+        return true;
+      }
+      await Future<void>.delayed(settleDelay);
+    }
+    return false;
+  }
+
   Future<void> _wait(String reason) async {
     if (_stop) return;
     task!.status = 'paused';
@@ -376,7 +411,7 @@ For scroll, text is up or down. For type, text is the input. Reason is a concise
     if (!_stop) {
       task!.status = 'running';
       await checkpoint(task!);
-      await bridge.openApp(task!.package);
+      await _openTargetApp(task!.package);
     }
   }
 
