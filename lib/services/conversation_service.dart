@@ -3,6 +3,7 @@ import 'dart:convert';
 import '../models/chat_message.dart';
 import '../models/flow.dart';
 import 'llm_client.dart';
+import 'slot_extractor.dart';
 
 class ConversationDecision {
   final String kind;
@@ -39,6 +40,11 @@ class ConversationDecision {
     final slots = Map<String, dynamic>.from(data['slots'] as Map);
     if (slots.values.any((v) => v is! String && v is! num)) {
       throw const FormatException('Invalid slot value');
+    }
+    if (data['kind'] != 'run' && (id != null || slots.isNotEmpty)) {
+      throw const FormatException(
+        'Non-action response cannot select a skill or parameters',
+      );
     }
     if (data['kind'] == 'run') {
       final names = candidates.single.slots.map((s) => s.name).toSet();
@@ -144,6 +150,20 @@ ${jsonEncode(flows.map((f) => {'id': f.flowId, 'goal': f.procedureTemplate, 'app
     final decision = ConversationDecision.parse(response, flows);
     if (decision.kind != 'run') return decision;
     final selected = flows.singleWhere((f) => f.flowId == decision.flowId);
+    final extractor = SlotExtractor();
+    final requestedApp = extractor.extractRequestedApp(text);
+    final selectedApp =
+        extractor.extractApp(selected.appPackage) ??
+        extractor.extractApp(selected.triggerIntent);
+    if (requestedApp != null && requestedApp != selectedApp) {
+      return ConversationDecision(
+        'clarify',
+        'The selected workflow is for ${selectedApp ?? selected.appPackage}, not $requestedApp. Choose a saved workflow for $requestedApp or teach that app separately.',
+        null,
+        {},
+        0,
+      );
+    }
     // Model confidence and a valid skill ID are not proof the operations match.
     if (_operationsConflict(text, selected.triggerIntent)) {
       return const ConversationDecision(
@@ -179,6 +199,20 @@ ${jsonEncode(flows.map((f) => {'id': f.flowId, 'goal': f.procedureTemplate, 'app
       schemaName: 'saar_skill_match',
     );
     if (!_verifiedMatch(verification)) {
+      // Preserve a plausible saved workflow as a choice, never as permission to
+      // execute. This candidate is created in code, not accepted from model JSON.
+      final requestedOperation = operationFamily(text);
+      if (_explicitActionRequest(text) &&
+          requestedOperation != null &&
+          requestedOperation == operationFamily(selected.triggerIntent)) {
+        return ConversationDecision(
+          'clarify',
+          'I found your saved workflow “${selected.triggerIntent}”, but could not verify this wording. Review the workflow and inputs before starting.',
+          selected.flowId,
+          decision.slots,
+          0,
+        );
+      }
       return const ConversationDecision(
         'clarify',
         'I could not verify that a learned skill supports this request. Please clarify the task, or teach me the missing procedure.',
@@ -213,6 +247,16 @@ String? operationFamily(String text) {
     return 'message';
   }
   return null;
+}
+
+bool _explicitActionRequest(String text) {
+  final request = text.trim().toLowerCase().replaceFirst(
+    RegExp(r'^(?:(?:can|could|would|will) you(?: please)?|please)\s+'),
+    '',
+  );
+  return RegExp(
+    r'^(?:search|find|look for|buy|order|purchase|checkout|add to cart|transfer|send|pay|book|reserve)\b',
+  ).hasMatch(request);
 }
 
 bool _operationsConflict(String request, String skillGoal) {

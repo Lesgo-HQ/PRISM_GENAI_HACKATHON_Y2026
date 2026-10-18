@@ -429,7 +429,8 @@ class AppController extends ChangeNotifier {
         } else {
           await _startCommand(text, parsed.slots);
         }
-      } else if (decision.kind == 'run' && decision.confidence >= 0.8) {
+      } else if (decision.kind == 'run' ||
+          (decision.kind == 'clarify' && decision.flowId != null)) {
         final flow = _flows.singleWhere((f) => f.flowId == decision.flowId);
         _pendingFlow = flow;
         _pendingSlots = {
@@ -443,8 +444,9 @@ class AppController extends ChangeNotifier {
         _clarificationContext = missing.isEmpty
             ? ClarificationContext.flowLowConfidence
             : ClarificationContext.flowNeedsClarification;
+        final review = decision.kind == 'clarify' ? '${decision.reply}\n' : '';
         _clarificationQuestion = missing.isEmpty
-            ? 'Run “${flow.triggerIntent}” with ${decision.slots}? Say yes to start.'
+            ? '${review}Run “${flow.triggerIntent}” with $_pendingSlots? Say yes to start.'
             : 'What ${missing.first} should I use?';
         _state = AppState.waitingForClarification;
         _say(_clarificationQuestion!);

@@ -28,6 +28,28 @@ void main() {
       }
     },
   );
+  test(
+    'polite requests still identify the exact demonstrated command',
+    () async {
+      final matcher = FlowMatcher(MemoryStore(saved: [skill('one')]));
+      for (final text in [
+        'Please order food from Swiggy',
+        'Can you order food from Swiggy?',
+        'Could you please order food from swiggy?',
+      ]) {
+        final result = await matcher.matchExact(text);
+        expect(result?.flow?.flowId, 'one', reason: text);
+        expect(result?.resolvedSlots['query'], 'pizza');
+      }
+      for (final text in [
+        "Don't order food from swiggy",
+        'Why order food from swiggy?',
+        'Order food from zomato',
+      ]) {
+        expect(await matcher.matchExact(text), isNull, reason: text);
+      }
+    },
+  );
   test('duplicate exact commands require choosing a workflow', () async {
     final result = await FlowMatcher(
       MemoryStore(saved: [skill('one'), skill('two')]),

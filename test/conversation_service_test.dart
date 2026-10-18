@@ -73,6 +73,15 @@ void main() {
     }
   });
 
+  test('model JSON cannot smuggle a skill through a non-action response', () {
+    for (final kind in ['clarify', 'chat', 'teach']) {
+      final invalid = decision(kind: kind, slots: {})..['flow_id'] = 'search';
+      expect(
+        () => ConversationDecision.parse(jsonEncode(invalid), [skill]),
+        throwsFormatException,
+      );
+    }
+  });
   test('compatible catalog search can run after verification', () async {
     final result = await decide('Search the catalog for pizza', [
       jsonEncode(decision()),
@@ -130,6 +139,65 @@ void main() {
     }
   });
 
+  test(
+    'uncertain supported procedure offers its saved skill for explicit review',
+    () async {
+      final result = await decide('Find headphones in the catalog', [
+        jsonEncode(decision(slots: {'query': 'headphones'})),
+        '{"matches":false}',
+      ]);
+      expect(result?.kind, 'clarify');
+      expect(result?.flowId, 'search');
+      expect(result?.reply, contains(skill.triggerIntent));
+      expect(result?.slots['query'], 'headphones');
+      expect(result?.confidence, 0);
+    },
+  );
+  test('a model cannot substitute Swiggy for a Zomato request', () async {
+    final swiggy = Flow(
+      flowId: 'swiggy',
+      appPackage: 'in.swiggy.android',
+      triggerIntent: 'order food from swiggy',
+      exampleUtterances: [],
+      slots: [],
+      steps: [],
+    );
+    final client = ScriptedClient([
+      jsonEncode(decision(flowId: 'swiggy', slots: {})),
+      '{"matches":true}',
+    ]);
+    final result = await ConversationService(client: client)
+        .respond('Please order food from zomato', [], [swiggy]);
+    expect(result?.kind, 'clarify');
+    expect(result?.flowId, isNull);
+    expect(client.calls, 1);
+  });
+  test(
+    'an uncertain model cannot turn discussion or negation into a confirmation',
+    () async {
+      for (final request in [
+        'Why search the catalog?',
+        'Please do not search the catalog',
+      ]) {
+        final result = await decide(request, [
+          jsonEncode(decision()),
+          '{"matches":false}',
+        ]);
+        expect(result?.kind, 'clarify');
+        expect(result?.flowId, isNull);
+      }
+    },
+  );
+  test(
+    'an app name in a search query is not treated as a destination app',
+    () async {
+      final result = await decide('Search the catalog for swiggy gift cards', [
+        jsonEncode(decision(slots: {'query': 'swiggy gift cards'})),
+        '{"matches":true}',
+      ]);
+      expect(result?.kind, 'run');
+    },
+  );
   test('ordinary chat skips skill verification', () async {
     final client = ScriptedClient([
       jsonEncode(

@@ -219,6 +219,54 @@ void main() {
     app.dispose();
   });
 
+  test(
+    'recorded Swiggy task is reused beside an existing Zomato skill',
+    () async {
+      final store = RecordingStore();
+      store.saved.add(
+        Flow(
+          flowId: 'zomato',
+          appPackage: 'com.application.zomato',
+          triggerIntent: 'order food from zomato',
+          exampleUtterances: [],
+          slots: [],
+          steps: [],
+        ),
+      );
+      final conversation = ScriptedConversation([
+        const ConversationDecision('clarify', 'Teach this again', null, {}, 0),
+      ]);
+      final app = AppController(
+        store: store,
+        bridge: RecordingBridge(),
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: conversation,
+      );
+      await app.initialize();
+      await app.submitTypedCommand('teach me to order food from swiggy');
+      await app.submitTypedCommand('stop recording');
+      expect(app.flows, hasLength(2));
+      expect(app.flows.last.steps, isNotEmpty);
+      for (final command in [
+        'order food from swiggy',
+        'Please order food from swiggy',
+        'Can you order food from swiggy?',
+      ]) {
+        await app.submitTypedCommand(command);
+        expect(
+          app.clarificationQuestion,
+          contains('Run “order food from swiggy”'),
+        );
+        expect(app.clarificationQuestion, contains('Say yes to start'));
+        expect(app.isTeachConfirmation, isFalse);
+        expect(app.hasActiveTask, isFalse);
+        await app.submitTypedCommand('no');
+      }
+      expect(conversation.calls, 0);
+      app.dispose();
+    },
+  );
   test('cancel teaching stops native capture without saving a skill', () async {
     final store = RecordingStore();
     final bridge = RecordingBridge();
@@ -301,6 +349,44 @@ void main() {
       await app.initialize();
       await app.submitTypedCommand('My morning routine');
       expect(app.statusMessage, contains('Say yes'));
+      expect(app.hasActiveTask, isFalse);
+      app.dispose();
+    },
+  );
+  test(
+    'uncertain model verification can be reviewed without teaching again',
+    () async {
+      final flow = Flow(
+        flowId: 'search',
+        appPackage: 'shop',
+        triggerIntent: 'Search the catalog for coffee',
+        exampleUtterances: [],
+        slots: [Slot(name: 'query', defaultValue: 'coffee')],
+        steps: [],
+      );
+      final app = AppController(
+        store: MemoryStore(saved: [flow]),
+        bridge: SilentBridge(),
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: ScriptedConversation([
+          ConversationDecision(
+            'clarify',
+            'Please review the saved workflow.',
+            'search',
+            {'query': 'pizza'},
+            0,
+          ),
+        ]),
+      );
+      await app.initialize();
+      await app.submitTypedCommand('Find pizza in the catalog');
+      expect(app.state, AppState.waitingForClarification);
+      expect(app.clarificationQuestion, contains('Say yes to start'));
+      expect(app.clarificationQuestion, contains('pizza'));
+      expect(app.isTeachConfirmation, isFalse);
+      expect(app.hasActiveTask, isFalse);
+      await app.submitTypedCommand('no');
       expect(app.hasActiveTask, isFalse);
       app.dispose();
     },

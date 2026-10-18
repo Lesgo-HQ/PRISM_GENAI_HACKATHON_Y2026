@@ -114,7 +114,7 @@ class FlowMatcher {
           if (requested != null && learned != null && requested != learned) {
             return false;
           }
-          final app = _extractor.extractApp(utterance.toLowerCase());
+          final app = _extractor.extractRequestedApp(utterance);
           return app == null || flow.appPackage.toLowerCase().contains(app);
         })
         .map((flow) => flow.flowId)
@@ -214,7 +214,12 @@ class FlowMatcher {
       .toLowerCase()
       .replaceAll(RegExp(r'[.!?]+$'), '')
       .trim()
-      .replaceAll(RegExp(r'\s+'), ' ');
+      .replaceAll(RegExp(r'\s+'), ' ')
+      // Strip only a request prefix; keep negation, app names and task inputs.
+      .replaceFirst(
+        RegExp(r'^(?:(?:can|could|would|will) you(?: please)?|please)\s+'),
+        '',
+      );
 
   double _cos(List<double> a, List<double> b) {
     if (a.length != b.length || a.isEmpty) {

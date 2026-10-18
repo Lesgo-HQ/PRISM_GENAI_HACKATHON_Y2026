@@ -76,11 +76,31 @@ class SlotExtractor {
   }
 
   String? extractApp(String text) {
-    const apps = ['swiggy', 'blinkit', 'myntra', 'zepto', 'amazon', 'flipkart'];
+    const apps = [
+      'swiggy',
+      'zomato',
+      'blinkit',
+      'myntra',
+      'zepto',
+      'amazon',
+      'flipkart',
+    ];
     for (final app in apps) {
       if (RegExp('\\b$app\\b', caseSensitive: false).hasMatch(text)) return app;
     }
     return null;
+  }
+
+  /// An app name inside a search term is not an instruction to switch apps.
+  String? extractRequestedApp(String text) {
+    final app = extractApp(text);
+    if (app == null) return null;
+    return RegExp(
+          '\\b(?:on|from|using|in|with)\\s+(?:the\\s+)?${RegExp.escape(app)}\\b',
+          caseSensitive: false,
+        ).hasMatch(text)
+        ? app
+        : null;
   }
 
   String? _extractVariant(String text) {
