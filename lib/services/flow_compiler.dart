@@ -21,6 +21,11 @@ class FlowCompiler {
         packageCounts[pkg] = (packageCounts[pkg] ?? 0) + 1;
       }
     }
+    if (packageCounts.isEmpty) {
+      throw const FormatException(
+        'No target app actions captured. Open the app and demonstrate the task before saving.',
+      );
+    }
     final appPackage = packageCounts.isNotEmpty
         ? (packageCounts.entries.reduce((a, b) => a.value > b.value ? a : b))
               .key
@@ -85,7 +90,7 @@ class FlowCompiler {
           id: stepId++,
           action: event.action,
           targetRole: role,
-          targetNodeText: node.text,
+          targetNodeText: _targetText(node),
           targetNodeContentDescription: node.contentDescription,
           targetNodeResourceId: node.resourceId,
           scrollDeltaX: event.scrollDeltaX,
@@ -116,10 +121,19 @@ class FlowCompiler {
     return '${lower}_value';
   }
 
+  String? _targetText(UiNode node) {
+    if (node.text?.trim().isNotEmpty == true) return node.text;
+    if (!node.isClickable || node.isEditable) return node.text;
+    for (final child in node.flatten().skip(1)) {
+      if (child.text?.trim().isNotEmpty == true) return child.text;
+    }
+    return node.text;
+  }
+
   String _roleForAction(UiNode node, String action, int stepId) {
+    if (action == 'scroll') return RoleOntology.scrollView;
     final inferred = RoleOntology.inferRole(node);
     if (inferred != null) return inferred;
-    if (action == 'scroll') return RoleOntology.scrollView;
     return 'UI_ELEMENT_$stepId';
   }
 
@@ -139,7 +153,10 @@ class FlowCompiler {
     if (packageName == null || packageName.isEmpty) return null;
     if (packageName == 'com.lesgo.saar' ||
         packageName == 'android' ||
-        packageName.startsWith('com.android.') ||
+        packageName == 'com.android.systemui' ||
+        packageName == 'com.android.launcher3' ||
+        packageName == 'com.android.permissioncontroller' ||
+        packageName == 'com.android.packageinstaller' ||
         packageName == 'com.miui.home' ||
         packageName == 'com.google.android.apps.nexuslauncher') {
       return null;

@@ -186,6 +186,10 @@ class MainActivity : FlutterActivity() {
                         }
 
                         "startTeachSession" -> {
+                            if (!SaarAccessibilityService.isServiceRunning()) {
+                                result.error("ACCESSIBILITY_DISABLED", "Enable SAAR accessibility before recording.", null)
+                                return@setMethodCallHandler
+                            }
                             stopTeachPolling()
                             SaarAccessibilityService.setTeachMode(true)
                             lastTraceSentCount = 0

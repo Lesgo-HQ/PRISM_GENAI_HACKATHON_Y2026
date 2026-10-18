@@ -161,10 +161,13 @@ class AppController extends ChangeNotifier {
       try {
         await _asr.initialize();
       } catch (_) {}
+      _flows = await _store.getAllFlows();
+      // A damaged optional search index must not hide persisted workflows.
       try {
         await _store.loadEmbeddingsIntoMemory();
-        _flows = await _store.getAllFlows();
-      } catch (_) {}
+      } catch (e) {
+        debugPrint('Could not load workflow search index: $e');
+      }
       await checkAccessibility();
       await _checkRecoverTeaching();
       _agentRecovered = await _store.loadAgentCheckpoint();
@@ -220,13 +223,13 @@ class AppController extends ChangeNotifier {
     } catch (_) {}
   }
 
-  Future<String?> _loadPendingTeach() async {
+  Future<String?> _loadPendingTeach({bool clear = false}) async {
     try {
       final dir = await getApplicationDocumentsDirectory();
       final file = File('${dir.path}/pending_teach.txt');
       if (await file.exists()) {
         final text = await file.readAsString();
-        await file.delete();
+        if (clear) await file.delete();
         return text;
       }
     } catch (_) {}
@@ -291,8 +294,20 @@ class AppController extends ChangeNotifier {
       ),
     );
     final lower = text.toLowerCase().replaceAll(RegExp(r'[.!?]+$'), '');
+    if (_state == AppState.teaching &&
+        ['stop', 'stop recording', 'save recording', 'done'].contains(lower)) {
+      await stopTeaching();
+      return;
+    }
     if (['stop', 'cancel', 'stop task', 'cancel task'].contains(lower)) {
       _turn++;
+      if (_state == AppState.teaching) {
+        await _teachSubscription?.cancel();
+        _teachSubscription = null;
+        await _bridge.stopTeachSession();
+        _actionTrace = [];
+        await _loadPendingTeach(clear: true);
+      }
       stopExecution();
       _recovered = null;
       _agentRecovered = null;
@@ -393,6 +408,12 @@ class AppController extends ChangeNotifier {
       }
       _statusMessage = 'Thinking…';
       notifyListeners();
+      final exact = await _matcher.matchExact(text);
+      if (turn != _turn || _disposed) return;
+      if (exact != null) {
+        await _startCommand(text, {}, match: exact);
+        return;
+      }
       final decision = await _conversation.respond(
         text,
         _messages.take(_messages.length - 1).toList(),
@@ -412,7 +433,8 @@ class AppController extends ChangeNotifier {
         final flow = _flows.singleWhere((f) => f.flowId == decision.flowId);
         _pendingFlow = flow;
         _pendingSlots = {
-          for (final slot in flow.slots) slot.name: decision.slots[slot.name],
+          for (final slot in flow.slots)
+            slot.name: decision.slots[slot.name] ?? slot.defaultValue,
         };
         final missing = _pendingSlots!.entries
             .where((e) => e.value == null)
@@ -494,67 +516,88 @@ class AppController extends ChangeNotifier {
       return;
     }
 
-    _state = AppState.teaching;
     _teachUtterance = utterance;
-    _statusMessage = 'Recording your actions... Perform the task now.';
     _actionTrace = [];
     await _savePendingTeach(utterance);
+    try {
+      await _teachSubscription?.cancel();
+      final stream = await _bridge.startTeachSession();
+      _teachSubscription = stream.listen(
+        (events) {
+          _actionTrace.addAll(events);
+          _statusMessage =
+              'Recording... ${_actionTrace.length} actions captured';
+          notifyListeners();
+        },
+        onError: (Object error) {
+          _statusMessage = 'Live recording updates interrupted. Return here and stop to save the captured actions.';
+          notifyListeners();
+        },
+      );
+      _state = AppState.teaching;
+      _statusMessage = 'Recording your actions... Perform the task now.';
+    } catch (e) {
+      _state = AppState.error;
+      _statusMessage = 'Could not start recording. Check accessibility access and try again.';
+      await _loadPendingTeach(clear: true);
+    }
     notifyListeners();
-
-    // Start teach session via bridge
-    _teachSubscription?.cancel();
-    final stream = await _bridge.startTeachSession();
-    _teachSubscription = stream.listen((events) {
-      _actionTrace.addAll(events);
-      _statusMessage = 'Recording... ${_actionTrace.length} actions captured';
-      notifyListeners();
-    });
   }
 
   Future<void> stopTeaching() async {
+    if (_state != AppState.teaching) return;
     _state = AppState.synthesizing;
-    _statusMessage = 'Analyzing your actions...';
+    _statusMessage = 'Saving your demonstration...';
     notifyListeners();
 
-    _teachSubscription?.cancel();
+    await _teachSubscription?.cancel();
     _teachSubscription = null;
 
     try {
       final finalTrace = await _bridge.stopTeachSession();
-      _actionTrace = finalTrace;
+      if (finalTrace.isNotEmpty) _actionTrace = finalTrace;
 
       if (_actionTrace.isEmpty) {
         _state = AppState.error;
-        _statusMessage = 'No actions recorded. Make sure you tapped something!';
+        _statusMessage = 'No actions recorded. Make sure accessibility is enabled, then demonstrate the task again.';
         notifyListeners();
         return;
       }
 
-      // Synthesize flow
       final flow = await _synthesizer.synthesize(
         _teachUtterance ?? 'Recovered Task',
         _actionTrace,
       );
-      _lastSynthesizedFlow = flow;
-
-      // Save flow and embedding
       await _store.saveFlow(flow);
-      final embedding = await _localModel.embed(flow.triggerIntent);
-      await _store.saveEmbedding(flow.flowId, embedding);
-      await _store.loadEmbeddingsIntoMemory();
+      _lastSynthesizedFlow = flow;
       _flows = await _store.getAllFlows();
-
-      await _store.logSession(
-        flowId: flow.flowId,
-        sessionType: 'teach',
-        status: 'success',
-      );
-
+      // Exact reuse depends only on the committed flow, not this optional index.
+      try {
+        final embedding = await _localModel.embed(flow.triggerIntent);
+        await _store.saveEmbedding(flow.flowId, embedding);
+        await _store.loadEmbeddingsIntoMemory();
+      } catch (e) {
+        debugPrint('Workflow saved; search index unavailable: $e');
+      }
+      try {
+        await _store.logSession(
+          flowId: flow.flowId,
+          sessionType: 'teach',
+          status: 'success',
+        );
+      } catch (e) {
+        debugPrint('Workflow saved; session log unavailable: $e');
+      }
+      await _loadPendingTeach(clear: true);
       _state = AppState.idle;
+      final manual = flow.steps
+          .where((step) => step.action == 'stop_before')
+          .length;
       _say(
-        'I learned ${flow.triggerIntent}. You can now reuse it with different inputs.',
+        'Saved “${flow.triggerIntent}” with ${flow.steps.length} steps. '
+        'Say the same command to reuse it.'
+        '${manual > 0 ? ' $manual steps need your help because their targets were sensitive or unreadable.' : ''}',
       );
-      await _loadPendingTeach();
       notifyListeners();
     } catch (e) {
       _state = AppState.error;
@@ -565,18 +608,18 @@ class AppController extends ChangeNotifier {
 
   Future<void> _startCommand(
     String utterance,
-    Map<String, dynamic> extractedSlots,
-  ) async {
+    Map<String, dynamic> extractedSlots, {
+    MatchResult? match,
+  }) async {
     _state = AppState.matching;
     _statusMessage = 'Finding matching flow...';
     notifyListeners();
 
     try {
       final turn = _turn;
-      final result = await _matcher.match(
-        utterance,
-        extractedSlots: extractedSlots,
-      );
+      final result =
+          match ??
+          await _matcher.match(utterance, extractedSlots: extractedSlots);
 
       if (turn != _turn || _disposed) return;
       if (result.isUnknown) {
@@ -629,7 +672,13 @@ class AppController extends ChangeNotifier {
         return;
       }
 
-      await _executeFlow(result.flow!, result.resolvedSlots);
+      _pendingFlow = result.flow;
+      _pendingSlots = result.resolvedSlots;
+      _clarificationContext = ClarificationContext.flowLowConfidence;
+      _clarificationQuestion =
+          'Run “${result.flow!.triggerIntent}” with ${result.resolvedSlots}? Say yes to start.';
+      _state = AppState.waitingForClarification;
+      _say(_clarificationQuestion!);
     } catch (e) {
       _state = AppState.error;
       _statusMessage = 'Error: $e';
@@ -835,7 +884,8 @@ class AppController extends ChangeNotifier {
         }
         final flow = _pendingFlow!;
         _pendingSlots = {
-          for (final slot in flow.slots) slot.name: _pendingSlots?[slot.name],
+          for (final slot in flow.slots)
+            slot.name: _pendingSlots?[slot.name] ?? slot.defaultValue,
         };
         _pendingCandidates = [];
         final missing = _pendingSlots!.entries

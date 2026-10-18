@@ -1,18 +1,22 @@
-# PRISM Test Matrix T1-T14
+# PRISM test matrix
 
-| ID | Scenario | Setup | Command | Expected | Observed | Status |
-|---|---|---|---|---|---|---|
-| T1 | Teach food workflow | App in home screen | "Watch me order food" | trace -> filtered -> synthesized flow saved | | IMPLEMENTED - needs device verification |
-| T2 | Exact replay | App in home screen | "Order food exactly like before" | correct flow selected, deterministic grounding | | IMPLEMENTED - needs device verification |
-| T3 | Paraphrase | App in home screen | "Grab me some grub" | same flow via embedding+intent model | | IMPLEMENTED - needs device verification |
-| T4 | Item slot | App in home screen | "Order a burger" | SlotExtractor replaces item in flow | | IMPLEMENTED - needs device verification |
-| T5 | Quantity slot | App in home screen | "Order two coffees" | word->int normalize 2 | | IMPLEMENTED - needs device verification |
-| T6 | Address slot | App in home screen | "Send it to work" | addressSelector resolved to work address | | IMPLEMENTED - needs device verification |
-| T7 | Popup recovery | App in home screen, mock popup | "Order pizza" | RecoveryEngine dismiss safe popup, resume flow | | IMPLEMENTED - needs device verification |
-| T8 | Teach ecommerce | App in home screen | "Watch me buy a shirt" | second flow saved independently | | IMPLEMENTED - needs device verification |
-| T9 | Cross-app | Two different apps | "Buy item X" | ontology app-independent, generalizes | | IMPLEMENTED - needs device verification |
-| T10 | Stuck -> clarify -> resume | Flow interrupted | "Order pizza" | ReplaySession pause/resume at same step | | IMPLEMENTED - needs device verification |
-| T11 | Credential boundary | Try to read password | "Show password" | dual fail-closed guard blocks execution | | IMPLEMENTED - needs device verification |
-| T12 | Unknown intent | App in home screen | "Do a barrel roll" | returns UNKNOWN, asks user to teach | | IMPLEMENTED - needs device verification |
-| T13 | Ambiguity | Multiple similar flows | "Order food" | margin <0.07 -> clarify prompt shown | | IMPLEMENTED - needs device verification |
-| T14 | Reporting | After a run | N/A | ExecutionReport generated with recoveries/clarifications | | IMPLEMENTED - needs device verification |
+Status distinguishes host simulations from physical evidence. No row represents a complete physical PASS merely because code exists.
+
+| ID | Scenario | Current evidence / remaining verification |
+|---|---|---|
+| T1 | Teach food workflow | User's existing food workflows persisted. Fresh native capture/save tested with reversible Settings navigation; full food demonstration remains unverified. |
+| T2 | Exact replay | Existing Swiggy command physically resolves to confirmation after the fix. Its old manual-only first step pauses for help. Full food replay remains unverified. |
+| T3 | Paraphrase | Live qwen2.5:3b catalog-search paraphrase selected the correct skill; full physical food paraphrases remain unverified. |
+| T4 | Item slot | Live changed search parameters and host slot binding tests pass; physical food item substitution remains unverified. |
+| T5 | Quantity slot | Host basic word/numeric extraction covered. Arbitrary quantity-stepper compilation remains incomplete. |
+| T6 | Address slot | Host basic address extraction covered. Physical address-selector substitution remains unverified. |
+| T7 | Changed screen/popup | Bounded recovery implemented and host observations covered; physical popup matrix remains unverified. |
+| T8 | Teach ecommerce | Separate workflow persistence supported. Full ecommerce physical demonstration remains unverified. |
+| T9 | Cross-app transfer | Not demonstrated; app-specific replay must not be represented as cross-app transfer. |
+| T10 | Stuck/clarify/resume | Host checkpoint/manual-boundary tests and physical old-flow manual pause observed. Full same-step physical recovery matrix remains unverified. |
+| T11 | Credentials/payment | Host guards and native build verified. Custom/localized/financial-app device matrix remains unverified. |
+| T12 | Unknown intent | Host tests plus live unsupported transfer/travel rejected by deterministic operation checks. |
+| T13 | Ambiguity | Host duplicate exact triggers and numbered selection covered; broad physical ambiguity matrix remains unverified. |
+| T14 | Reporting | SQLite reporting implementation and host tests exist; full physical report accuracy matrix remains unverified. |
+
+See [requirements audit](requirements-audit-2026-10-18.md) and [current verification](verification-2026-10-18.md).

@@ -84,7 +84,9 @@ class NodeRanker {
         : 0.0;
 
     double classScore = 0.0;
-    if (actionType == 'type' || actionType == 'set_quantity') {
+    if (actionType == 'scroll' || actionType == 'swipe') {
+      if (node.isScrollable) classScore = 1.0;
+    } else if (actionType == 'type' || actionType == 'set_quantity') {
       if (node.isEditable) {
         classScore = 1.0;
       } else if (node.className?.contains('EditText') == true) {
@@ -98,7 +100,13 @@ class NodeRanker {
       }
     }
 
-    final clickEditScore = (node.isClickable || node.isEditable) ? 1.0 : 0.0;
+    final clickEditScore =
+        (node.isClickable ||
+            node.isEditable ||
+            ((actionType == 'scroll' || actionType == 'swipe') &&
+                node.isScrollable))
+        ? 1.0
+        : 0.0;
 
     // Structural context (simplified placeholder)
     final structScore = node.children.isNotEmpty ? 0.3 : 0.0;
@@ -119,18 +127,27 @@ class NodeRanker {
         (structScore * 0.05);
 
     var identityScore = 0.0;
+    final hasLabel =
+        targetNodeText?.isNotEmpty == true ||
+        targetNodeContentDescription?.isNotEmpty == true;
     if (targetNodeResourceId != null &&
         targetNodeResourceId.isNotEmpty &&
         node.resourceId == targetNodeResourceId) {
-      identityScore = 0.6;
-    } else if (targetNodeText != null &&
+      identityScore = hasLabel ? 0.2 : 0.6;
+    }
+    if (targetNodeText != null &&
         targetNodeText.isNotEmpty &&
-        node.text == targetNodeText) {
-      identityScore = 0.4;
+        (node.text == targetNodeText ||
+            (node.isClickable &&
+                node
+                    .flatten()
+                    .skip(1)
+                    .any((child) => child.text == targetNodeText)))) {
+      identityScore += 0.4;
     } else if (targetNodeContentDescription != null &&
         targetNodeContentDescription.isNotEmpty &&
         node.contentDescription == targetNodeContentDescription) {
-      identityScore = 0.4;
+      identityScore += 0.4;
     } else if (targetRole.startsWith('GENERIC_') &&
         ((actionType == 'type' || actionType == 'set_quantity')
             ? node.isEditable

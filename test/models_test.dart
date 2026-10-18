@@ -194,6 +194,28 @@ void main() {
     expect(CredentialGuard.isSensitiveScreen(null), isTrue);
   });
 
+  test('plain payment and credential labels require manual control', () {
+    for (final label in [
+      'OTP',
+      'Password',
+      'Payment',
+      'Pay',
+      'Pay ₹250',
+      'Place order',
+      'Confirm purchase',
+    ]) {
+      expect(
+        CredentialGuard.isSensitiveScreen(_node(text: label)),
+        isTrue,
+        reason: label,
+      );
+    }
+    expect(
+      CredentialGuard.isSensitiveScreen(_node(text: 'Shopping bag')),
+      isFalse,
+    );
+  });
+
   test('CredentialGuard allows normal fields', () {
     expect(
       CredentialGuard.isSensitiveScreen(_node(text: 'Rice', clickable: true)),

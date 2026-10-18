@@ -145,7 +145,12 @@ class AccessibilityBridge {
 
   // Start the native recorder before subscribing to its event stream.
   Future<Stream<List<ActionTraceEvent>>> startTeachSession() async {
-    await _methodChannel.invokeMethod<bool>('startTeachSession');
+    final started = await _methodChannel.invokeMethod<bool>(
+      'startTeachSession',
+    );
+    if (started != true) {
+      throw StateError('Accessibility recorder did not start.');
+    }
     return _eventChannel.receiveBroadcastStream().map((dynamic event) {
       try {
         final decoded = event is String ? jsonDecode(event) : event;
@@ -196,7 +201,7 @@ class AccessibilityBridge {
           .toList();
     } catch (e) {
       debugPrint('Error stopping teach session: $e');
-      return <ActionTraceEvent>[];
+      rethrow;
     }
   }
 }

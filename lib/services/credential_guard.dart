@@ -26,7 +26,19 @@ class CredentialGuard {
     'one time password',
     'security code',
     'card number',
+    'upi pin',
+    'bank account number',
+    'ifsc code',
+    'confirm purchase',
+    'place order',
+    'pay now',
+    'make payment',
+    'biometric authentication',
   ];
+  static final RegExp _boundaryLabel = RegExp(
+    r'^(?:password|passcode|otp|pin|cvv|cvc|payment|pay|confirm purchase|place order)(?:\s*[:₹$\d]|$)',
+    caseSensitive: false,
+  );
 
   /// Whether the given UI tree contains a credential entry field.
   ///
@@ -54,8 +66,9 @@ class CredentialGuard {
     ];
     if (identifiers.any(_sensitiveWord.hasMatch)) return true;
 
-    final text = (node.text ?? '').toLowerCase();
-    return _sensitivePrompts.any(text.contains);
+    final text = (node.text ?? '').toLowerCase().trim();
+    return _boundaryLabel.hasMatch(text) ||
+        _sensitivePrompts.any(text.contains);
   }
 
   /// Android InputType class and variation masks.

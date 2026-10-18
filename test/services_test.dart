@@ -28,6 +28,36 @@ UiNode _node({
 );
 
 void main() {
+  test(
+    'word quantities, item and address updates are independently extracted',
+    () {
+      final extractor = SlotExtractor();
+      expect(
+        extractor.extract('order two coffees from swiggy'),
+        containsPair('quantity', 2),
+      );
+      expect(
+        extractor.extract('order two coffees from swiggy'),
+        containsPair('query', 'coffees'),
+      );
+      expect(
+        extractor.extract('order 2 packets of rice from zepto'),
+        containsPair('query', 'rice'),
+      );
+      expect(
+        extractor.extract('send it to work'),
+        containsPair('address', 'work'),
+      );
+      expect(
+        extractor.extract('deliver to 12 Main Street')['quantity'],
+        isNull,
+      );
+      expect(
+        extractor.extract('order coffee from swiggy')['restaurant'],
+        isNull,
+      );
+    },
+  );
   group('TraceNormalizer', () {
     test('accepts platform timestamps represented as numeric values', () {
       final event = ActionTraceEvent.fromJson({

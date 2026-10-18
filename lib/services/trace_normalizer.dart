@@ -8,6 +8,11 @@ class TraceNormalizer {
       'com.google.android.apps.nexuslauncher',
       'com.android.packageinstaller',
       'com.android.permissioncontroller',
+      'com.motorola.launcher3',
+      'com.sec.android.app.launcher',
+      'com.miui.home',
+      'com.google.android.inputmethod.latin',
+      'com.samsung.android.honeyboard',
     ];
 
     final filtered = <ActionTraceEvent>[];
@@ -30,6 +35,8 @@ class TraceNormalizer {
         final lastEvent = filtered.last;
         final timeDiff = event.timestampMs - lastEvent.timestampMs;
         final sameNode =
+            (event.packageName ?? event.node?.packageName) ==
+                (lastEvent.packageName ?? lastEvent.node?.packageName) &&
             event.node?.nodeId != null &&
             event.node?.nodeId == lastEvent.node?.nodeId &&
             event.node!.nodeId!.isNotEmpty;

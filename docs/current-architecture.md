@@ -1,29 +1,11 @@
 # Current architecture
 
-## Modules
+See [agent architecture](agent-architecture.md) for runtime ownership and [requirements audit](requirements-audit-2026-10-18.md) for implementation and verification gaps.
 
-`lib/` contains Flutter UI, orchestration, flow persistence, matching, synthesis, replay, and safety checks. `android/app/` contains the Flutter Android host and `SaarAccessibilityService`.
+Commands first check persisted exact triggers and saved examples, ignoring case, repeated whitespace and terminal speech punctuation. A match uses demonstrated slot defaults and requires confirmation. Duplicate triggers require choosing a workflow. This path needs neither an embedding index nor a model server.
 
-## Data flow
+Other requests use the configured model with structured decisions and separate compatibility verification. When the model is disabled, a limited keyword/hash matcher is available; incompatible operations and explicitly different apps are excluded. This is not a trained semantic NLU runtime.
 
-Voice input is transcribed by `AsrService`, classified by `LlmClient`, and matched to persisted flows by `FlowMatcher`. `ReplayEngine` creates a `ReplaySession`, grounds each semantic target against the current Accessibility tree, validates the safety boundary, dispatches a native action, and captures a new `ScreenSnapshot` for condition verification.
+Teaching uses the native accessibility event buffer, a deterministic trace normalizer/compiler, and SQLite persistence. The UI acknowledges saving only after the flow is committed. Search-index failures do not hide saved workflows. Stop recording saves; cancelling discards the capture. Sensitive or unreadable recorded targets become manual steps and are disclosed in the save message.
 
-## Native bridge
-
-`AccessibilityBridge` uses `saar/accessibility` for tree reads, gestures, text entry, service state, and the native sensitive-screen check. `saar/accessibility_events` streams teach-mode traces from Kotlin to Flutter.
-
-## Accessibility service
-
-`SaarAccessibilityService` serializes the active window tree, records teach-mode events, and performs gestures only after its independent fail-closed credential/payment guard passes. A missing service or active window blocks automation.
-
-## Flow schema
-
-A flow has an ID, target app package, trigger intent, examples, typed slots, and ordered `FlowStep`s. Steps use a semantic `target_role`, optional slot/literal value, optional screen precondition/postcondition, and recovery directives. Raw coordinates are not stored in flow data.
-
-## Safety
-
-Flutter and Kotlin independently block password, OTP, PIN, card, bank, UPI, payment, purchase-confirmation, and biometric signals. Replay stops if tree retrieval or native safety validation fails. Safe recovery can dismiss only a small allowlist of harmless popups.
-
-## Current limitations
-
-The local development environment does not expose the Flutter/Dart SDK on `PATH`, so baseline `flutter analyze`, tests, APK builds, device enumeration, and physical-device smoke testing remain unverified. The imported Flutter branch also lacks Gradle wrapper launchers/JAR; regenerate them with the Flutter SDK before building. The current intent/synthesis development provider is configurable, but local SAAR-NLU and production on-device inference are not implemented yet.
+Replay uses semantic/identity grounding, live safety checks, checkpoints before dispatch, result observations and explicit clarification. A changed screen is a limited completion heuristic for steps without explicit postconditions. Native compilation and host tests do not establish successful replay in every third-party app.

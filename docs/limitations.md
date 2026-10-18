@@ -1,12 +1,12 @@
-# SAAR Limitations
+# Current limitations
 
-This document details the honest operational limitations of the SAAR system as of the current version.
-
-1. **Regex-based NLU Baseline**: The current Natural Language Understanding (NLU) is based on regex and keyword extraction (`saar-nlu-lite`). It is not a trained neural model, which limits its ability to handle complex paraphrasing or multi-intent commands.
-2. **Generalization**: Cross-app generalization is currently an architectural design rather than a physically demonstrated capability. Flows are tightly coupled to the recorded app's UI structure.
-3. **ASR Network Dependency**: Automatic Speech Recognition (ASR) relies on Android's native `SpeechRecognizer`, which may require network connectivity depending on the device and OS version.
-4. **No Overlay UI**: Currently, there is no floating overlay UI to pause/resume or indicate status during replay.
-5. **Trace Quality**: Flow synthesis quality relies heavily on clean action traces during the `RECORDING` phase. Extraneous taps can confuse the Script Engine.
-6. **Domain Restriction**: The system's role ontology and intent handling are largely limited to e-commerce and generic navigation patterns.
-7. **Single Language**: The system only supports English; there is no multi-language support.
-8. **Test Verification**: Tests T1-T14 require physical device verification to ensure the Accessibility Service functions correctly across different manufacturer skins.
+- Exact saved commands are deterministic; general paraphrases and adaptive planning depend on model quality. A connection test establishes protocol connectivity, not routing accuracy.
+- The keyword/hash fallback is limited. ONNX assets and a native inference bridge exist, but LocalIntentModel.parse does not use a validated neural intent/slot/embedding pipeline. No measured on-device model quality or resource claim is made.
+- Learned workflows are app-specific. Cross-app transfer has not been demonstrated. An app with unavailable or unlabeled accessibility nodes can require manual steps even after teaching.
+- Older recordings containing stop_before steps retain those boundaries. Missing historical targets cannot safely be reconstructed; inspect the skill and demonstrate it again if the captured procedure is inadequate.
+- Quantity/address extraction supports basic forms; substitution only affects declared workflow slots. A demonstrated tap on a quantity increment is not automatically a reusable quantity loop.
+- Recovery is bounded and heuristic. Screen changes alone are weak evidence for steps without explicit postconditions. Arbitrary UI redesigns, popups, multiple identical controls and canvas interfaces can prevent replay.
+- Floating recording/replay controls exist. Microphone recognition, OEM background limits and accessibility-service restarts still need wider device testing. A process kill can lose an in-progress native recording; committed workflows survive app restart.
+- Credentials and payment remain manual. Metadata and label checks cannot prove detection of every custom/localized financial UI.
+- The installed Android speech recognizer may use a network. Fully offline speech operation has not been established.
+- Full T1–T14 cross-app physical evidence, multi-device benchmarks, release signing and the unedited submission video remain outstanding. See the [requirements audit](requirements-audit-2026-10-18.md).

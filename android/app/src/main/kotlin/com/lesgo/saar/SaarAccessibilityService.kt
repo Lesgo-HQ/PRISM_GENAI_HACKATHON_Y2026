@@ -63,7 +63,13 @@ class SaarAccessibilityService : AccessibilityService() {
         private val SENSITIVE_PROMPTS = listOf(
             "enter otp", "enter pin", "enter cvv", "enter cvc", "enter mpin",
             "enter password", "verify otp", "verification code", "one time password",
-            "security code", "card number"
+            "security code", "card number", "upi pin", "bank account number",
+            "ifsc code", "confirm purchase", "place order", "pay now",
+            "make payment", "biometric authentication"
+        )
+        private val BOUNDARY_LABEL = Regex(
+            "^(?:password|passcode|otp|pin|cvv|cvc|payment|pay|confirm purchase|place order)(?:\\s*[:₹$\\d]|$)",
+            RegexOption.IGNORE_CASE
         )
 
         fun getLatestTreeJson(): String? = latestTreeJson
@@ -222,8 +228,8 @@ class SaarAccessibilityService : AccessibilityService() {
                 return true
             }
 
-            val text = node.text?.toString()?.lowercase() ?: ""
-            return SENSITIVE_PROMPTS.any { text.contains(it) }
+            val text = node.text?.toString()?.lowercase()?.trim() ?: ""
+            return BOUNDARY_LABEL.containsMatchIn(text) || SENSITIVE_PROMPTS.any { text.contains(it) }
         }
 
         /**
@@ -567,7 +573,9 @@ class SaarAccessibilityService : AccessibilityService() {
             val sensitive = event.isPassword || source == null || isNodeSensitive(source)
             val nodeJson = if (source != null) {
                 try {
-                    serializeNodeFlat(source)
+                    // Android list rows often put their label on a child while
+                    // the clickable source itself has no text or resource ID.
+                    serializeNodeFlat(source, if (action == "tap") 4 else 0)
                 } finally {
                     source.recycle()
                 }
@@ -596,7 +604,7 @@ class SaarAccessibilityService : AccessibilityService() {
     }
 
     /** Serialize a single node without children (for action trace). */
-    private fun serializeNodeFlat(node: AccessibilityNodeInfo): JSONObject {
+    private fun serializeNodeFlat(node: AccessibilityNodeInfo, remainingDepth: Int = 0): JSONObject {
         val obj = JSONObject()
         try {
             obj.put("nodeId", node.viewIdResourceName ?: "")
@@ -624,7 +632,18 @@ class SaarAccessibilityService : AccessibilityService() {
             obj.put("isFocusable", node.isFocusable)
             obj.put("isFocused", node.isFocused)
             obj.put("inputType", node.inputType)
-            obj.put("children", JSONArray()) // no children in flat serialization
+            val children = JSONArray()
+            if (remainingDepth > 0 && !isNodeSensitive(node)) {
+                for (i in 0 until minOf(node.childCount, 32)) {
+                    val child = node.getChild(i) ?: continue
+                    try {
+                        if (child.isVisibleToUser) children.put(serializeNodeFlat(child, remainingDepth - 1))
+                    } finally {
+                        child.recycle()
+                    }
+                }
+            }
+            obj.put("children", children)
         } catch (e: Exception) {
             Log.e(TAG, "Error serializing flat node: ${e.message}")
         }

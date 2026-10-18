@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:saar/app_controller.dart';
 import 'package:saar/models/chat_message.dart';
+import 'package:saar/models/action_trace_event.dart';
+import 'package:saar/models/ui_node.dart';
 import 'package:saar/models/agent_task.dart';
 import 'package:saar/models/flow.dart';
 import 'package:saar/models/parsed_intent.dart';
@@ -80,6 +82,57 @@ class Baseline extends LocalIntentModel {
   Future<void> initialize() async {}
 }
 
+class RecordingStore extends MemoryStore {
+  RecordingStore() : super(saved: []);
+  bool brokenIndex = false;
+  @override
+  Future<void> saveFlow(Flow flow) async => saved.add(flow);
+  @override
+  Future<void> saveEmbedding(String flowId, List<double> vector) async {
+    if (brokenIndex) throw StateError('index unavailable');
+  }
+
+  @override
+  Future<void> loadEmbeddingsIntoMemory() async {
+    if (brokenIndex) throw StateError('index unavailable');
+  }
+}
+
+class RecordingBridge extends SilentBridge {
+  bool recording = false;
+  bool failStart = false;
+  int stops = 0;
+  @override
+  Future<bool> isServiceEnabled() async => true;
+  @override
+  Future<bool> isRecording() async => recording;
+  @override
+  Future<Stream<List<ActionTraceEvent>>> startTeachSession() async {
+    if (failStart) throw StateError('service stopped');
+    recording = true;
+    return const Stream.empty();
+  }
+
+  @override
+  Future<List<ActionTraceEvent>> stopTeachSession() async {
+    stops++;
+    recording = false;
+    return [
+      ActionTraceEvent(
+        timestampMs: 1,
+        action: 'tap',
+        packageName: 'in.swiggy.android',
+        node: UiNode.fromJson({
+          'packageName': 'in.swiggy.android',
+          'text': 'Search',
+          'isClickable': true,
+          'children': [],
+        }),
+      ),
+    ];
+  }
+}
+
 class DelayedConversation extends ConversationService {
   final result = Completer<ConversationDecision?>();
   final started = Completer<void>();
@@ -132,6 +185,126 @@ Flow _skill(String id, String goal) => Flow(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test('teach, stop, reuse and restart retain the saved command even with a failed index', () async {
+    final store = RecordingStore()..brokenIndex = true;
+    final bridge = RecordingBridge();
+    AppController create() => AppController(
+      store: store,
+      bridge: bridge,
+      asr: NoSpeech(),
+      intentModel: Baseline(),
+      conversation: ScriptedConversation([null]),
+    );
+    var app = create();
+    await app.initialize();
+    await app.submitTypedCommand('Order food from swiggy');
+    expect(app.isTeachConfirmation, isTrue);
+    await app.submitTypedCommand('yes');
+    expect(bridge.recording, isTrue);
+    await app.submitTypedCommand('stop recording');
+    await app.stopTeaching(); // A second tap must not save a duplicate flow.
+    expect(store.saved, hasLength(1));
+    expect(bridge.stops, 1);
+    expect(app.statusMessage, contains('Saved'));
+    await app.submitTypedCommand('Order food from Swiggy!');
+    expect(app.isTeachConfirmation, isFalse);
+    expect(app.statusMessage, contains('Say yes'));
+    app.dispose();
+    app = create();
+    await app.initialize();
+    expect(app.flows, hasLength(1));
+    await app.submitTypedCommand('Order food from swiggy');
+    expect(app.statusMessage, contains('Say yes'));
+    expect(app.hasActiveTask, isFalse);
+    app.dispose();
+  });
+
+  test('cancel teaching stops native capture without saving a skill', () async {
+    final store = RecordingStore();
+    final bridge = RecordingBridge();
+    final app = AppController(
+      store: store,
+      bridge: bridge,
+      asr: NoSpeech(),
+      intentModel: Baseline(),
+      conversation: ScriptedConversation([]),
+    );
+    await app.initialize();
+    await app.submitTypedCommand('teach me to order food');
+    await app.submitTypedCommand('cancel');
+    expect(bridge.recording, isFalse);
+    expect(store.saved, isEmpty);
+    app.dispose();
+  });
+
+  test(
+    'recorder startup failure is visible and never claims recording',
+    () async {
+      final app = AppController(
+        store: RecordingStore(),
+        bridge: RecordingBridge()..failStart = true,
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: ScriptedConversation([]),
+      );
+      await app.initialize();
+      await app.submitTypedCommand('teach me to order food');
+      expect(app.state, AppState.error);
+      expect(app.statusMessage, contains('Could not start recording'));
+      app.dispose();
+    },
+  );
+  test(
+    'saved exact command bypasses model rejection and requests confirmation',
+    () async {
+      final conversation = ScriptedConversation([
+        const ConversationDecision('clarify', 'Please teach me.', null, {}, 1),
+      ]);
+      final app = AppController(
+        store: MemoryStore(saved: [_skill('swiggy', 'order food from swiggy')]),
+        bridge: SilentBridge(),
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: conversation,
+      );
+      await app.initialize();
+      await app.submitTypedCommand('Order food from Swiggy!');
+      expect(conversation.calls, 0);
+      expect(app.state, AppState.waitingForClarification);
+      expect(app.isTeachConfirmation, isFalse);
+      expect(app.statusMessage, contains('query'));
+      app.dispose();
+    },
+  );
+
+  test(
+    'exact custom command works even when keyword parser considers it unknown',
+    () async {
+      final app = AppController(
+        store: MemoryStore(
+          saved: [
+            Flow(
+              flowId: 'custom',
+              appPackage: 'shop',
+              triggerIntent: 'My morning routine',
+              exampleUtterances: [],
+              slots: [],
+              steps: [],
+            ),
+          ],
+        ),
+        bridge: SilentBridge(),
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: ScriptedConversation([null]),
+      );
+      await app.initialize();
+      await app.submitTypedCommand('My morning routine');
+      expect(app.statusMessage, contains('Say yes'));
+      expect(app.hasActiveTask, isFalse);
+      app.dispose();
+    },
+  );
   test('cancel invalidates a model response that arrives later', () async {
     final conversation = DelayedConversation();
     final app = AppController(

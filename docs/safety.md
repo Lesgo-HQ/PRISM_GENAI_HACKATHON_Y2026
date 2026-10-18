@@ -1,36 +1,13 @@
-# SAAR Safety Documentation
+# Safety boundaries
 
-## Dual-Layer Credential Guard
-SAAR implements a rigorous Dual-Layer Credential Guard to prevent unintentional interaction with sensitive data.
+Dart CredentialGuard and the Kotlin accessibility service independently inspect field metadata, input types and explicit credential/payment labels. Unreadable screens block replay. Payment confirmation, credentials and destructive actions require manual control; model confidence cannot override these checks.
 
-### Flutter Layer (Pre-flight & Real-time)
-`CredentialGuard.isSensitiveScreen` evaluates the screen snapshot. It checks:
-- `inputType` (e.g., password types)
-- `resourceId`
-- `className`
-- `hintText`
-- `contentDescription`
-- `text`
-If any matches a blocklist, the execution fails closed.
+The native recorder redacts recognized sensitive node text and typed values. The compiler turns recognized sensitive or unreadable targets into stop_before steps without saving their target text. Card-number-like typed values are redacted. This is heuristic protection, not a guarantee that all PII or custom sensitive interfaces are detected.
 
-### Kotlin Layer (Execution time)
-`SaarAccessibilityService.isSensitiveScreenDetected` runs the exact same checks on the native side immediately before dispatching an accessibility gesture.
+For tappable containers, a bounded child subtree is captured so labels can identify the recorded row. Sensitive child nodes remain redacted, and the compiler checks the subtree before retaining an action.
 
-## Fail-Closed Behavior
-In any ambiguous state (e.g., a null tree, text extraction failure, or an unknown regex error), the system assumes the screen is sensitive and will fail closed (return `false`), preventing execution.
+Every replay action is checkpointed before dispatch. An unverified dispatched action is not blindly repeated. Pause/Stop and manual acknowledgement preserve control. Exact saved command selection also requires confirmation before execution.
 
-## Payment Boundary
-Payment gateways and financial transactions are strictly outside the automation boundary. A `stop_before` action is injected for payment/credential roles in the `FlowCompiler`. This prevents any automated confirmation of payments.
+Native and Dart guards cover explicit password/OTP/PIN/card prompts, plain credential labels and payment labels such as Pay, Pay now, Place order and Confirm purchase. Custom WebViews, localized labels, biometric flows and weak metadata still require adversarial device validation.
 
-## Trace Redaction
-During `RECORDING`, `SlotExtractor.redactTrace` automatically redacts sensitive trace content. It removes:
-- Credit card numbers
-- Short PINs
-- Sensitive keywords
-This ensures that the final saved abstract flow contains no user PII.
-
-## What is Never Automated
-- Settings changes (unless explicitly a SAAR-approved flow).
-- Password inputs.
-- Bank transfers.
-- Deletion of accounts/data.
+Do not claim full payment/credential safety based on host tests alone. See [limitations](limitations.md) and the dated verification report.

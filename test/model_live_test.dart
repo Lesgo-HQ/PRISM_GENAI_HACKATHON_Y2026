@@ -38,8 +38,10 @@ void main() {
     () async {
       SharedPreferences.setMockInitialValues({
         'enable_llm': true,
-        'model_endpoint': 'http://127.0.0.1:8080/v1/chat/completions',
-        'model_name': 'local',
+        'model_endpoint':
+            Platform.environment['SAAR_MODEL_ENDPOINT'] ??
+            'http://127.0.0.1:8080/v1/chat/completions',
+        'model_name': Platform.environment['SAAR_MODEL_NAME'] ?? 'local',
       });
       AgentObservation observed(String label) => AgentObservation(
         UiNode.fromJson({
@@ -85,8 +87,10 @@ void main() {
     () async {
       SharedPreferences.setMockInitialValues({
         'enable_llm': true,
-        'model_endpoint': 'http://127.0.0.1:8080/v1/chat/completions',
-        'model_name': 'local',
+        'model_endpoint':
+            Platform.environment['SAAR_MODEL_ENDPOINT'] ??
+            'http://127.0.0.1:8080/v1/chat/completions',
+        'model_name': Platform.environment['SAAR_MODEL_NAME'] ?? 'local',
       });
       final service = ConversationService(client: LoggedClient());
       final skills = [

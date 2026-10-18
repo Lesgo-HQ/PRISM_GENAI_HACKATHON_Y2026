@@ -11,6 +11,13 @@ class SlotExtractor {
     final quantity = _extractQuantity(lower);
     if (quantity != null) slots['quantity'] = quantity;
 
+    final address = RegExp(
+      r'\b(?:deliver|send)(?: it)? to (.+)$|\b(?:address(?: to)?|deliver to) (.+)$',
+    ).firstMatch(lower);
+    if (address != null) {
+      slots['address'] = (address.group(1) ?? address.group(2))!.trim();
+    }
+
     final app = extractApp(lower);
     if (app != null) slots['app'] = app;
 
@@ -28,9 +35,18 @@ class SlotExtractor {
 
   String? _extractQuery(String text) {
     final match = RegExp(
-      r'(search for|find|get me|buy|order) (.*?)( on | from |$)',
+      r'\b(search for|search|find|get me|buy|order) (.*?)( on | from | deliver to |$)',
     ).firstMatch(text);
-    return match?.group(2)?.trim();
+    final query = match
+        ?.group(2)
+        ?.trim()
+        .replaceFirst(
+          RegExp(
+            r'^(?:\d+(?:\.\d+)?|one|two|three|four|five|six|seven|eight|nine|ten)\s+(?:(?:packets?|packs?|kg|pcs|items?)\s+(?:of\s+)?)?',
+          ),
+          '',
+        );
+    return query == null || query.isEmpty ? null : query;
   }
 
   dynamic _extractQuantity(String text) {
@@ -39,19 +55,30 @@ class SlotExtractor {
     final match = RegExp(r'(\d+(?:\.\d+)?)\s*(kg|g|liters|ml|pcs|pack|items?)')
         .firstMatch(text);
     if (match != null) {
-      return {
-        'value': num.tryParse(match.group(1) ?? '1'),
-        'unit': match.group(2),
-      };
+      return num.tryParse(match.group(1) ?? '1');
     }
-    final numMatch = RegExp(r'\b(\d+)\b').firstMatch(text);
-    return numMatch != null ? int.tryParse(numMatch.group(1)!) : null;
+    final count = RegExp(
+      r'\b(?:order|buy|add|quantity(?: to)?|make (?:it|the quantity))\s+(\d+|one|two|three|four|five|six|seven|eight|nine|ten)\b',
+    ).firstMatch(text)?.group(1);
+    const words = {
+      'one': 1,
+      'two': 2,
+      'three': 3,
+      'four': 4,
+      'five': 5,
+      'six': 6,
+      'seven': 7,
+      'eight': 8,
+      'nine': 9,
+      'ten': 10,
+    };
+    return count == null ? null : int.tryParse(count) ?? words[count];
   }
 
   String? extractApp(String text) {
     const apps = ['swiggy', 'blinkit', 'myntra', 'zepto', 'amazon', 'flipkart'];
     for (final app in apps) {
-      if (text.contains(app)) return app;
+      if (RegExp('\\b$app\\b', caseSensitive: false).hasMatch(text)) return app;
     }
     return null;
   }
@@ -64,8 +91,11 @@ class SlotExtractor {
   }
 
   String? _extractRestaurant(String text) {
-    final match = RegExp(r'from (.*?) (on|$)').firstMatch(text);
-    return match?.group(1)?.trim();
+    final match = RegExp(r'\bfrom (.*?)(?: on |$)').firstMatch(text);
+    final restaurant = match?.group(1)?.trim();
+    return restaurant == null || extractApp(restaurant) != null
+        ? null
+        : restaurant;
   }
 
   String? _extractCategory(String text) {

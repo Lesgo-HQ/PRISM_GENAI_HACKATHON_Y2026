@@ -490,7 +490,11 @@ class RoleOntology {
         if (text.contains('order id') || resId.contains('order_id')) s += 0.6;
         break;
       case scrollView:
-        if (cls.contains('scrollview')) s += 0.6;
+        if (node.isScrollable) {
+          s += 0.9;
+        } else if (cls.contains('scrollview')) {
+          s += 0.6;
+        }
         break;
       case gridView:
         if (cls.contains('gridview')) s += 0.6;

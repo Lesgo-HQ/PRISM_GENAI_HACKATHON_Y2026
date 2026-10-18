@@ -5,6 +5,7 @@ import '../models/parsed_intent.dart';
 import 'flow_store.dart';
 import 'intent_model.dart';
 import 'slot_extractor.dart';
+import 'conversation_service.dart';
 
 class MatchResult {
   final Flow? flow;
@@ -41,31 +42,52 @@ class FlowMatcher {
   FlowMatcher(this._store, {LocalIntentModel? localModel})
     : _local = localModel;
 
+  /// Exact demonstrated commands do not depend on model availability or opinion.
+  /// Reuse demonstrated defaults: a broad goal like "order food" is not a
+  /// request to replace the demonstrated search query with the word "food".
+  Future<MatchResult?> matchExact(String utterance) async {
+    final normalized = _normalize(utterance);
+    if (normalized.isEmpty) return null;
+    final matches = (await _store.getAllFlows())
+        .where(
+          (flow) => [
+            flow.triggerIntent,
+            ...flow.exampleUtterances,
+          ].any((example) => _normalize(example) == normalized),
+        )
+        .toList();
+    if (matches.isEmpty) return null;
+    if (matches.length > 1) {
+      return MatchResult(
+        candidates: matches,
+        confidence: 1,
+        needsClarification: true,
+        clarificationQuestion: _ambiguityQuestion(matches),
+      );
+    }
+    final flow = matches.single;
+    final resolved = _resolveSlots(flow, const {});
+    final missing = resolved.values.any((v) => v == null);
+    return MatchResult(
+      flow: flow,
+      confidence: 1,
+      resolvedSlots: resolved,
+      needsClarification: missing,
+      clarificationQuestion: missing ? _slotQuestion(flow, resolved) : null,
+    );
+  }
+
   Future<MatchResult> match(
     String utterance, {
     Map<String, dynamic> extractedSlots = const {},
   }) async {
+    final exact = await matchExact(utterance);
+    if (exact != null) return exact;
     final slots = extractedSlots.isEmpty
         ? _extractor.extract(utterance)
         : extractedSlots;
 
-    final normalizedUtterance = _normalize(utterance);
     final savedFlows = await _store.getAllFlows();
-    for (final flow in savedFlows) {
-      if (_normalize(flow.triggerIntent) == normalizedUtterance) {
-        final resolved = _resolveSlots(flow, slots);
-        final hasUnresolved = resolved.values.any((v) => v == null);
-        return MatchResult(
-          flow: flow,
-          confidence: 1.0,
-          resolvedSlots: resolved,
-          needsClarification: hasUnresolved,
-          clarificationQuestion: hasUnresolved
-              ? _slotQuestion(flow, resolved)
-              : null,
-        );
-      }
-    }
 
     ParsedIntent? parsed;
     final local = _local;
@@ -74,7 +96,9 @@ class FlowMatcher {
         parsed = await local.parse(utterance);
       } catch (_) {}
     }
-    if (_store.embeddings.isEmpty || local == null) {
+    if (_store.embeddings.isEmpty ||
+        local == null ||
+        parsed?.isUnknown == true) {
       return MatchResult(
         isUnknown: true,
         needsClarification: true,
@@ -83,8 +107,23 @@ class FlowMatcher {
       );
     }
     final emb = await local.embed(utterance);
+    final eligibleIds = savedFlows
+        .where((flow) {
+          final requested = operationFamily(utterance);
+          final learned = operationFamily(flow.triggerIntent);
+          if (requested != null && learned != null && requested != learned) {
+            return false;
+          }
+          final app = _extractor.extractApp(utterance.toLowerCase());
+          return app == null || flow.appPackage.toLowerCase().contains(app);
+        })
+        .map((flow) => flow.flowId)
+        .toSet();
     final sims =
-        _store.embeddings.map((e) => MapEntry(e, _cos(emb, e.vector))).toList()
+        _store.embeddings
+            .where((e) => eligibleIds.contains(e.flowId))
+            .map((e) => MapEntry(e, _cos(emb, e.vector)))
+            .toList()
           ..sort((a, b) => b.value.compareTo(a.value));
     final top = sims.take(_topK).toList();
     if (top.isEmpty) {
@@ -170,8 +209,12 @@ class FlowMatcher {
     return 'I found two possible workflows:\n$opts\nWhich one do you want?';
   }
 
-  String _normalize(String value) =>
-      value.trim().toLowerCase().replaceAll(RegExp(r'\s+'), ' ');
+  String _normalize(String value) => value
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp(r'[.!?]+$'), '')
+      .trim()
+      .replaceAll(RegExp(r'\s+'), ' ');
 
   double _cos(List<double> a, List<double> b) {
     if (a.length != b.length || a.isEmpty) {
