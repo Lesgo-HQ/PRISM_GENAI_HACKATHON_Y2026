@@ -74,7 +74,8 @@ void main() {
           ),
         ],
       );
-      final matcher = FlowMatcher(indexed, localModel: model);
+      final matcher = FlowMatcher(indexed, localModel: model)
+        ..appNames = {saved.appPackage: 'Swiggy', 'com.amazon.shop': 'Amazon'};
       expect((await matcher.match('Order food from swiggy')).isUnknown, isTrue);
       expect(
         (await matcher.match('Search food from amazon')).isUnknown,

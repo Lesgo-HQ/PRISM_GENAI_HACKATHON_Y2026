@@ -1,5 +1,7 @@
 import 'dart:math';
 
+import 'app_catalog.dart';
+
 import '../models/flow.dart';
 import '../models/parsed_intent.dart';
 import 'flow_store.dart';
@@ -32,6 +34,7 @@ class MatchResult {
 
 class FlowMatcher {
   final FlowStore _store;
+  Map<String, String> appNames = {};
   final LocalIntentModel? _local;
   final SlotExtractor _extractor = SlotExtractor();
   static const double _threshold = 0.65;
@@ -107,6 +110,10 @@ class FlowMatcher {
       );
     }
     final emb = await local.embed(utterance);
+    final destinations = AppCatalog(
+      installed: appNames,
+      flows: savedFlows,
+    ).explicitDestinations(utterance);
     final eligibleIds = savedFlows
         .where((flow) {
           final requested = operationFamily(utterance);
@@ -114,8 +121,9 @@ class FlowMatcher {
           if (requested != null && learned != null && requested != learned) {
             return false;
           }
-          final app = _extractor.extractRequestedApp(utterance);
-          return app == null || flow.appPackage.toLowerCase().contains(app);
+          return destinations.isEmpty ||
+              (destinations.length == 1 &&
+                  destinations.contains(flow.appPackage));
         })
         .map((flow) => flow.flowId)
         .toSet();

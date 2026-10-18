@@ -144,4 +144,67 @@ void main() {
     skip: !enabled,
     timeout: const Timeout(Duration(minutes: 6)),
   );
+  test(
+    'local model understands varied intents across arbitrary apps',
+    () async {
+      SharedPreferences.setMockInitialValues({
+        'enable_llm': true,
+        'model_endpoint':
+            Platform.environment['SAAR_MODEL_ENDPOINT'] ??
+            'http://127.0.0.1:8080/v1/chat/completions',
+        'model_name': Platform.environment['SAAR_MODEL_NAME'] ?? 'local',
+      });
+      final service = ConversationService(client: LoggedClient())
+        ..appNames = {
+          'dev.a17': 'Paper Pad',
+          'dev.b28': 'MelodyBox',
+          'dev.c39': 'MealNest',
+          'dev.d40': 'Bazaar',
+          'dev.e51': 'TwinTone',
+        };
+      Flow skill(String id, String app, String goal, String parameter) => Flow(
+        flowId: id,
+        appPackage: app,
+        triggerIntent: goal,
+        exampleUtterances: [],
+        slots: [Slot(name: parameter)],
+        steps: [],
+      );
+      final skills = [
+        skill('notes', 'dev.a17', 'Create a note', 'content'),
+        skill('music', 'dev.b28', 'Play a song', 'query'),
+        skill('food', 'dev.c39', 'Order food', 'query'),
+        skill('search', 'dev.d40', 'Search products', 'query'),
+        skill('other-music', 'dev.e51', 'Play a song', 'query'),
+      ];
+      for (final example in [
+        ('Put on Believer in MelodyBox', 'music', 'query'),
+        ('Paper Pad mein doodh aur bread ki list bana do', 'notes', 'content'),
+        ('I want a burger delivered from MealNest', 'food', 'query'),
+        ('Could you look up wireless headphones in Bazaar?', 'search', 'query'),
+      ]) {
+        final result = await service.respond(example.$1, [], skills);
+        stdout.writeln(
+          '${example.$1} => ${result?.kind} ${result?.flowId} ${result?.slots} ${result?.reply}',
+        );
+        expect(result?.flowId, example.$2, reason: example.$1);
+        expect(result?.slots[example.$3], isNotEmpty, reason: example.$1);
+      }
+      for (final request in [
+        "Don't create a note in Paper Pad",
+        'What does Paper Pad do?',
+        'Play Believer',
+      ]) {
+        final result = await service.respond(request, [], skills);
+        stdout.writeln(
+          '$request => ${result?.kind} ${result?.flowId} ${result?.reply}',
+        );
+        expect(result, isNotNull);
+        expect(result?.flowId, isNull, reason: request);
+        expect(result?.kind, isNot('run'), reason: request);
+      }
+    },
+    skip: !enabled,
+    timeout: const Timeout(Duration(minutes: 8)),
+  );
 }

@@ -82,10 +82,21 @@ void main() {
       );
     }
   });
+  test(
+    'invalid model selection becomes clarification without executing',
+    () async {
+      final result = await decide('Transfer money', [
+        jsonEncode(decision()..['flow_id'] = null),
+      ]);
+      expect(result?.kind, 'clarify');
+      expect(result?.flowId, isNull);
+      expect(result?.slots, isEmpty);
+    },
+  );
   test('compatible catalog search can run after verification', () async {
     final result = await decide('Search the catalog for pizza', [
       jsonEncode(decision()),
-      '{"matches":true}',
+      '{"verdict":"supported","reason":"Same intended procedure"}',
     ]);
     expect(result?.kind, 'run');
     expect(result?.flowId, 'search');
@@ -103,7 +114,7 @@ void main() {
             confidence: 0.99,
           ),
         ),
-        '{"matches":true}',
+        '{"verdict":"supported","reason":"Same intended procedure"}',
       ]);
       final result = await ConversationService(client: client).respond(
         'Transfer 500 rupees to my friend',
@@ -119,7 +130,7 @@ void main() {
   test('travel request does not reuse a search skill', () async {
     final result = await decide('Book a flight to Tokyo', [
       jsonEncode(decision(slots: {'query': 'Tokyo'})),
-      '{"matches":true}',
+      '{"verdict":"supported","reason":"Same intended procedure"}',
     ]);
     expect(result?.kind, 'clarify');
   });
@@ -144,7 +155,7 @@ void main() {
     () async {
       final result = await decide('Find headphones in the catalog', [
         jsonEncode(decision(slots: {'query': 'headphones'})),
-        '{"matches":false}',
+        '{"verdict":"review","reason":"Please confirm the desired query"}',
       ]);
       expect(result?.kind, 'clarify');
       expect(result?.flowId, 'search');
@@ -164,10 +175,16 @@ void main() {
     );
     final client = ScriptedClient([
       jsonEncode(decision(flowId: 'swiggy', slots: {})),
-      '{"matches":true}',
+      '{"verdict":"supported","reason":"Same intended procedure"}',
     ]);
-    final result = await ConversationService(client: client)
-        .respond('Please order food from zomato', [], [swiggy]);
+    final service = ConversationService(client: client)
+      ..appNames = {
+        'in.swiggy.android': 'Swiggy',
+        'com.application.zomato': 'Zomato',
+      };
+    final result = await service.respond('Please order food from zomato', [], [
+      swiggy,
+    ]);
     expect(result?.kind, 'clarify');
     expect(result?.flowId, isNull);
     expect(client.calls, 1);
@@ -193,7 +210,7 @@ void main() {
     () async {
       final result = await decide('Search the catalog for swiggy gift cards', [
         jsonEncode(decision(slots: {'query': 'swiggy gift cards'})),
-        '{"matches":true}',
+        '{"verdict":"supported","reason":"Same intended procedure"}',
       ]);
       expect(result?.kind, 'run');
     },

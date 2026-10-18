@@ -50,6 +50,12 @@ HTTP is allowed only for local development addresses. This configuration runs in
 
 The 4B model passed the six-case live routing check after prompt/schema fixes, but also made incorrect proposals during development. Schema validation does not guarantee semantic correctness. Compatibility checks, action validation, result checks and human handoff remain necessary.
 
+## Reusing skills with different wording
+
+Saved skills are matched by intended outcome, app and declared inputs. With the model enabled, requests can use synonyms, indirect phrasing or Hindi/Hinglish; recent conversation is included when resolving follow-up answers. Android supplies app names dynamically, so this is not limited to a fixed list of brands. A second structured assessment checks the proposed procedure before confirmation. Ambiguous app choices ask a question; plausible matches show the saved workflow and inputs for review. Exact demonstrated commands also work without model routing.
+
+A saved procedure remains specific to its app: teaching one food app does not establish that the same gestures work in another. Language accuracy depends on the configured model. Without it, non-exact matching uses a limited lexical fallback, not equivalent multilingual understanding.
+
 ## If the app opens and then appears stuck
 
 `flutter run` starts the Android app, not the AI server. For adaptive tasks, start the model server described above, connect the phone to that computer by USB, and run:

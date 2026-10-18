@@ -35,3 +35,15 @@ The live suite used the available cached Qwen3-4B GGUF model through llama.cpp o
 Update the existing installation from the latest source or APK; do not clear its saved data. With the existing two saved skills, request `order food from swiggy`. Expect either a confirmation naming the saved Swiggy workflow or a focused question for a missing recorded input. Also try `Please order food from swiggy`. Confirm only the intended workflow; payment and credential steps remain manual.
 
 For a paraphrase the model cannot verify, expect a named workflow review and input values, not a claim that the task has already run. Rejecting the review must leave the task inactive. Actual app gestures and completion still require the friend's device retest.
+
+## General intent matching follow-up
+
+Replaced the uncertain-match English verb gate with typed semantic assessments: supported, review, ambiguous, unsupported and not-action. Assessment receives recent conversation, declared inputs, the selected procedure and competing skills. Installed Android app labels supply identities for both model routing and lexical fallback; identities refresh before non-exact commands. No Swiggy-specific routing is required.
+
+Equivalent procedure templates in multiple apps now require an app choice independently of model confidence. This guard was added after the live model incorrectly selected the first of two music apps. Invalid model selections become clarification without execution; strict decision parsing remains in place. Language understanding still depends on the enabled model, and exact commands retain their model-independent path.
+
+The expanded live fixture includes arbitrary app names and packages for music, notes, food and shopping. Requests include “Put on Believer”, “Paper Pad mein doodh aur bread ki list bana do”, “a burger delivered”, and “look up wireless headphones”. Negative cases cover negation, factual discussion and an ambiguous music-app choice. These are intent-routing fixtures, not claims that those fictional apps were operated.
+
+Model limitations observed: the 4B model can propose an invalid skill ID or ignore ambiguity, and some ordinary conversational answers remain unhelpful. Application validation and explicit confirmation remain essential. The tests do not establish broad multilingual accuracy, friend's Qwen2.5 behavior, physical-device execution or embedded Android inference.
+
+Final follow-up verification: `flutter analyze` reported no issues; `flutter test` passed 94 tests with three opt-in tests skipped; the debug APK built successfully. Live action-reflection and the seven-case cross-app intent test passed after the ambiguity guard. The catalog-routing test initially failed on an invalid model selection; after adding safe clarification handling, its separate rerun passed all six requests. `git diff --check` passed. Live checks used cached Qwen3-4B through local llama.cpp, not the friend's Qwen2.5 instance.

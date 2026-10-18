@@ -144,6 +144,20 @@ class AppController extends ChangeNotifier {
 
   bool _initialized = false;
 
+  Future<void> _refreshAppNames() async {
+    try {
+      final installed = await _bridge.installedApps();
+      _conversation.appNames = {
+        for (final app in installed)
+          if (app['packageName'] is String && app['appName'] is String)
+            app['packageName'] as String: app['appName'] as String,
+      };
+      _matcher.appNames = _conversation.appNames;
+    } catch (_) {
+      // Saved package identities remain usable if Android cannot list apps.
+    }
+  }
+
   Future<void> initialize() async {
     try {
       _clarification = ClarificationService();
@@ -172,6 +186,7 @@ class AppController extends ChangeNotifier {
       await _checkRecoverTeaching();
       _agentRecovered = await _store.loadAgentCheckpoint();
       _conversation.memory = await _store.readMemory('user');
+      await _refreshAppNames();
       _controlSubscription = _bridge.agentControls.listen((command) {
         if (command == 'talk') {
           startListening();
@@ -414,6 +429,8 @@ class AppController extends ChangeNotifier {
         await _startCommand(text, {}, match: exact);
         return;
       }
+      await _refreshAppNames();
+      if (turn != _turn || _disposed) return;
       final decision = await _conversation.respond(
         text,
         _messages.take(_messages.length - 1).toList(),
