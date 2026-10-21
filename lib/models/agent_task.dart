@@ -27,6 +27,14 @@ class AgentObservation {
         {
           'id': i,
           'text': nodes[i].text,
+          if (nodes[i].isClickable && (nodes[i].text?.isEmpty ?? true))
+            'child_text': nodes[i]
+                .flatten()
+                .skip(1)
+                .map((n) => n.text ?? '')
+                .where((text) => text.isNotEmpty)
+                .take(6)
+                .join(' · '),
           'description': nodes[i].contentDescription,
           'resource': nodes[i].resourceId,
           'clickable': nodes[i].isClickable,

@@ -569,6 +569,8 @@ class SaarAccessibilityService : AccessibilityService() {
 
     private fun recordAction(action: String, event: AccessibilityEvent) {
         try {
+            // Preserve gesture timing even when reading accessibility nodes is slow.
+            val timestampMs = System.currentTimeMillis() - android.os.SystemClock.uptimeMillis() + event.eventTime
             val source = event.source
             val sensitive = event.isPassword || source == null || isNodeSensitive(source)
             val nodeJson = if (source != null) {
@@ -584,7 +586,7 @@ class SaarAccessibilityService : AccessibilityService() {
             }
 
             val record = JSONObject().apply {
-                put("timestampMs", System.currentTimeMillis())
+                put("timestampMs", timestampMs)
                 put("action", action)
                 put("node", nodeJson)
                 put("valueTyped", if (sensitive) "<REDACTED>" else if (action == "type") event.text?.joinToString("") ?: "" else "")

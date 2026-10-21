@@ -107,7 +107,11 @@ class ConversationService {
                 },
           },
         },
-        'confidence': {'type': 'number', 'minimum': 0, 'maximum': 1},
+        // Some local grammar engines do not enforce numeric minimum/maximum.
+        'confidence': {
+          'type': 'number',
+          'enum': [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1],
+        },
       },
       'required': ['kind', 'reply', 'flow_id', 'slots', 'confidence'],
     };
@@ -123,6 +127,7 @@ class ConversationService {
       systemInstruction:
           '''You are SAAR, a conversational teachable Android assistant.
 Return a JSON object with five fields: kind, reply, flow_id, slots, confidence.
+confidence is a probability from 0.0 to 1.0 inclusive; never exceed 1.0.
 When kind is run, flow_id MUST be an actual catalog id, never null. Put parameter values in slots, never inside reply.
 Example conversation: {"kind":"chat","reply":"Hello!","flow_id":null,"slots":{},"confidence":1.0}
 Interpret MEANING, not shared words or exact verbs. The same goal can be phrased

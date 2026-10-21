@@ -29,6 +29,12 @@ class TraceNormalizer {
           systemPackages.contains(event.packageName)) {
         continue;
       }
+      if (event.action == 'scroll' &&
+          event.scrollDeltaX == 0 &&
+          event.scrollDeltaY == 0 &&
+          event.valueTyped != '<REDACTED>') {
+        continue;
+      }
 
       // 2. Remove duplicate actions within 100ms on same node
       if (filtered.isNotEmpty) {
@@ -40,9 +46,33 @@ class TraceNormalizer {
             event.node?.nodeId != null &&
             event.node?.nodeId == lastEvent.node?.nodeId &&
             event.node!.nodeId!.isNotEmpty;
+        // Android emits many scroll updates for one continuous gesture.
+        if (sameNode &&
+            timeDiff < 250 &&
+            event.action == 'scroll' &&
+            lastEvent.action == 'scroll' &&
+            event.valueTyped != '<REDACTED>' &&
+            lastEvent.valueTyped != '<REDACTED>' &&
+            event.scrollDeltaX != null &&
+            event.scrollDeltaY != null &&
+            lastEvent.scrollDeltaX != null &&
+            lastEvent.scrollDeltaY != null &&
+            event.scrollDeltaX!.sign == lastEvent.scrollDeltaX!.sign &&
+            event.scrollDeltaY!.sign == lastEvent.scrollDeltaY!.sign) {
+          filtered[filtered.length - 1] = ActionTraceEvent(
+            timestampMs: event.timestampMs,
+            action: 'scroll',
+            node: lastEvent.node,
+            packageName: lastEvent.packageName,
+            scrollDeltaX: lastEvent.scrollDeltaX! + event.scrollDeltaX!,
+            scrollDeltaY: lastEvent.scrollDeltaY! + event.scrollDeltaY!,
+          );
+          continue;
+        }
         if (timeDiff < 100 &&
             sameNode &&
             event.action != 'type' &&
+            event.action != 'scroll' &&
             event.action == lastEvent.action) {
           continue;
         }

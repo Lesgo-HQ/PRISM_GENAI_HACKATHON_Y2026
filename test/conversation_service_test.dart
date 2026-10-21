@@ -11,6 +11,7 @@ class ScriptedClient extends LlmClient {
   ScriptedClient(this.replies);
   final List<String?> replies;
   final prompts = <String>[];
+  final schemas = <Map<String, dynamic>?>[];
   int calls = 0;
   @override
   Future<String?> generateContent(
@@ -21,6 +22,7 @@ class ScriptedClient extends LlmClient {
     String schemaName = 'saar_decision',
   }) async {
     prompts.add(prompt);
+    schemas.add(schema);
     return calls < replies.length ? replies[calls++] : null;
   }
 }
@@ -56,6 +58,21 @@ void main() {
     final result = ConversationDecision.parse(jsonEncode(decision()), [skill]);
     expect(result.slots['query'], 'pizza');
   });
+  test(
+    'generation constrains confidence to valid probability choices',
+    () async {
+      final client = ScriptedClient([null]);
+      await ConversationService(client: client)
+          .respond('Search for tea', [], [skill]);
+      final values =
+          client.schemas.first!['properties']['confidence']['enum'] as List;
+      expect(values, containsAll([0, 1]));
+      expect(
+        values.every((value) => value is num && value >= 0 && value <= 1),
+        isTrue,
+      );
+    },
+  );
   test('rejects invented skill, parameters and malformed confidence', () {
     for (final invalid in [
       decision()..['flow_id'] = 'invented',

@@ -39,6 +39,30 @@ class FakeBridge extends AccessibilityBridge {
   Future<bool> performGlobalAction(int action) async => false;
 }
 
+class ScrollBridge extends FakeBridge {
+  List<double>? gesture;
+  ScrollBridge() {
+    tree = UiNode.fromJson({
+      'packageName': 'test.shop',
+      'isScrollable': true,
+      'bounds': {'left': 0, 'top': 0, 'right': 1000, 'bottom': 2000},
+      'children': [],
+    });
+  }
+  @override
+  Future<bool> swipe(
+    double a,
+    double b,
+    double c,
+    double d, {
+    int durationMs = 300,
+  }) async {
+    gesture = [a, b, c, d];
+    tree = UiNode.fromJson({...tree!.toJson(), 'text': 'New visible content'});
+    return true;
+  }
+}
+
 Flow flow(List<FlowStep> steps) => Flow(
   flowId: 'one',
   appPackage: '',
@@ -48,6 +72,40 @@ Flow flow(List<FlowStep> steps) => Flow(
   steps: steps,
 );
 void main() {
+  test(
+    'scroll replay preserves distance and stays within the target',
+    () async {
+      for (final delta in [600, 4000, -600]) {
+        final bridge = ScrollBridge();
+        final engine = ReplayEngine(
+          bridge,
+          ClarificationService(),
+          stepDelay: Duration.zero,
+        );
+        final result = await engine.execute(
+          flow([
+            FlowStep(
+              id: 1,
+              action: 'scroll',
+              targetRole: 'SCROLL_VIEW',
+              scrollDeltaX: 0,
+              scrollDeltaY: delta,
+            ),
+          ]),
+          {},
+        );
+        expect(result.status, ReplayStatus.completed);
+        final distance = delta.clamp(-1600, 1600);
+        expect(bridge.gesture, [
+          500,
+          1000 + distance / 2,
+          500,
+          1000 - distance / 2,
+        ]);
+        engine.dispose();
+      }
+    },
+  );
   test(
     'sensitive screen waits and can be cancelled without a gesture',
     () async {

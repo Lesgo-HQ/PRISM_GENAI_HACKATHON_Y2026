@@ -59,6 +59,26 @@ void main() {
     },
   );
   group('TraceNormalizer', () {
+    test('coalesces scroll updates without losing distance or direction', () {
+      ActionTraceEvent scroll(int time, int delta, {String id = 'list'}) =>
+          ActionTraceEvent(
+            timestampMs: time,
+            action: 'scroll',
+            node: _node(nodeId: id),
+            scrollDeltaX: 0,
+            scrollDeltaY: delta,
+          );
+      final result = TraceNormalizer().normalize([
+        scroll(0, 0),
+        scroll(100, 285),
+        scroll(150, 274),
+        scroll(300, 219),
+        scroll(400, -50),
+        scroll(900, -20),
+        scroll(950, -10, id: 'other'),
+      ]);
+      expect(result.map((e) => e.scrollDeltaY), [778, -50, -20, -10]);
+    });
     test('accepts platform timestamps represented as numeric values', () {
       final event = ActionTraceEvent.fromJson({
         'timestampMs': 1000.0,

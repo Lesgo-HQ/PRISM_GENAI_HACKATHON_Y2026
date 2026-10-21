@@ -18,6 +18,7 @@ void main() {
     final client = LlmClient(
       client: MockClient((request) async {
         final body = jsonDecode(request.body);
+        expect(body['reasoning_effort'], 'none');
         expect(
           body['response_format']['json_schema']['name'],
           'saar_connection_check',

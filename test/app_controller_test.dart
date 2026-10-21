@@ -185,6 +185,23 @@ Flow _skill(String id, String goal) => Flow(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  for (final prefix in ['teach me to ', 'teach me how to ']) {
+    test('$prefix preserves the complete demonstrated command', () async {
+      final store = RecordingStore();
+      final app = AppController(
+        store: store,
+        bridge: RecordingBridge(),
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: ScriptedConversation([]),
+      );
+      await app.initialize();
+      await app.submitTypedCommand('${prefix}open display settings');
+      await app.stopTeaching();
+      expect(store.saved.single.triggerIntent, 'open display settings');
+      app.dispose();
+    });
+  }
   test('teach, stop, reuse and restart retain the saved command even with a failed index', () async {
     final store = RecordingStore()..brokenIndex = true;
     final bridge = RecordingBridge();

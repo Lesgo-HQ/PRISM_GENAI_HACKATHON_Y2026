@@ -175,46 +175,52 @@ class _HomeViewState extends State<_HomeView>
             ),
           ),
           const SizedBox(width: 12),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: controller.state == AppState.error
-                  ? AppTheme.error.withValues(alpha: 0.2)
-                  : AppTheme.primary.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+              decoration: BoxDecoration(
                 color: controller.state == AppState.error
-                    ? AppTheme.error.withValues(alpha: 0.5)
-                    : AppTheme.primary.withValues(alpha: 0.5),
+                    ? AppTheme.error.withValues(alpha: 0.2)
+                    : AppTheme.primary.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(
+                  color: controller.state == AppState.error
+                      ? AppTheme.error.withValues(alpha: 0.5)
+                      : AppTheme.primary.withValues(alpha: 0.5),
+                ),
               ),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: controller.state == AppState.error
-                        ? AppTheme.error
-                        : AppTheme.success,
-                    shape: BoxShape.circle,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: controller.state == AppState.error
+                          ? AppTheme.error
+                          : AppTheme.success,
+                      shape: BoxShape.circle,
+                    ),
                   ),
-                ),
-                const SizedBox(width: 6),
-                Text(
-                  controller.state == AppState.idle
-                      ? 'Online'
-                      : controller.statusMessage,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: controller.state == AppState.error
-                        ? AppTheme.error
-                        : AppTheme.success,
-                    fontWeight: FontWeight.w600,
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      controller.state == AppState.idle
+                          ? 'Online'
+                          : controller.statusMessage,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: controller.state == AppState.error
+                            ? AppTheme.error
+                            : AppTheme.success,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],

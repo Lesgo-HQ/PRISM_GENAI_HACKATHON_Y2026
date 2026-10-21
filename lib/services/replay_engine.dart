@@ -148,7 +148,10 @@ class ReplayEngine {
             s.recoveryAttempts++;
             s.stepRecoveryAttempts++;
             if (_stopRequested || _pauseRequested) continue;
-            await _recovery.recover(tree, isCancelled: () => _stopRequested || _pauseRequested);
+            await _recovery.recover(
+              tree,
+              isCancelled: () => _stopRequested || _pauseRequested,
+            );
             await Future<void>.delayed(stepDelay);
             continue;
           }
@@ -280,7 +283,9 @@ class ReplayEngine {
     if (!_stopRequested) {
       s.resume();
       await _save(s);
-      if (s.currentStep < s.flow.steps.length) await _openTargetApp(s.flow.appPackage);
+      if (s.currentStep < s.flow.steps.length) {
+        await _openTargetApp(s.flow.appPackage);
+      }
     }
   }
 
@@ -370,11 +375,20 @@ class ReplayEngine {
         return _bridge.typeIntoFocused(value);
       case 'swipe':
       case 'scroll':
-        final dx = (step.scrollDeltaX ?? 0) == 0
-            ? 0
-            : (step.scrollDeltaX! > 0 ? -150 : 150);
-        final dy = (step.scrollDeltaY ?? 0) < 0 ? 150 : -150;
-        return _bridge.swipe(x - dx, y - dy, x, y, durationMs: 300);
+        final width = (b['right'] ?? 0) - (b['left'] ?? 0);
+        final height = (b['bottom'] ?? 0) - (b['top'] ?? 0);
+        if (width <= 0 || height <= 0) return false;
+        final dx = (step.scrollDeltaX ?? 0).clamp(-width * .8, width * .8);
+        final dy = (step.scrollDeltaY ?? (step.scrollDeltaX == null ? 150 : 0))
+            .clamp(-height * .8, height * .8);
+        // shortcut: flings are bounded to one screen; split gestures if long-scroll recovery becomes frequent.
+        return _bridge.swipe(
+          x + dx / 2,
+          y + dy / 2,
+          x - dx / 2,
+          y - dy / 2,
+          durationMs: 500,
+        );
       default:
         return false;
     }

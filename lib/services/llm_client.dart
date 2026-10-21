@@ -71,6 +71,8 @@ class LlmClient {
               {'role': 'user', 'content': prompt},
             ],
             'temperature': 0.2,
+            // Interactive device actions cannot wait for a thinking-token budget.
+            'reasoning_effort': 'none',
             'max_tokens': 768,
             if (schema != null)
               'response_format': {
@@ -83,7 +85,8 @@ class LlmClient {
               },
           }),
         )
-        .timeout(const Duration(seconds: 45));
+        // CPU-hosted models need time to process a full accessibility screen.
+        .timeout(const Duration(seconds: 120));
     if (response.statusCode != 200) {
       throw StateError('Model server returned HTTP ${response.statusCode}.');
     }

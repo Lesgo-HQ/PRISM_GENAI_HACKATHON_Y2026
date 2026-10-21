@@ -18,6 +18,24 @@ UiNode tree(String text, {bool focused = false}) => UiNode.fromJson({
 
 void main() {
   test(
+    'clickable rows expose child labels without changing target capabilities',
+    () {
+      final observation = AgentObservation(
+        UiNode.fromJson({
+          'packageName': 'settings',
+          'isClickable': true,
+          'children': [
+            {'text': 'Bluetooth'},
+          ],
+        }),
+      );
+      final elements = observation.toJson()['elements'] as List;
+      expect(elements[0]['child_text'], 'Bluetooth');
+      expect(observation.nodes[0].isClickable, isTrue);
+      expect(observation.nodes[1].isClickable, isFalse);
+    },
+  );
+  test(
     'focus-only change is not navigation but still invalidates stale target',
     () {
       final before = AgentObservation(tree('Search'));

@@ -65,7 +65,7 @@ class _ReplayScreenState extends State<ReplayScreen>
         centerTitle: true,
         automaticallyImplyLeading: false,
       ),
-      body: Column(
+      body: ListView(
         children: [
           if (totalSteps > 0) ...[
             Padding(
@@ -118,6 +118,8 @@ class _ReplayScreenState extends State<ReplayScreen>
                 Expanded(
                   child: Text(
                     controller.statusMessage,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
                     style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
@@ -129,60 +131,60 @@ class _ReplayScreenState extends State<ReplayScreen>
             ),
           ),
 
-          Expanded(
-            child: ListView.builder(
-              padding: const EdgeInsets.all(24),
-              itemCount: totalSteps,
-              itemBuilder: (context, index) {
-                final isCompleted = index < (currentStep - 1);
-                final isCurrent = index == (currentStep - 1);
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.all(24),
+            itemCount: totalSteps,
+            itemBuilder: (context, index) {
+              final isCompleted = index < (currentStep - 1);
+              final isCurrent = index == (currentStep - 1);
 
-                Color iconColor = AppTheme.textSecondary;
-                IconData iconData = Icons.radio_button_unchecked_rounded;
+              Color iconColor = AppTheme.textSecondary;
+              IconData iconData = Icons.radio_button_unchecked_rounded;
 
-                if (isCompleted) {
-                  iconColor = AppTheme.success;
-                  iconData = Icons.check_circle_rounded;
-                } else if (isCurrent) {
-                  iconColor = AppTheme.primary;
-                  iconData = Icons.play_circle_fill_rounded;
-                }
+              if (isCompleted) {
+                iconColor = AppTheme.success;
+                iconData = Icons.check_circle_rounded;
+              } else if (isCurrent) {
+                iconColor = AppTheme.primary;
+                iconData = Icons.play_circle_fill_rounded;
+              }
 
-                return AnimatedContainer(
-                  duration: const Duration(milliseconds: 300),
-                  margin: const EdgeInsets.only(bottom: 12),
-                  decoration: BoxDecoration(
-                    color: isCurrent ? AppTheme.surface : Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
+              return AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                margin: const EdgeInsets.only(bottom: 12),
+                decoration: BoxDecoration(
+                  color: isCurrent ? AppTheme.surface : Colors.transparent,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: isCurrent
+                        ? AppTheme.primary.withValues(alpha: 0.3)
+                        : Colors.transparent,
+                  ),
+                ),
+                child: ListTile(
+                  leading: Icon(iconData, color: iconColor),
+                  title: Text(
+                    'Step ${index + 1}',
+                    style: TextStyle(
                       color: isCurrent
-                          ? AppTheme.primary.withValues(alpha: 0.3)
-                          : Colors.transparent,
+                          ? AppTheme.textPrimary
+                          : AppTheme.textSecondary,
+                      fontWeight: isCurrent
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
                   ),
-                  child: ListTile(
-                    leading: Icon(iconData, color: iconColor),
-                    title: Text(
-                      'Step ${index + 1}',
-                      style: TextStyle(
-                        color: isCurrent
-                            ? AppTheme.textPrimary
-                            : AppTheme.textSecondary,
-                        fontWeight: isCurrent
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                    subtitle: isCurrent
-                        ? const Text(
-                            'Running...',
-                            style: TextStyle(color: AppTheme.primary),
-                          )
-                        : null,
-                  ),
-                );
-              },
-            ),
+                  subtitle: isCurrent
+                      ? const Text(
+                          'Running...',
+                          style: TextStyle(color: AppTheme.primary),
+                        )
+                      : null,
+                ),
+              );
+            },
           ),
 
           if (!isClarifying)

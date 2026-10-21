@@ -129,7 +129,9 @@ Use tap/type/scroll/back for reversible navigation, ask for missing details, fin
 Never send messages, purchase, pay, delete, authorize, log in or enter credentials. Ask the user to perform consequential actions.
 If a previous action is uncertain or produced no change, ask for help; never blindly repeat it.
 For finish, expectation MUST quote an exact visible text supporting the goal. For ask, text is the question.
-For scroll, text is up or down. For type, text is the input. Reason is a concise user-facing explanation.''',
+For tap, select a clickable row using its child_text if its own text is empty.
+For scroll, text is up or down. For type, text is the input. Otherwise text is empty.
+Keep reason and expectation to one short sentence each; do not explain your reasoning.''',
             schemaName: 'saar_next_action',
             schema: actionSchema(observation),
           );
@@ -342,8 +344,8 @@ For scroll, text is up or down. For type, text is the input. Reason is a concise
         'enum': [null, ...List.generate(observation.nodes.length, (i) => i)],
       },
       'text': {'type': 'string'},
-      'reason': {'type': 'string'},
-      'expectation': {'type': 'string'},
+      'reason': {'type': 'string', 'maxLength': 160},
+      'expectation': {'type': 'string', 'maxLength': 160},
     },
     'required': ['action', 'target', 'text', 'reason', 'expectation'],
   };
