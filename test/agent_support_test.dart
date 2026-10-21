@@ -18,6 +18,35 @@ UiNode tree(String text, {bool focused = false}) => UiNode.fromJson({
 
 void main() {
   test(
+    'model observations omit geometry without weakening stale-target checks',
+    () {
+      final observation = AgentObservation(
+        UiNode.fromJson(tree('Bluetooth').toJson()..['isCheckable'] = true),
+      );
+      final fingerprint = observation.fingerprint;
+      final element =
+          (observation.toModelJson()['elements'] as List).single as Map;
+      expect(element['id'], 0);
+      expect(element['text'], 'Bluetooth');
+      expect(element['clickable'], isTrue);
+      expect(element['selection_state'], 'off');
+      expect(
+        (AgentObservation(tree('Label')).toModelJson()['elements'] as List)
+            .single
+            .containsKey('selection_state'),
+        isFalse,
+      );
+      expect(element.containsKey('editable'), isFalse);
+      expect(element.containsKey('bounds'), isFalse);
+      expect(observation.fingerprint, fingerprint);
+      final moved = UiNode.fromJson(
+        tree('Bluetooth').toJson()
+          ..['bounds'] = {'left': 0, 'top': 10, 'right': 100, 'bottom': 110},
+      );
+      expect(AgentObservation(moved).fingerprint, isNot(fingerprint));
+    },
+  );
+  test(
     'clickable rows expose child labels without changing target capabilities',
     () {
       final observation = AgentObservation(

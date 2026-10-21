@@ -97,6 +97,32 @@ String action(String name, {int? target, String evidence = ''}) => jsonEncode({
 });
 AgentTask task() => AgentTask(id: 'test', goal: 'Find pizza', package: 'shop');
 void main() {
+  test('action schema only offers targets that support each action', () {
+    final observation = AgentObservation(
+      UiNode.fromJson({
+        'children': [
+          {'text': 'Label'},
+          {'text': 'Row', 'isClickable': true},
+          {'text': 'Input', 'isEditable': true},
+          {'isScrollable': true},
+        ],
+      }),
+    );
+    final branches = AdaptiveAgent.actionSchema(observation)['oneOf'] as List;
+    final targets = {
+      for (final branch in branches)
+        branch['properties']['action']['const']:
+            branch['properties']['target']['enum'],
+    };
+    expect(targets['tap'], [1, 2]);
+    expect(targets['type'], [2]);
+    expect(targets['scroll'], [3]);
+    expect(targets['finish'], [null]);
+    final empty = AdaptiveAgent.actionSchema(
+      AgentObservation(UiNode.fromJson({})),
+    );
+    expect((empty['oneOf'] as List).length, 3);
+  });
   test(
     'disabled model does not open an app and strand the user there',
     () async {

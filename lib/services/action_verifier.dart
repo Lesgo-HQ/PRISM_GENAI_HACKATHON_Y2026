@@ -47,11 +47,14 @@ class ActionVerifier {
           'user_request': goal,
           'latest_action': action.toJson(),
           'expectation': action.expectation,
-          'before': before.toJson(),
-          'after': after.toJson(),
+          'before': before.toModelJson(),
+          'after': after.toModelJson(),
         }),
         systemInstruction: '''Verify ONE Android action using the supplied before and after screens.
 Compare expectation with the visible text and controls in after.elements:
+For checkable controls, selection_state is on or off. Clickable does not mean switched on.
+Use equivalent labels and control state as evidence; the source row's wording need not appear verbatim on the destination page.
+Example: expectation "Feature settings, Feature Off"; after shows Feature settings and a Feature control with selection_state="off": A. The same control with selection_state="on" does not satisfy that expectation.
 - A: the after screen visibly satisfies the expectation. error must be "None".
 - B: the after screen is a different, wrong destination.
 - C: the expected change did not happen; content is unchanged, including a scroll at the end of a list.

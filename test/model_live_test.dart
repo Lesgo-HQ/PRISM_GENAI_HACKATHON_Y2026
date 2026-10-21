@@ -78,6 +78,44 @@ void main() {
         after: observed('Account settings: Profile, Notifications, Sign out'),
       );
       expect(wrongPage.verified, isFalse);
+      AgentObservation bluetooth(bool checked) => AgentObservation(
+        UiNode.fromJson({
+          'packageName': 'com.android.settings',
+          'text': 'Bluetooth settings',
+          'children': [
+            {
+              'text': 'Bluetooth',
+              'isClickable': true,
+              'isCheckable': true,
+              'isChecked': checked,
+            },
+            {'text': 'Device name'},
+            {'text': 'Additional settings'},
+          ],
+        }),
+      );
+      for (final checked in [false, true]) {
+        final result = await ActionVerifier.reflect(
+          LoggedClient(),
+          goal: 'Open Bluetooth settings without changing Bluetooth from off',
+          action: const AgentAction(
+            'tap',
+            0,
+            '',
+            'Open Bluetooth settings',
+            "Bluetooth settings should open with 'Bluetooth · Off' visible",
+          ),
+          before: AgentObservation(
+            UiNode.fromJson({
+              'packageName': 'com.android.settings',
+              'text': 'Bluetooth · Off',
+              'isClickable': true,
+            }),
+          ),
+          after: bluetooth(checked),
+        );
+        expect(result.verified, !checked, reason: 'Bluetooth checked=$checked');
+      }
     },
     skip: !enabled,
     timeout: const Timeout(Duration(minutes: 3)),

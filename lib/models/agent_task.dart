@@ -41,12 +41,33 @@ class AgentObservation {
           'editable': nodes[i].isEditable,
           'scrollable': nodes[i].isScrollable,
           'focused': nodes[i].isFocused,
+          'checkable': nodes[i].isCheckable,
           'checked': nodes[i].isChecked,
           'bounds': nodes[i].bounds,
         },
     ],
   };
   String get fingerprint => jsonEncode(toJson());
+  Map<String, dynamic> toModelJson() {
+    final data = toJson();
+    // Keep full geometry locally for stale-target checks, not in model prompts.
+    for (final element in data['elements'] as List) {
+      if (element.remove('checkable') == true) {
+        element['selection_state'] = element['checked'] == true ? 'on' : 'off';
+      }
+      element.remove('checked');
+      (element as Map).removeWhere(
+        (key, value) =>
+            key == 'bounds' ||
+            key == 'focused' ||
+            value == null ||
+            value == '' ||
+            value == false,
+      );
+    }
+    return data;
+  }
+
   String get stateKey {
     var hash = 2166136261;
     for (final unit in fingerprint.codeUnits) {

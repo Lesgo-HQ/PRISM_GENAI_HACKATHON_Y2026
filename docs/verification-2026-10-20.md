@@ -6,7 +6,7 @@ Tested version 1.0.0 (debug) on the connected Xiaomi 2312DRAABI, Android 15, usi
 
 | Check | Result |
 |---|---|
-| Final `flutter test --no-pub` | 102 passed; 3 opt-in live-model tests skipped in this command |
+| Final `flutter test --no-pub` | 103 passed; 3 opt-in live-model tests skipped in this command |
 | Final `flutter analyze --no-pub` | No issues |
 | Final `flutter build apk --debug --no-pub` | Passed; APK installed with `adb install -r` |
 | Cold startup and accessibility | Started; service bound, no crashed accessibility services |
@@ -24,7 +24,7 @@ Tested version 1.0.0 (debug) on the connected Xiaomi 2312DRAABI, Android 15, usi
 - Constrained long home-header status text and made execution/input content scrollable. The installed-app chooser previously caused a 2,819-pixel vertical overflow. Added phone-size and short-viewport regression tests.
 - Coalesced consecutive scroll updates, ignored explicit zero-distance updates, and replayed recorded distances within screen bounds. Android now timestamps records using the event occurrence time rather than slow node-read completion time. On this phone, processing delays had split a single swipe into many steps.
 - Disabled model thinking for interactive requests, allowed a bounded 120-second local-model response time, constrained confidence to schema enum values, and clarified outcome verification.
-- Included child labels for otherwise unnamed clickable rows in model observations. Added a regression test preserving actual target capabilities. Limited action explanation fields and instructed the model to give short responses.
+- Included child labels for otherwise unnamed clickable rows in model observations. Added a regression test preserving actual target capabilities. Limited action explanation fields and instructed the model to give short responses. Removed redundant geometry and empty/default fields from model prompts while preserving full local fingerprints and target capabilities. The captured Bluetooth verification payload fell from 10,144 to 4,049 characters; it returned the correct result in 36.53 seconds versus 176 seconds in the earlier run (host load differed). The final live success/wrong-page verification test passed in 16 seconds.
 
 ## Corrections to the first report
 
@@ -44,6 +44,7 @@ Actual microphone transcription, arbitrary third-party workflows, purchases/mess
 
 ## Evidence
 
-Local evidence is under ignored `build/verification/`: `final-tests.log`, `final-analyze.log`, `final-build.log`, `final-app.log`, `final-exit-info.log`, `wifi-replayed.png`, database snapshots, and captured local-model requests/responses. These may contain device screen text; they are local and not committed. Log buffers are finite: this is a review of captured test intervals, not every historical phone log.
+Local evidence is under ignored `build/verification/`: `compact-tests.log`, `compact-analyze.log`, `compact-build.log`, `compact-live-verifier.log`, `final-app.log`, `final-exit-info.log`, `wifi-replayed.png`, database snapshots, and captured local-model requests/responses. These may contain device screen text; they are local and not committed. Log buffers are finite: this is a review of captured test intervals, not every historical phone log.
 
 `uiautomator dump` disrupted SAAR accessibility during earlier tests, so later tests used screenshots and debugger state. Phone screenshots and all added test skills were retained. The Flutter machine-local JDK setting was corrected to the installed Java 25 path so builds could run.
+
