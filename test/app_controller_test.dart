@@ -99,6 +99,7 @@ class RecordingStore extends MemoryStore {
 }
 
 class RecordingBridge extends SilentBridge {
+  String recordedPackage = 'in.swiggy.android';
   bool recording = false;
   bool failStart = false;
   int stops = 0;
@@ -121,9 +122,9 @@ class RecordingBridge extends SilentBridge {
       ActionTraceEvent(
         timestampMs: 1,
         action: 'tap',
-        packageName: 'in.swiggy.android',
+        packageName: recordedPackage,
         node: UiNode.fromJson({
-          'packageName': 'in.swiggy.android',
+          'packageName': recordedPackage,
           'text': 'Search',
           'isClickable': true,
           'children': [],
@@ -185,6 +186,36 @@ Flow _skill(String id, String goal) => Flow(
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
+  test(
+    'own-app-only recording explains failure and a new demonstration saves',
+    () async {
+      final store = RecordingStore();
+      final bridge = RecordingBridge()..recordedPackage = 'com.lesgo.saar';
+      final app = AppController(
+        store: store,
+        bridge: bridge,
+        asr: NoSpeech(),
+        intentModel: Baseline(),
+        conversation: ScriptedConversation([]),
+      );
+      addTearDown(app.dispose);
+      await app.initialize();
+      await app.submitTypedCommand('teach me to search for coffee');
+      await app.stopTeaching();
+      expect(app.state, AppState.error);
+      expect(
+        app.messages.last.text,
+        contains('No target app actions captured'),
+      );
+      expect(app.recordedTargetActions, 0);
+      expect(store.saved, isEmpty);
+      bridge.recordedPackage = 'in.swiggy.android';
+      await app.submitTypedCommand('teach me to search for coffee');
+      await app.stopTeaching();
+      expect(app.recordedTargetActions, 1);
+      expect(store.saved.single.triggerIntent, 'search for coffee');
+    },
+  );
   for (final prefix in ['teach me to ', 'teach me how to ']) {
     test('$prefix preserves the complete demonstrated command', () async {
       final store = RecordingStore();

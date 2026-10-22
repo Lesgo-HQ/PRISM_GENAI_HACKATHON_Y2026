@@ -6,7 +6,7 @@ Tested version 1.0.0 (debug) on the connected Xiaomi 2312DRAABI, Android 15, usi
 
 | Check | Result |
 |---|---|
-| Final `flutter test --no-pub` | 103 passed; 3 opt-in live-model tests skipped in this command |
+| Final `flutter test --no-pub` | 105 passed; 3 opt-in live-model tests skipped in this command |
 | Final `flutter analyze --no-pub` | No issues |
 | Final `flutter build apk --debug --no-pub` | Passed; APK installed with `adb install -r` |
 | Cold startup and accessibility | Started; service bound, no crashed accessibility services |
@@ -26,6 +26,8 @@ Tested version 1.0.0 (debug) on the connected Xiaomi 2312DRAABI, Android 15, usi
 - Disabled model thinking for interactive requests, allowed a bounded 120-second local-model response time, constrained confidence to schema enum values, and clarified outcome verification.
 - Included child labels for otherwise unnamed clickable rows in model observations. Added a regression test preserving actual target capabilities. Limited action explanation fields and instructed the model to give short responses. Removed redundant geometry and empty/default fields from model prompts while preserving full local fingerprints and target capabilities. The captured Bluetooth verification payload fell from 10,144 to 4,049 characters; it returned the correct result in 36.53 seconds versus 176 seconds in the earlier run (host load differed). The final live success/wrong-page verification test passed in 16 seconds.
 
+- Represented checkable state explicitly as on/off in model observations. Live verifier checks passed for correct/wrong destinations and off/on states. Excluded checkable controls and their containing rows from automatic taps, with a runtime guard and regression test; changes to switches require manual input.
+
 ## Corrections to the first report
 
 The original report incorrectly blamed teaching-prefix substring offsets. The offsets are correct. ADB keyboard input corrupted the earlier command; exact commands through the debug controller preserved their names. Parser regression tests pass without parser changes.
@@ -36,7 +38,7 @@ A historical crash in the device buffer belongs to `com.miui.face`, not SAAR. SA
 
 Earlier live-model tests separately passed action outcome checking, learned-skill routing, and varied intent cases after the fixes. Unsupported or invalid proposals remained rejected. The ordinary host suite does not run these opt-in network tests.
 
-Adaptive Bluetooth navigation is being checked separately on the final build; its final outcome is recorded below. Earlier attempts timed out or proposed an invalid scroll target and were not treated as successful. A captured diagnostic response also generated an excessively long explanation. Model latency was strongly affected by local host load.
+Final physical-phone adaptive test: SAAR opened Bluetooth settings and the action verifier reported success. The model then proposed an unnecessary second tap instead of finishing. No screen change occurred, so SAAR paused safely. Bluetooth remained off. A clarification asking it to finish also paused because its proposed completion evidence did not match visible text. The diagnostic task was then cancelled, the debugger detached, and the app left installed with Ollama available. This is successful navigation but not successful autonomous task completion. Earlier attempts also timed out or proposed invalid actions. Model latency and planning reliability remain limitations.
 
 The saved `inspect display settings` test still contains a manual boundary because Android supplied an unreadable tap source. The older `pen display settings` skill remains intact. Neither is claimed as a fully automated successful Display workflow. Long flings remain bounded to one screen per replay gesture and may require recovery.
 
@@ -44,7 +46,6 @@ Actual microphone transcription, arbitrary third-party workflows, purchases/mess
 
 ## Evidence
 
-Local evidence is under ignored `build/verification/`: `compact-tests.log`, `compact-analyze.log`, `compact-build.log`, `compact-live-verifier.log`, `final-app.log`, `final-exit-info.log`, `wifi-replayed.png`, database snapshots, and captured local-model requests/responses. These may contain device screen text; they are local and not committed. Log buffers are finite: this is a review of captured test intervals, not every historical phone log.
+Local evidence is under ignored `build/verification/`: `completion-tests.log`, `completion-analyze.log`, `completion-build.log`, `completion-live.log`, `completion-app.log`, `completion-checkpoint.db`, `completion.png`, `final-exit-info.log`, `wifi-replayed.png`, database snapshots, and captured local-model requests/responses. These may contain device screen text; they are local and not committed. Log buffers are finite: this is a review of captured test intervals, not every historical phone log.
 
 `uiautomator dump` disrupted SAAR accessibility during earlier tests, so later tests used screenshots and debugger state. Phone screenshots and all added test skills were retained. The Flutter machine-local JDK setting was corrected to the installed Java 25 path so builds could run.
-

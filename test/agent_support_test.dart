@@ -62,6 +62,11 @@ void main() {
       expect(elements[0]['child_text'], 'Bluetooth');
       expect(observation.nodes[0].isClickable, isTrue);
       expect(observation.nodes[1].isClickable, isFalse);
+      final compact = observation.toModelJson()['elements'] as List;
+      expect(compact.length, 1);
+      expect(compact.single['id'], 0);
+      expect(compact.single['child_text'], 'Bluetooth');
+      expect(observation.nodes.length, 2);
     },
   );
   test(

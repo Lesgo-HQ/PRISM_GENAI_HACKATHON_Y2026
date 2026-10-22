@@ -500,20 +500,22 @@ class _HomeViewState extends State<_HomeView>
                 spacing: 8,
                 children: [
                   ActionChip(
-                    label: const Text('Operate an app'),
-                    avatar: const Icon(Icons.touch_app, size: 18),
-                    onPressed: () {
-                      _commandController.text = 'do ';
-                      setState(() => _showTypedCommand = true);
-                    },
-                  ),
-                  ActionChip(
                     label: const Text('Teach a skill'),
                     avatar: const Icon(Icons.school_outlined, size: 18),
                     onPressed: () {
                       _commandController.text = 'teach me to ';
                       setState(() => _showTypedCommand = true);
                     },
+                  ),
+                  ActionChip(
+                    label: Text('Learned skills (${controller.flows.length})'),
+                    avatar: const Icon(Icons.library_books_outlined, size: 18),
+                    onPressed: () => Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const FlowLibraryScreen(),
+                      ),
+                    ),
                   ),
                 ],
               ),
@@ -604,6 +606,7 @@ class _HomeViewState extends State<_HomeView>
                 ),
                 const SizedBox(width: 24),
                 IconButton(
+                  tooltip: 'Learned skills',
                   icon: const Icon(
                     Icons.library_books_rounded,
                     color: AppTheme.textSecondary,

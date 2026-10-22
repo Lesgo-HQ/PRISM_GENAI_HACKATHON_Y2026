@@ -10,6 +10,17 @@ import 'credential_guard.dart';
 class FlowCompiler {
   final TraceNormalizer _normalizer = TraceNormalizer();
 
+  static int targetActionCount(List<ActionTraceEvent> trace) =>
+      TraceNormalizer()
+          .normalize(trace)
+          .where(
+            (event) =>
+                event.node != null &&
+                event.action != 'focus' &&
+                _applicationPackage(event) != null,
+          )
+          .length;
+
   Flow compile(String utterance, List<ActionTraceEvent> rawTrace) {
     final trace = _normalizer.normalize(rawTrace);
     if (trace.isEmpty) throw Exception('Empty trace after normalization');
@@ -144,7 +155,7 @@ class FlowCompiler {
     return nodeValue == null || nodeValue.isEmpty ? null : nodeValue;
   }
 
-  String? _applicationPackage(ActionTraceEvent event) {
+  static String? _applicationPackage(ActionTraceEvent event) {
     final eventPackage = event.packageName?.trim();
     final nodePackage = event.node?.packageName?.trim();
     final packageName = eventPackage?.isNotEmpty == true

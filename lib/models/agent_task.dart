@@ -50,8 +50,29 @@ class AgentObservation {
   String get fingerprint => jsonEncode(toJson());
   Map<String, dynamic> toModelJson() {
     final data = toJson();
+    final labelledChildren = <UiNode>{
+      for (final node in nodes)
+        if (node.isClickable && (node.text?.isEmpty ?? true))
+          ...node
+              .flatten()
+              .skip(1)
+              .where((n) => n.text?.isNotEmpty ?? false)
+              .take(6),
+    };
+    (data['elements'] as List).removeWhere((element) {
+      final node = nodes[element['id'] as int];
+      return labelledChildren.contains(node) &&
+          !node.isClickable &&
+          !node.isEditable &&
+          !node.isScrollable &&
+          !node.isCheckable;
+    });
     // Keep full geometry locally for stale-target checks, not in model prompts.
     for (final element in data['elements'] as List) {
+      final resource = element['resource'] as String?;
+      if (resource != null && resource.contains(':id/')) {
+        element['resource'] = resource.split(':id/').last;
+      }
       if (element.remove('checkable') == true) {
         element['selection_state'] = element['checked'] == true ? 'on' : 'off';
       }

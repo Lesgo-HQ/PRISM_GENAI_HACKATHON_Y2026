@@ -19,6 +19,7 @@ import 'services/flow_store.dart';
 import 'services/flow_matcher.dart';
 import 'services/replay_engine.dart';
 import 'services/flow_synthesizer.dart';
+import 'services/flow_compiler.dart';
 import 'services/clarification_service.dart';
 import 'services/intent_model.dart';
 import 'models/execution_report.dart';
@@ -118,6 +119,7 @@ class AppController extends ChangeNotifier {
 
   // Teach mode state
   List<ActionTraceEvent> _actionTrace = [];
+  int get recordedTargetActions => FlowCompiler.targetActionCount(_actionTrace);
   StreamSubscription<List<ActionTraceEvent>>? _teachSubscription;
   String? _teachUtterance;
   Flow? _lastSynthesizedFlow;
@@ -197,7 +199,7 @@ class AppController extends ChangeNotifier {
       _recovered = await _store.loadCheckpoint();
       if (_agentRecovered != null) {
         _say(
-          'Your adaptive task is saved: ${_agentRecovered!.goal}. Say resume task to continue or cancel.',
+          'An app task was interrupted. This is a recovery checkpoint, not a learned skill. Say resume task to continue it. To learn a reusable task, tap Teach a skill and demonstrate it.',
         );
       } else if (_recovered != null) {
         _say(
@@ -578,7 +580,7 @@ class AppController extends ChangeNotifier {
 
       if (_actionTrace.isEmpty) {
         _state = AppState.error;
-        _statusMessage = 'No actions recorded. Make sure accessibility is enabled, then demonstrate the task again.';
+        _say('No actions recorded. Tap Teach a skill, open the target app, perform the task, then return to SAAR to save.');
         notifyListeners();
         return;
       }
@@ -614,13 +616,17 @@ class AppController extends ChangeNotifier {
           .length;
       _say(
         'Saved “${flow.triggerIntent}” with ${flow.steps.length} steps. '
-        'Say the same command to reuse it.'
+        'Find it in Learned skills and tap Run skill, or say the same command to reuse it.'
         '${manual > 0 ? ' $manual steps need your help because their targets were sensitive or unreadable.' : ''}',
       );
       notifyListeners();
+    } on FormatException catch (e) {
+      _state = AppState.error;
+      _say('${e.message} Tap Teach a skill to record again. No skill was saved.');
+      notifyListeners();
     } catch (e) {
       _state = AppState.error;
-      _statusMessage = 'Error synthesizing flow: $e';
+      _say('Could not save your demonstration: $e');
       notifyListeners();
     }
   }

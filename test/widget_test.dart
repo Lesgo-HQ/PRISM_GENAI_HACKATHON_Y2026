@@ -1,10 +1,30 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter/material.dart' hide Flow;
 import 'package:provider/provider.dart';
 import 'package:saar/app_controller.dart';
 import 'package:saar/main.dart';
 import 'package:saar/screens/home_screen.dart';
 import 'package:saar/screens/replay_screen.dart';
+import 'package:saar/models/flow.dart';
+
+class SkillLibraryController extends AppController {
+  String? submitted;
+  @override
+  List<Flow> get flows => [
+    Flow(
+      flowId: 'demo',
+      appPackage: 'example.app',
+      triggerIntent: 'Find coffee',
+      exampleUtterances: [],
+      slots: [],
+      steps: [],
+    ),
+  ];
+  @override
+  Future<void> submitTypedCommand(String utterance) async {
+    submitted = utterance;
+  }
+}
 
 class AppChoiceController extends AppController {
   @override
@@ -25,6 +45,28 @@ class LongStatusController extends AppController {
 }
 
 void main() {
+  testWidgets('visible skill library runs the selected learned command', (
+    tester,
+  ) async {
+    final controller = SkillLibraryController();
+    addTearDown(controller.dispose);
+    await tester.pumpWidget(
+      ChangeNotifierProvider<AppController>.value(
+        value: controller,
+        child: const MaterialApp(home: HomeScreen()),
+      ),
+    );
+    await tester.tap(find.text('Learned skills (1)'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Find coffee').last);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 400));
+    await tester.tap(find.text('Run skill'));
+    await tester.pump();
+    expect(controller.submitted, 'Find coffee');
+    expect(tester.takeException(), isNull);
+  });
   testWidgets('long app choice remains scrollable with keyboard space', (
     tester,
   ) async {

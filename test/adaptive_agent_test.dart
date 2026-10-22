@@ -50,6 +50,12 @@ class LaunchingDevice extends Device {
     if (launchReads == 2) {
       return UiNode.fromJson({'packageName': 'com.lesgo.saar', 'children': []});
     }
+    if (launchReads == 3 || launchReads == 4) {
+      return UiNode.fromJson({
+        'packageName': 'shop',
+        'text': 'Loading your food',
+      });
+    }
     return tree;
   }
 }
@@ -105,6 +111,13 @@ void main() {
           {'text': 'Row', 'isClickable': true},
           {'text': 'Input', 'isEditable': true},
           {'isScrollable': true},
+          {'isClickable': true, 'isCheckable': true},
+          {
+            'isClickable': true,
+            'children': [
+              {'isCheckable': true},
+            ],
+          },
         ],
       }),
     );
@@ -123,6 +136,30 @@ void main() {
     );
     expect((empty['oneOf'] as List).length, 3);
   });
+  test(
+    'model cannot tap a checkable control even if it ignores the schema',
+    () async {
+      final device = Device()
+        ..tree = UiNode.fromJson({
+          'packageName': 'shop',
+          'text': 'Switch',
+          'isClickable': true,
+          'isCheckable': true,
+        });
+      late AdaptiveAgent agent;
+      agent = AdaptiveAgent(
+        bridge: device,
+        model: Model([action('tap', target: 0)]),
+        checkpoint: (_) async {},
+        onStatus: (_, waiting) {
+          if (waiting) agent.stop();
+        },
+        settleDelay: Duration.zero,
+      );
+      await agent.run(task(), []);
+      expect(device.taps, 0);
+    },
+  );
   test(
     'disabled model does not open an app and strand the user there',
     () async {
@@ -143,7 +180,7 @@ void main() {
       expect(device.taps, 0);
     },
   );
-  test('cold launch waits through missing and previous-app screens before planning', () async {
+  test('cold launch waits through missing, previous-app and text-only loading screens before planning', () async {
     final device = LaunchingDevice();
     final waits = <String>[];
     late AdaptiveAgent agent;

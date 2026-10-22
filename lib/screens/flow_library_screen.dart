@@ -14,7 +14,7 @@ class FlowLibraryScreen extends StatelessWidget {
       backgroundColor: Theme.of(context).scaffoldBackgroundColor,
       appBar: AppBar(
         title: Text(
-          'Flow Library',
+          'Learned skills',
           style: TextStyle(
             fontWeight: FontWeight.bold,
             color: Theme.of(context).primaryColor,
@@ -24,7 +24,8 @@ class FlowLibraryScreen extends StatelessWidget {
       body: controller.flows.isEmpty
           ? Center(
               child: Text(
-                'No flows saved yet.',
+                'No learned skills yet.\nTap Teach a skill on the home screen, demonstrate\nthe task, then stop recording to save it here.',
+                textAlign: TextAlign.center,
                 style: TextStyle(
                   color:
                       Theme.of(context).textTheme.bodyMedium?.color ??
@@ -86,6 +87,17 @@ class FlowLibraryScreen extends StatelessWidget {
                       style: TextStyle(color: Theme.of(context).primaryColor),
                     ),
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: FilledButton.icon(
+                          icon: const Icon(Icons.play_arrow),
+                          label: const Text('Run skill'),
+                          onPressed: () {
+                            Navigator.pop(context);
+                            controller.submitTypedCommand(flow.triggerIntent);
+                          },
+                        ),
+                      ),
                       ...flow.steps.asMap().entries.map((entry) {
                         final idx = entry.key;
                         final step = entry.value;

@@ -11,7 +11,8 @@ class TeachScreen extends StatefulWidget {
   State<TeachScreen> createState() => _TeachScreenState();
 }
 
-class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStateMixin {
+class _TeachScreenState extends State<TeachScreen>
+    with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
 
@@ -41,7 +42,10 @@ class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStat
     return Scaffold(
       backgroundColor: AppTheme.background,
       appBar: AppBar(
-        title: const Text('TEACH MODE', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold)),
+        title: const Text(
+          'TEACH MODE',
+          style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         leading: IconButton(
           icon: const Icon(Icons.close_rounded, color: AppTheme.textPrimary),
@@ -68,15 +72,25 @@ class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStat
                   child: Container(
                     width: 12,
                     height: 12,
-                    decoration: const BoxDecoration(color: AppTheme.error, shape: BoxShape.circle),
+                    decoration: const BoxDecoration(
+                      color: AppTheme.error,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                const Text('RECORDING', style: TextStyle(color: AppTheme.error, fontWeight: FontWeight.bold, letterSpacing: 1.5)),
+                const Text(
+                  'RECORDING',
+                  style: TextStyle(
+                    color: AppTheme.error,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 1.5,
+                  ),
+                ),
               ],
             ),
           ),
-          
+
           if (isSynthesizing) ...[
             Expanded(
               child: Center(
@@ -85,7 +99,13 @@ class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStat
                   children: [
                     const CircularProgressIndicator(color: AppTheme.primary),
                     const SizedBox(height: 24),
-                    Text(controller.statusMessage, style: const TextStyle(fontSize: 18, color: AppTheme.textPrimary)),
+                    Text(
+                      controller.statusMessage,
+                      style: const TextStyle(
+                        fontSize: 18,
+                        color: AppTheme.textPrimary,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -97,30 +117,41 @@ class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStat
                 color: AppTheme.surface,
                 borderRadius: BorderRadius.circular(16),
               ),
-              child: const Text(
-                'Capture in progress...',
-                style: TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold),
+              child: Text(
+                '${controller.recordedTargetActions} target-app actions captured',
+                style: const TextStyle(
+                  color: AppTheme.textSecondary,
+                  fontWeight: FontWeight.bold,
+                ),
               ),
             ),
             const SizedBox(height: 24),
-            
+
             Expanded(
               child: Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(Icons.touch_app_rounded, size: 80, color: AppTheme.textSecondary.withValues(alpha: 0.3)),
+                    Icon(
+                      Icons.touch_app_rounded,
+                      size: 80,
+                      color: AppTheme.textSecondary.withValues(alpha: 0.3),
+                    ),
                     const SizedBox(height: 24),
                     const Text(
-                      'Navigate to the target app\nand perform the task naturally.',
+                      'Press Home and open the app you want to teach.\nPerform the task yourself while SAAR records.\nThen return here and tap Stop & Save Skill.\nNaming a task alone does not teach it.',
                       textAlign: TextAlign.center,
-                      style: TextStyle(fontSize: 16, color: AppTheme.textSecondary, height: 1.5),
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: AppTheme.textSecondary,
+                        height: 1.5,
+                      ),
                     ),
                   ],
                 ),
               ),
             ),
-            
+
             Padding(
               padding: const EdgeInsets.all(24.0),
               child: SizedBox(
@@ -135,7 +166,13 @@ class _TeachScreenState extends State<TeachScreen> with SingleTickerProviderStat
                     shadowColor: AppTheme.error.withValues(alpha: 0.5),
                   ),
                   icon: const Icon(Icons.stop_rounded),
-                  label: const Text('STOP RECORDING', style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1)),
+                  label: const Text(
+                    'STOP & SAVE SKILL',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
                 ),
               ),
             ),
