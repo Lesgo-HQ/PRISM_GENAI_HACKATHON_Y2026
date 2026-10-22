@@ -1,4 +1,4 @@
-﻿import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SettingsService {
   final SharedPreferences _prefs;
@@ -8,15 +8,6 @@ class SettingsService {
   static Future<SettingsService> load() async {
     final prefs = await SharedPreferences.getInstance();
     return SettingsService._(prefs);
-  }
-
-  String? get groqApiKey => _prefs.getString('groq_api_key');
-  Future<void> setGroqApiKey(String? value) async {
-    if (value == null) {
-      await _prefs.remove('groq_api_key');
-    } else {
-      await _prefs.setString('groq_api_key', value);
-    }
   }
 
   bool get enableLlm => _prefs.getBool('enable_llm') ?? true;

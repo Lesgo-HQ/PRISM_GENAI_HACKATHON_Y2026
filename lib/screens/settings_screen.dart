@@ -14,11 +14,6 @@ class SettingsScreen extends StatefulWidget {
 class _SettingsScreenState extends State<SettingsScreen> {
   final _endpoint = TextEditingController();
   final _model = TextEditingController();
-  final _apiKey = TextEditingController();
-  final _ollamaEndpoint = TextEditingController();
-  final _ollamaModel = TextEditingController();
-  bool _fallback = true;
-  bool _keySaved = false;
   bool _enabled = false;
   bool _busy = false;
   String _status = 'Connection not tested';
@@ -30,22 +25,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   Future<void> _load() async {
     final prefs = await SharedPreferences.getInstance();
-    final keySaved = await LlmClient.keyStorage.containsKey(
-      key: LlmClient.groqKeyName,
-    );
     if (!mounted) return;
+    final savedEndpoint = prefs.getString('model_endpoint');
+    final isGroqEndpoint = savedEndpoint != null &&
+        savedEndpoint.toLowerCase().contains('groq.com');
+    final defaultEndpoint = isGroqEndpoint
+        ? (prefs.getString('ollama_endpoint') ??
+            'http://127.0.0.1:11434/v1/chat/completions')
+        : (savedEndpoint ?? 'http://127.0.0.1:11434/v1/chat/completions');
+    final defaultModel = isGroqEndpoint
+        ? (prefs.getString('ollama_model') ?? 'qwen2.5:3b')
+        : (prefs.getString('model_name') ?? 'qwen2.5:3b');
     setState(() {
-      _endpoint.text =
-          prefs.getString('model_endpoint') ??
-          'https://api.groq.com/openai/v1/chat/completions';
-      _model.text = prefs.getString('model_name') ?? 'openai/gpt-oss-20b';
-      _ollamaEndpoint.text =
-          prefs.getString('ollama_endpoint') ??
-          'http://127.0.0.1:11434/v1/chat/completions';
-      _ollamaModel.text = prefs.getString('ollama_model') ?? 'qwen3:4b';
-      _fallback = prefs.getBool('ollama_fallback') ?? true;
+      _endpoint.text = defaultEndpoint;
+      _model.text = defaultModel;
       _enabled = prefs.getBool('enable_llm') ?? false;
-      _keySaved = keySaved;
     });
   }
 
@@ -63,33 +57,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
     }
     setState(() => _busy = true);
     try {
-      final fallbackUri = Uri.tryParse(_ollamaEndpoint.text.trim());
-      if (_fallback &&
-          (fallbackUri == null ||
-              !['http', 'https'].contains(fallbackUri.scheme) ||
-              fallbackUri.host.isEmpty ||
-              fallbackUri.userInfo.isNotEmpty ||
-              fallbackUri.host == 'api.groq.com' ||
-              _ollamaModel.text.trim().isEmpty)) {
-        throw StateError(
-          'Enter a valid Ollama endpoint and model for fallback.',
-        );
-      }
       final prefs = await SharedPreferences.getInstance();
-      if (_apiKey.text.trim().isNotEmpty) {
-        await LlmClient.keyStorage.write(
-          key: LlmClient.groqKeyName,
-          value: _apiKey.text.trim(),
-        );
-        _apiKey.clear();
-        _keySaved = true;
-      }
       await prefs.setString('model_endpoint', uri.toString());
       await prefs.setString('model_name', _model.text.trim());
       await prefs.setBool('enable_llm', _enabled);
-      await prefs.setBool('ollama_fallback', _fallback);
-      await prefs.setString('ollama_endpoint', _ollamaEndpoint.text.trim());
-      await prefs.setString('ollama_model', _ollamaModel.text.trim());
       var status = 'Settings saved. Connection not tested.';
       if (test) {
         final issue = await LlmClient.instance.connectionIssue();
@@ -109,9 +80,6 @@ class _SettingsScreenState extends State<SettingsScreen> {
   void dispose() {
     _endpoint.dispose();
     _model.dispose();
-    _apiKey.dispose();
-    _ollamaEndpoint.dispose();
-    _ollamaModel.dispose();
     super.dispose();
   }
 
@@ -130,7 +98,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 12),
           const Text(
             'Connect your model server for conversation, skill selection and app tasks. '
-            'Your messages, screen text and learned skill descriptions are sent to this address. Groq processes them in the cloud. '
+            'Your messages, screen text and learned skill descriptions are sent to this address. '
             'Device actions remain controlled by SAAR.',
           ),
           SwitchListTile(
@@ -144,7 +112,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextField(
             controller: _endpoint,
             decoration: const InputDecoration(
-              labelText: 'Primary model endpoint',
+              labelText: 'Model endpoint',
             ),
           ),
           const SizedBox(height: 12),
@@ -155,60 +123,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          OutlinedButton(
-            onPressed: _busy
-                ? null
-                : () => setState(() {
-                    _endpoint.text =
-                        'https://api.groq.com/openai/v1/chat/completions';
-                    _model.text = 'openai/gpt-oss-20b';
-                    _enabled = true;
-                  }),
-            child: const Text('Use Groq as primary'),
-          ),
-          TextField(
-            controller: _apiKey,
-            obscureText: true,
-            autocorrect: false,
-            enableSuggestions: false,
-            decoration: InputDecoration(
-              labelText: 'Groq API key',
-              helperText: _keySaved
-                  ? 'Key saved securely. Leave blank to keep it.'
-                  : 'Stored securely on this phone; sent only to api.groq.com.',
-            ),
-          ),
-          const SizedBox(height: 12),
-          SwitchListTile(
-            contentPadding: EdgeInsets.zero,
-            title: const Text('Use Ollama when Groq is unavailable'),
-            subtitle: const Text(
-              'Fallback for network failures, timeouts, rate limits and server errors.',
-            ),
-            value: _fallback,
-            onChanged: _busy
-                ? null
-                : (value) => setState(() => _fallback = value),
-          ),
-          if (_fallback) ...[
-            TextField(
-              controller: _ollamaEndpoint,
-              decoration: const InputDecoration(
-                labelText: 'Ollama fallback endpoint',
-              ),
-            ),
-            const SizedBox(height: 12),
-            TextField(
-              controller: _ollamaModel,
-              decoration: const InputDecoration(
-                labelText: 'Ollama fallback model',
-              ),
-            ),
-          ],
           const Text(
             'For an Android emulator use 10.0.2.2 instead of 127.0.0.1. '
-            'For Ollama on a USB-connected computer, forward port 11434 as described in the setup guide. '
-            'Local servers must support JSON schema responses. Groq needs internet; no USB model forwarding is needed.',
+            'For a USB-connected phone, forward your port (e.g. adb reverse tcp:11434 tcp:11434 for Ollama or tcp:8080 tcp:8080 for llama-server). '
+            'The server must support JSON schema responses.',
           ),
           const SizedBox(height: 16),
           Wrap(
